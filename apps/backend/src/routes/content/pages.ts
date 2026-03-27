@@ -1,4 +1,5 @@
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
+import { legacyContentKeyToStorageKey, toPublicContentKey } from '@nase-cms/shared';
 import { supabaseAdmin } from '../../lib/supabase.js';
 import { getCached, setCached, cacheKey } from '../../lib/cache.js';
 
@@ -39,9 +40,24 @@ export async function contentPagesRoutes(app: FastifyInstance) {
         return reply.status(500).send({ error: 'Failed to fetch content' });
       }
 
+      const rows = [...(entries ?? [])].sort((a, b) => {
+        const aNew = !a.key.startsWith('admin.') && a.key.includes(':');
+        const bNew = !b.key.startsWith('admin.') && b.key.includes(':');
+        if (aNew && !bNew) return 1;
+        if (!aNew && bNew) return -1;
+        return 0;
+      });
+
       const response: Record<string, string> = {};
-      for (const e of entries ?? []) {
-        response[e.key] = e.value ?? '';
+      for (const e of rows) {
+        const raw = e.key;
+        if (raw.startsWith('admin.')) {
+          response[raw] = e.value ?? '';
+          continue;
+        }
+        const normalized = legacyContentKeyToStorageKey(raw);
+        const publicKey = toPublicContentKey(normalized);
+        response[publicKey] = e.value ?? '';
       }
 
       setCached(cacheKeyStr, response);

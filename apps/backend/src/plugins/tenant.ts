@@ -7,6 +7,7 @@ import { verifyAdminAuth } from '../lib/auth.js';
  * Multi-tenancy plugin.
  * Registers preHandler hooks for admin and content routes.
  *
+ * Public routes (/api/v1/public/*): tenant z Host subdomény, bez auth (např. branding přihlášení).
  * Admin routes (/api/v1/admin/*): resolve tenant by Host subdomain + JWT auth
  * Content routes (/api/v1/content/*): resolve tenant by X-API-KEY header
  */
@@ -14,6 +15,18 @@ async function tenantPlugin(app: FastifyInstance) {
   app.addHook('preHandler', async (request: FastifyRequest, reply: FastifyReply) => {
     const url = request.url;
     if (!url.startsWith('/api/v1/')) return;
+
+    if (url.startsWith('/api/v1/public/')) {
+      const host = request.headers.host ?? '';
+      const result = await resolveTenantBySubdomain(host);
+      request.log.info({ host, publicRoute: true, result: result.ok ? 'ok' : result }, 'Tenant resolution');
+      if (!result.ok) {
+        return reply.status(result.status).send({ error: result.message });
+      }
+      request.tenantId = result.tenantId;
+      request.tenantSource = 'public';
+      return;
+    }
 
     if (url.startsWith('/api/v1/admin/')) {
       const host = request.headers.host ?? '';
@@ -32,7 +45,8 @@ async function tenantPlugin(app: FastifyInstance) {
     }
 
     if (url.startsWith('/api/v1/content')) {
-      const apiKey = request.headers['x-api-key'];
+      const raw = request.headers['x-api-key'];
+      const apiKey = Array.isArray(raw) ? raw[0] : raw;
       const result = await resolveTenantByApiKey(typeof apiKey === 'string' ? apiKey : undefined);
       if (!result.ok) {
         return reply.status(result.status).send({ error: result.message });

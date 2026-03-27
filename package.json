@@ -10,9 +10,11 @@
   "scripts": {
     "dev": "npm run dev -w @nase-cms/backend",
     "dev:admin": "npm run dev -w @nase-cms/admin",
+    "dev:web-demo": "npm run dev -w @nase-cms/web-demo",
     "build": "npm run build -w @nase-cms/backend",
-    "build:admin": "npm run build -w @nase-cms/admin",
+    "build:admin": "npm run build -w @nase-cms/shared && npm run build -w @nase-cms/admin",
     "start": "npm run start -w @nase-cms/backend",
-    "typecheck": "npm run typecheck -w @nase-cms/backend"
+    "typecheck": "npm run typecheck -w @nase-cms/backend",
+    "hash-api-key": "node scripts/hash-api-key.mjs"
   }
 }

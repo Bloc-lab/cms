@@ -8,6 +8,8 @@ export default defineConfig({
     proxy: {
       '/api': {
         target: 'http://localhost:3000',
+        // Musí být false: jinak proxy přepíše Host na localhost:3000 a tenant z subdomény
+        // (kadernictvi.localhost) zmizí → admin API vrací 404 „Tenant subdomain required“.
         changeOrigin: false,
         secure: false,
       },

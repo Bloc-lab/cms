@@ -28,34 +28,44 @@ export default function MediaPicker({ onSelect, onClose }: MediaPickerProps) {
   const baseUrl = supabaseUrl ? `${supabaseUrl}/storage/v1/object/public/media` : '';
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={onClose}>
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={onClose}>
       <div
-        className="bg-white rounded-lg shadow-xl max-w-2xl max-h-[80vh] overflow-auto p-4"
+        className="bg-white rounded-lg border border-gray-200 shadow-xl max-w-2xl w-full max-h-[80vh] overflow-auto"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-semibold">Vybrat z knihovny</h3>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-700">×</button>
+        <div className="flex justify-between items-center px-5 py-4 border-b border-gray-100 bg-gray-50/80">
+          <h3 className="text-sm font-semibold text-gray-900">Vybrat z knihovny</h3>
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-700 text-xl leading-none w-8 h-8 flex items-center justify-center rounded-md hover:bg-gray-100"
+            aria-label="Zavřít"
+          >
+            ×
+          </button>
         </div>
-        {loading ? (
-          <p>Načítání...</p>
-        ) : (
-          <div className="grid grid-cols-4 gap-2">
-            {media.map((m) => (
-              <button
-                key={m.id}
-                onClick={() => onSelect({ ...m, url: m.url ?? (baseUrl ? `${baseUrl}/${m.path}` : null) })}
-                className="aspect-square rounded overflow-hidden border hover:border-blue-500 focus:border-blue-500"
-              >
-                <img
-                  src={m.url ?? (baseUrl ? `${baseUrl}/${m.path}` : '')}
-                  alt={m.alt_text ?? ''}
-                  className="w-full h-full object-cover"
-                />
-              </button>
-            ))}
-          </div>
-        )}
+        <div className="p-4">
+          {loading ? (
+            <p className="text-sm text-gray-500 py-8 text-center">Načítání…</p>
+          ) : (
+            <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+              {media.map((m) => (
+                <button
+                  type="button"
+                  key={m.id}
+                  onClick={() => onSelect({ ...m, url: m.url ?? (baseUrl ? `${baseUrl}/${m.path}` : null) })}
+                  className="aspect-square rounded-md overflow-hidden border border-gray-200 hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+                >
+                  <img
+                    src={m.url ?? (baseUrl ? `${baseUrl}/${m.path}` : '')}
+                    alt={m.alt_text ?? ''}
+                    className="w-full h-full object-cover"
+                  />
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

@@ -28,7 +28,16 @@ export async function adminContentRoutes(app: FastifyInstance) {
       return reply.status(500).send({ error: 'Failed to list content', detail: error.message });
     }
 
-    return reply.send({ entries: data ?? [] });
+    const { data: tenantRow } = await supabaseAdmin
+      .from('tenants')
+      .select('name')
+      .eq('id', tenantId)
+      .single();
+
+    return reply.send({
+      entries: data ?? [],
+      tenantName: tenantRow?.name ?? null,
+    });
   });
 
   app.put<{

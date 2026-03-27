@@ -8,7 +8,8 @@ Multi-tenant Headless CMS v Node.js + TypeScript s Supabase jako databází a au
 cms/
 ├── apps/
 │   ├── backend/     # Fastify API
-│   └── admin/       # React admin (Vite + Tailwind)
+│   ├── admin/       # React admin (Vite + Tailwind)
+│   └── web-demo/    # Minimální ukázka veřejného webu (Vite proxy → API)
 ├── packages/
 │   └── shared/      # Sdílené typy (bloky)
 └── supabase/        # SQL migrace
@@ -72,6 +73,51 @@ npm run dev:admin
 ```
 
 Vite proxy přeposílá `/api` na `http://localhost:3000`.
+
+### Web demo (`apps/web-demo`)
+
+Ukázkový statický klient volající `GET /api/v1/content` přes proxy (port **5174**, aby nekolidoval s adminem).
+
+**API klíč musí sedět s databází:** v tabulce `tenants` je uložený jen **SHA-256 hash** (`api_key_hash`). Plaintext klíč dáš do `.env`, hash do Supabase:
+
+```bash
+# 1) Zvol tajný řetězec a spočítej hash (stejný algoritmus jako backend)
+npm run hash-api-key -- "muj-tajny-klicek"
+
+# 2) V Supabase → SQL: (nahraď hash výstupem z příkazu výše)
+#    UPDATE tenants SET api_key_hash = '...' WHERE admin_subdomain = 'kadernictvi';
+
+# 3) Do apps/web-demo/.env stejný plaintext:
+#    VITE_CMS_API_KEY=muj-tajny-klicek
+```
+
+```bash
+cp apps/web-demo/.env.example apps/web-demo/.env
+# doplň VITE_CMS_API_KEY podle kroku výše
+
+npm run dev          # backend :3000
+npm run dev:web-demo # demo :5174
+```
+
+Otevři http://localhost:5174 — zobrazí JSON obsahu nebo chybu z API.
+
+**Stále 401?** Ověř v Supabase (stejný projekt jako `SUPABASE_*` v `apps/backend/.env`):
+
+```sql
+SELECT admin_subdomain, LENGTH(api_key_hash) AS hash_len
+FROM tenants;
+```
+
+- `hash_len` musí být **64** (SHA-256 hex). Pokud je `NULL`, `UPDATE` nezasáhl řádek (špatný `WHERE`) nebo měníš jiný Supabase projekt než backend.
+- Ověření mimo prohlížeč (stejný klíč jako v `.env`):
+
+```bash
+curl -s -H "X-API-KEY: TVUJ_PLAINTEXT" "http://localhost:3000/api/v1/content?lang=cs"
+```
+
+Měl bys dostat JSON (HTTP 200). Při `401` je problém v DB / hash / plaintext klíči (ne ve Vite).
+
+Po změně kódu backendu **restartuj** `npm run dev` (backend).
 
 ## Admin rozhraní
 

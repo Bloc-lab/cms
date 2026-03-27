@@ -13,10 +13,11 @@ export function hashApiKey(apiKey: string): string {
  * Prevents timing attacks.
  */
 export function verifyApiKey(apiKey: string, storedHash: string): boolean {
+  const stored = storedHash.trim().toLowerCase();
   const inputHash = hashApiKey(apiKey);
-  if (inputHash.length !== storedHash.length) return false;
+  if (inputHash.length !== stored.length) return false;
   try {
-    return timingSafeEqual(Buffer.from(inputHash, 'hex'), Buffer.from(storedHash, 'hex'));
+    return timingSafeEqual(Buffer.from(inputHash, 'hex'), Buffer.from(stored, 'hex'));
   } catch {
     return false;
   }

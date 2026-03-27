@@ -50,7 +50,8 @@ export async function resolveTenantBySubdomain(host: string): Promise<TenantReso
  * Resolve tenant from X-API-KEY header.
  */
 export async function resolveTenantByApiKey(apiKey: string | undefined): Promise<TenantResolution> {
-  if (!apiKey?.trim()) {
+  const trimmed = typeof apiKey === 'string' ? apiKey.trim() : '';
+  if (!trimmed) {
     return { ok: false, status: 401, message: 'Missing or invalid X-API-KEY' };
   }
 
@@ -67,7 +68,10 @@ export async function resolveTenantByApiKey(apiKey: string | undefined): Promise
     return { ok: false, status: 500, message: 'Database error' };
   }
 
-  const tenant = tenants?.find((t) => t.api_key_hash && verifyApiKey(apiKey, t.api_key_hash));
+  const tenant = tenants?.find((t) => {
+    const stored = typeof t.api_key_hash === 'string' ? t.api_key_hash.trim() : '';
+    return stored.length > 0 && verifyApiKey(trimmed, stored);
+  });
   if (!tenant) {
     return { ok: false, status: 401, message: 'Invalid X-API-KEY' };
   }
