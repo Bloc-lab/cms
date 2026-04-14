@@ -6,6 +6,7 @@ import SitePages from './pages/SitePages';
 import Metadata from './pages/Metadata';
 import MediaLibrary from './pages/MediaLibrary';
 import PageContentEdit from './pages/PageContentEdit';
+import SettingsContact from './pages/SettingsContact';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -35,6 +36,7 @@ export default function App() {
         <Route index element={<SitePages />} />
         <Route path="content" element={<Navigate to="/" replace />} />
         <Route path="metadata" element={<Metadata />} />
+        <Route path="settings/contact" element={<SettingsContact />} />
         <Route path="media" element={<MediaLibrary />} />
         <Route path="page/:pageId" element={<PageContentEdit />} />
       </Route>

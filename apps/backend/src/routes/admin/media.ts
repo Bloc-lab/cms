@@ -44,6 +44,95 @@ export async function adminMediaRoutes(app: FastifyInstance) {
     return reply.send({ media: items });
   });
 
+  app.patch<{
+    Params: { id: string };
+    Body: { originalName?: string | null; alt_text?: string | null };
+  }>(
+    '/api/v1/admin/media/:id',
+    async (
+      request: FastifyRequest<{ Params: { id: string }; Body: { originalName?: string | null; alt_text?: string | null } }>,
+      reply: FastifyReply
+    ) => {
+      const tenantId = request.tenantId;
+      if (!tenantId || !supabaseAdmin) {
+        return reply.status(500).send({ error: 'Server error' });
+      }
+      const id = request.params.id;
+      const body = request.body ?? {};
+
+      if (!id) return reply.status(400).send({ error: 'Missing id' });
+      const nextOriginalName = typeof body.originalName === 'string' ? body.originalName.trim() : null;
+      const nextAltText = typeof body.alt_text === 'string' ? body.alt_text.trim() : body.alt_text ?? undefined;
+
+      if (body.originalName === undefined && body.alt_text === undefined) {
+        return reply.status(400).send({ error: 'Nothing to update' });
+      }
+
+      const { data: existing, error: loadErr } = await supabaseAdmin
+        .from('media')
+        .select('id, metadata, alt_text')
+        .eq('tenant_id', tenantId)
+        .eq('id', id)
+        .single();
+
+      if (loadErr || !existing) {
+        return reply.status(404).send({ error: 'Not found' });
+      }
+
+      const prevMetadata = (existing as any).metadata ?? {};
+      const nextMetadata =
+        body.originalName === undefined
+          ? prevMetadata
+          : { ...(prevMetadata as Record<string, unknown>), originalName: nextOriginalName || null };
+
+      const updatePayload: Record<string, unknown> = {
+        updated_at: new Date().toISOString(),
+      };
+      if (body.originalName !== undefined) updatePayload.metadata = nextMetadata;
+      if (body.alt_text !== undefined) updatePayload.alt_text = nextAltText ?? null;
+
+      const { data: updated, error: updErr } = await supabaseAdmin
+        .from('media')
+        .update(updatePayload)
+        .eq('tenant_id', tenantId)
+        .eq('id', id)
+        .select('id, path, alt_text, metadata, created_at')
+        .single();
+
+      if (updErr) {
+        request.log.error({ err: updErr }, 'Failed to update media');
+        return reply.status(500).send({ error: 'Failed to update media' });
+      }
+
+      return reply.send({ media: updated });
+    }
+  );
+
+  app.delete<{ Params: { id: string } }>(
+    '/api/v1/admin/media/:id',
+    async (request: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) => {
+      const tenantId = request.tenantId;
+      if (!tenantId || !supabaseAdmin) {
+        return reply.status(500).send({ error: 'Server error' });
+      }
+      const id = request.params.id;
+      if (!id) return reply.status(400).send({ error: 'Missing id' });
+
+      const { error } = await supabaseAdmin
+        .from('media')
+        .update({ is_deleted: true, updated_at: new Date().toISOString() })
+        .eq('tenant_id', tenantId)
+        .eq('id', id);
+
+      if (error) {
+        request.log.error({ err: error }, 'Failed to delete media');
+        return reply.status(500).send({ error: 'Failed to delete media' });
+      }
+
+      return reply.status(204).send();
+    }
+  );
+
   await app.register(multipart, {
     limits: {
       fileSize: MAX_FILE_SIZE,

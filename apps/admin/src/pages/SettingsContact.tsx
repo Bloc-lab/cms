@@ -1,16 +1,14 @@
-import { useEffect, useState } from 'react';
-import { Link, Navigate, useParams } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { apiGet, apiPut } from '../lib/api';
 import {
   defaultConfig,
   mergeContentEntriesMap,
-  sitePagesConfig,
-  storageKey,
+  siteSettingsConfig,
+  type ContentConfig,
+  type ContentField,
 } from '@nase-cms/shared';
-import PageContentFields from '../components/PageContentFields';
-import MediaPicker from '../components/MediaPicker';
-import { dispatchBrandingRefresh } from '../lib/branding';
-import { parseEnabledLangs, parseShowTranslationBadges } from '../lib/languages';
+import { parseEnabledLangs } from '../lib/languages';
 import StickyActionBar from '../components/StickyActionBar';
 import Toast from '../components/Toast';
 
@@ -18,6 +16,14 @@ interface ContentEntry {
   key: string;
   lang: string;
   value: string;
+}
+
+const inputClass =
+  'w-full px-3 py-2 border border-gray-200 rounded-md text-sm bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/25 focus:border-blue-500';
+
+function fieldLabel(field: ContentField | undefined, key: string): string {
+  const base = field?.label ?? key;
+  return field?.required ? `${base} *` : base;
 }
 
 function formatSavedAt(d: Date): string {
@@ -29,33 +35,26 @@ function formatSavedAt(d: Date): string {
   });
 }
 
-export default function PageContentEdit() {
-  const { pageId } = useParams<{ pageId: string }>();
-  const pageDef = pageId ? sitePagesConfig[pageId] : undefined;
+const contactConfig: ContentConfig = siteSettingsConfig;
 
+export default function SettingsContact() {
   const [entries, setEntries] = useState<Record<string, string>>({});
   const [baseline, setBaseline] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
-  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [lang, setLang] = useState<string>('cs');
-  const [mediaPickerKey, setMediaPickerKey] = useState<string | null>(null);
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
-  const [saveNotice, setSaveNotice] = useState<string>('');
-  const [simpleView, setSimpleView] = useState<boolean>(false);
   const [toast, setToast] = useState('');
   const [recentlySaved, setRecentlySaved] = useState(false);
 
   const entryKey = (key: string, l: string) => `${key}:${l}`;
+  const getValue = (key: string, l: string) => entries[entryKey(key, l)] ?? '';
   const enabledLangs = parseEnabledLangs(entries);
-  const showTranslationBadges = parseShowTranslationBadges(entries);
-
   const isDirty = (() => {
-    for (const [fieldKey] of Object.entries(pageDef?.fields ?? {})) {
-      const sk = storageKey(pageId ?? '', fieldKey);
+    for (const key of Object.keys(contactConfig)) {
       for (const l of enabledLangs) {
-        const k = entryKey(sk, l);
+        const k = entryKey(key, l);
         if ((entries[k] ?? '') !== (baseline[k] ?? '')) return true;
       }
     }
@@ -63,31 +62,15 @@ export default function PageContentEdit() {
   })();
 
   useEffect(() => {
-    if (!pageDef) return;
     let cancelled = false;
     (async () => {
       try {
-        const data = await apiGet<{ entries: ContentEntry[]; tenantName?: string | null }>(
-          '/api/v1/admin/content'
-        );
+        const data = await apiGet<{ entries: ContentEntry[] }>('/api/v1/admin/content');
         if (cancelled) return;
         const map = mergeContentEntriesMap(data.entries ?? []);
-        setSimpleView(!parseShowTranslationBadges(map));
-
-        const tenantName = (data.tenantName ?? '').trim();
-        const siteNameMissing = !parseEnabledLangs(map).some(
-          (l) => (map[entryKey('admin.siteName', l)] ?? '').trim()
-        );
-        if (tenantName && siteNameMissing) {
-          for (const l of parseEnabledLangs(map)) {
-            map[entryKey('admin.siteName', l)] = tenantName;
-          }
-        }
-
         setEntries(map);
         setBaseline({ ...map });
         setError('');
-        setSaveNotice('');
       } catch (err) {
         if (!cancelled) setError(err instanceof Error ? err.message : 'Chyba při načítání');
       } finally {
@@ -97,11 +80,18 @@ export default function PageContentEdit() {
     return () => {
       cancelled = true;
     };
-  }, [pageDef]);
+  }, []);
 
-  if (!pageId || !pageDef) {
-    return <Navigate to="/" replace />;
-  }
+  const sections = useMemo(() => {
+    const out = new Map<string, Array<[string, ContentField]>>();
+    for (const [key, field] of Object.entries(contactConfig)) {
+      const s = field.section ?? 'Obecné';
+      const arr = out.get(s) ?? [];
+      arr.push([key, field]);
+      out.set(s, arr);
+    }
+    return [...out.entries()];
+  }, []);
 
   const setValue = (key: string, l: string, value: string) => {
     setEntries((prev) => ({ ...prev, [entryKey(key, l)]: value }));
@@ -110,23 +100,16 @@ export default function PageContentEdit() {
   const handleSave = async () => {
     setSaving(true);
     setError('');
-    setFieldErrors({});
-    setSaveNotice('');
     try {
-      const nextFieldErrors: Record<string, string> = {};
-      for (const [fieldKey, field] of Object.entries(pageDef.fields)) {
+      for (const [key, field] of Object.entries(contactConfig)) {
         if (!field.required) continue;
-        const sk = storageKey(pageId, fieldKey);
-        const filled = enabledLangs.some((l) => (entries[entryKey(sk, l)] ?? '').trim());
+        const filled = enabledLangs.some((l) => (getValue(key, l) ?? '').trim());
         if (!filled) {
-          nextFieldErrors[sk] = 'Povinné pole';
+          setError(`Vyplňte povinné pole: ${field.label}`);
+          return;
         }
       }
-      if (Object.keys(nextFieldErrors).length > 0) {
-        setFieldErrors(nextFieldErrors);
-        setError('Zkontrolujte povinná pole.');
-        return;
-      }
+
       const contentEntries: ContentEntry[] = [];
       for (const key of Object.keys(defaultConfig)) {
         for (const l of enabledLangs) {
@@ -139,13 +122,10 @@ export default function PageContentEdit() {
       }
       await apiPut('/api/v1/admin/content', { entries: contentEntries });
       setBaseline({ ...entries });
-      const now = new Date();
-      setLastSavedAt(now);
-      setSaveNotice('Uloženo');
+      setLastSavedAt(new Date());
       setToast('Vše uloženo');
       setRecentlySaved(true);
       setTimeout(() => setRecentlySaved(false), 10_000);
-      dispatchBrandingRefresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Chyba při ukládání');
     } finally {
@@ -156,51 +136,31 @@ export default function PageContentEdit() {
   const handleDiscard = () => {
     setEntries({ ...baseline });
     setError('');
-    setSaveNotice('');
-  };
-
-  const handleImageSelect = (key: string) => (item: { url: string | null; path: string }) => {
-    const url =
-      item.url ??
-      (item.path ? `${import.meta.env.VITE_SUPABASE_URL ?? ''}/storage/v1/object/public/media/${item.path}` : '');
-    setValue(key, lang, url ?? '');
-    setMediaPickerKey(null);
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-24 text-gray-500 text-sm">Načítání…</div>
-    );
+    return <div className="flex items-center justify-center py-24 text-gray-500 text-sm">Načítání…</div>;
   }
-
-  const pathLabel = pageDef.slug === '' ? '/' : `/${pageDef.slug}`;
 
   return (
     <div>
       <Toast message={toast} show={toast.length > 0} onClose={() => setToast('')} />
       <nav className="text-sm text-gray-500 mb-3" aria-label="Drobečková navigace">
-        <Link to="/" className="hover:text-gray-700">
-          Stránky
+        <Link to="/metadata" className="hover:text-gray-700">
+          Nastavení webu
         </Link>
         <span className="mx-2 text-gray-300">/</span>
-        <span className="text-gray-900 font-medium">{pageDef.label}</span>
+        <span className="text-gray-900 font-medium">Kontakt a firma</span>
       </nav>
 
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-2xl font-semibold text-gray-900 tracking-tight">{pageDef.label}</h1>
-          <p className="text-sm text-gray-500 mt-1 font-mono">{pathLabel}</p>
+          <h1 className="text-2xl font-semibold text-gray-900 tracking-tight">Kontakt a firma</h1>
+          <p className="text-sm text-gray-500 mt-1 max-w-xl">
+            Údaje, které platí pro celý web (např. ve footeru nebo v kontaktní sekci).
+          </p>
         </div>
         <div className="flex flex-wrap items-center gap-2 sm:shrink-0">
-          <button
-            type="button"
-            onClick={() => setSimpleView((v) => !v)}
-            className="px-3 py-2 text-sm font-medium border border-gray-200 rounded-md text-gray-700 bg-white hover:bg-gray-50"
-            aria-pressed={simpleView}
-            title="Zjednoduší zobrazení formuláře (méně upozornění)"
-          >
-            {simpleView ? 'Zobrazit upozornění' : 'Skrýt upozornění'}
-          </button>
           <div className="inline-flex rounded-md border border-gray-200 bg-white p-0.5 shadow-sm">
             {enabledLangs.map((l) => (
               <button
@@ -215,12 +175,6 @@ export default function PageContentEdit() {
               </button>
             ))}
           </div>
-          <Link
-            to="/"
-            className="px-4 py-2 text-sm font-medium border border-gray-200 rounded-md text-gray-700 bg-white hover:bg-gray-50"
-          >
-            Zpět na seznam
-          </Link>
           <button
             type="button"
             onClick={handleSave}
@@ -233,22 +187,77 @@ export default function PageContentEdit() {
       </div>
 
       {error && (
-        <div className="mb-6 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">{error}</div>
+        <div className="mb-6 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+          {error}
+        </div>
       )}
 
       <div className="space-y-5">
-        <PageContentFields
-          pageId={pageId}
-          fields={pageDef.fields}
-          lang={lang}
-          enabledLangs={enabledLangs}
-          showFieldTranslationBadges={!simpleView && showTranslationBadges}
-          entries={entries}
-          fieldErrors={fieldErrors}
-          entryKey={entryKey}
-          setValue={setValue}
-          setMediaPickerKey={setMediaPickerKey}
-        />
+        {sections.map(([sectionTitle, fields]) => (
+          <section
+            key={sectionTitle}
+            className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden"
+          >
+            <div className="px-5 py-3 border-b border-gray-100 bg-gray-50/80">
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-600">{sectionTitle}</h2>
+            </div>
+            <div className="p-5 space-y-5">
+              {fields.map(([key, field]) => {
+                const fieldType = field?.type ?? 'text';
+                const value = getValue(key, lang);
+                const label = fieldLabel(field, key);
+
+                const help = field.helpText?.trim();
+
+                if (fieldType === 'textarea') {
+                  return (
+                    <div key={key}>
+                      <label className="block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1.5">
+                        {label}
+                      </label>
+                      {help ? <p className="text-xs text-gray-500 mb-2">{help}</p> : null}
+                      <textarea
+                        value={value}
+                        onChange={(e) => setValue(key, lang, e.target.value)}
+                        rows={4}
+                        placeholder={field.placeholder}
+                        maxLength={field.maxLength}
+                        className={inputClass}
+                      />
+                    </div>
+                  );
+                }
+
+                return (
+                  <div key={key}>
+                    <label className="block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1.5">
+                      {label}
+                      {field.advanced ? (
+                        <span className="ml-2 inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-semibold tracking-wide text-gray-600">
+                          Pokročilé
+                        </span>
+                      ) : null}
+                    </label>
+                    {help ? <p className="text-xs text-gray-500 mb-2">{help}</p> : null}
+                    <input
+                      type="text"
+                      value={value}
+                      onChange={(e) => setValue(key, lang, e.target.value)}
+                      placeholder={field.placeholder}
+                      maxLength={field.maxLength}
+                      className={`${inputClass} max-w-xl`}
+                    />
+                    {field.recommendedMaxLength ? (
+                      <p className="text-xs text-gray-500 mt-1">
+                        Doporučeno max. {field.recommendedMaxLength} znaků
+                      </p>
+                    ) : null}
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        ))}
       </div>
 
       <div className="h-20" />
@@ -258,32 +267,19 @@ export default function PageContentEdit() {
           lastSavedAt ? (
             <>
               Naposledy uloženo <time dateTime={lastSavedAt.toISOString()}>{formatSavedAt(lastSavedAt)}</time>
-              {isDirty ? <span className="ml-2 text-amber-700">• Nepublikované změny</span> : null}
-              {saveNotice ? (
+              {recentlySaved ? (
                 <span className="ml-2 text-emerald-700 font-medium" aria-live="polite">
-                  • {saveNotice}
+                  • Vše uloženo
                 </span>
               ) : null}
+              {isDirty ? <span className="ml-2 text-amber-700">• Neuložené změny</span> : null}
             </>
           ) : (
-            <>
-              {isDirty ? 'Máte neuložené změny' : 'Beze změn'}
-              {saveNotice ? (
-                <span className="ml-2 text-emerald-700 font-medium" aria-live="polite">
-                  • {saveNotice}
-                </span>
-              ) : null}
-            </>
+            <>{isDirty ? 'Máte neuložené změny' : 'Beze změn'}</>
           )
         }
         right={
           <>
-            <Link
-              to="/"
-              className="px-4 py-2 text-sm font-medium border border-gray-200 rounded-md text-gray-700 bg-white hover:bg-gray-50 shadow-sm"
-            >
-              Zpět na seznam
-            </Link>
             <button
               type="button"
               onClick={handleDiscard}
@@ -307,13 +303,7 @@ export default function PageContentEdit() {
           </>
         }
       />
-
-      {mediaPickerKey && (
-        <MediaPicker
-          onSelect={handleImageSelect(mediaPickerKey)}
-          onClose={() => setMediaPickerKey(null)}
-        />
-      )}
     </div>
   );
 }
+

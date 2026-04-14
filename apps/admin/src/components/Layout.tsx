@@ -108,6 +108,9 @@ export default function Layout() {
         : 'border-transparent text-gray-500 hover:bg-gray-50 hover:text-gray-800'
     }`;
 
+  const navSectionTitleClass =
+    'px-3 pt-5 pb-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-gray-400';
+
   return (
     <div className="min-h-screen flex bg-[#f5f5f5]">
       <aside className="w-[220px] shrink-0 bg-white border-r border-gray-200 flex flex-col">
@@ -120,27 +123,33 @@ export default function Layout() {
             </div>
           )}
         </div>
-        <nav className="flex-1 py-5 px-3 space-y-1">
-          <NavLink
-            to="/"
-            className={({ isActive }) =>
-              navItemClass(isActive || pathname.startsWith('/page/'))
-            }
-          >
-            Stránky
-          </NavLink>
-          <NavLink
-            to="/metadata"
-            className={({ isActive }) => navItemClass(isActive)}
-          >
-            Metadata webu
-          </NavLink>
-          <NavLink
-            to="/media"
-            className={({ isActive }) => navItemClass(isActive)}
-          >
-            Knihovna médií
-          </NavLink>
+        <nav className="flex-1 pb-5">
+          <div className={navSectionTitleClass}>Obsah</div>
+          <div className="px-3 space-y-1">
+            <NavLink
+              to="/"
+              className={({ isActive }) => navItemClass(isActive || pathname.startsWith('/page/'))}
+            >
+              Stránky
+            </NavLink>
+          </div>
+
+          <div className={navSectionTitleClass}>Média</div>
+          <div className="px-3 space-y-1">
+            <NavLink to="/media" className={({ isActive }) => navItemClass(isActive)}>
+              Knihovna médií
+            </NavLink>
+          </div>
+
+          <div className={navSectionTitleClass}>Nastavení webu</div>
+          <div className="px-3 space-y-1">
+            <NavLink to="/metadata" className={({ isActive }) => navItemClass(isActive)}>
+              Základní nastavení
+            </NavLink>
+            <NavLink to="/settings/contact" className={({ isActive }) => navItemClass(isActive)}>
+              Kontakt a firma
+            </NavLink>
+          </div>
         </nav>
       </aside>
 
