@@ -10,6 +10,7 @@ import {
 import PageContentFields from '../components/PageContentFields';
 import MediaPicker from '../components/MediaPicker';
 import { dispatchBrandingRefresh } from '../lib/branding';
+import { getSectionNavStructure, sectionAnchorId, type SectionNavNode } from '../lib/pageFieldSections';
 import { parseEnabledLangs, parseShowTranslationBadges } from '../lib/languages';
 import StickyActionBar from '../components/StickyActionBar';
 import Toast from '../components/Toast';
@@ -174,81 +175,153 @@ export default function PageContentEdit() {
   }
 
   const pathLabel = pageDef.slug === '' ? '/' : `/${pageDef.slug}`;
+  const sectionNav = getSectionNavStructure(pageDef.fields);
+
+  const scrollToSection = (sectionTitle: string) => {
+    const id = sectionAnchorId(pageId, sectionTitle);
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  const sectionNavClassName =
+    'text-left text-[11px] font-semibold uppercase tracking-[0.12em] text-gray-700 opacity-70 transition-opacity duration-150 hover:opacity-100 focus:opacity-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/30 rounded-sm';
+
+  const sectionNavChildClassName = `${sectionNavClassName} text-[10px] tracking-[0.1em]`;
+
+  const renderSectionNavNodes = (nodes: SectionNavNode[]) =>
+    nodes.map((node, idx) =>
+      node.type === 'single' ? (
+        <button
+          key={node.sectionTitle}
+          type="button"
+          onClick={() => scrollToSection(node.sectionTitle)}
+          className={sectionNavClassName}
+        >
+          {node.sectionTitle.toUpperCase()}
+        </button>
+      ) : (
+        <div key={`nav-group-${idx}`} className="flex flex-col gap-1">
+          <button
+            type="button"
+            onClick={() => scrollToSection(node.primarySection)}
+            className={sectionNavClassName}
+          >
+            {node.groupLabel.toUpperCase()}
+          </button>
+          {node.children.length > 0 ? (
+            <div className="ml-0.5 mt-0.5 flex flex-col gap-1 border-l border-gray-300/80 pl-2.5">
+              {node.children.map((c) => (
+                <button
+                  key={c.sectionTitle}
+                  type="button"
+                  onClick={() => scrollToSection(c.sectionTitle)}
+                  className={sectionNavChildClassName}
+                >
+                  {c.navLabel.toUpperCase()}
+                </button>
+              ))}
+            </div>
+          ) : null}
+        </div>
+      )
+    );
 
   return (
     <div>
       <Toast message={toast} show={toast.length > 0} onClose={() => setToast('')} />
-      <nav className="text-sm text-gray-500 mb-3" aria-label="Drobečková navigace">
-        <Link to="/" className="hover:text-gray-700">
-          Stránky
-        </Link>
-        <span className="mx-2 text-gray-300">/</span>
-        <span className="text-gray-900 font-medium">{pageDef.label}</span>
-      </nav>
+      <div className="flex w-full flex-col gap-6 lg:flex-row lg:items-start lg:gap-4">
+        {sectionNav.length > 0 ? (
+          <>
+            <nav
+              className="flex flex-col gap-2 border-b border-gray-100 pb-4 lg:hidden"
+              aria-label="Sekce na stránce"
+            >
+              {renderSectionNavNodes(sectionNav)}
+            </nav>
+            <nav
+              className="sticky top-14 z-10 hidden w-[9.25rem] shrink-0 flex-col gap-1.5 self-start [backface-visibility:hidden] lg:flex"
+              aria-label="Sekce na stránce"
+            >
+              {renderSectionNavNodes(sectionNav)}
+            </nav>
+          </>
+        ) : null}
 
-      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-8">
-        <div>
-          <h1 className="text-2xl font-semibold text-gray-900 tracking-tight">{pageDef.label}</h1>
-          <p className="text-sm text-gray-500 mt-1 font-mono">{pathLabel}</p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2 sm:shrink-0">
-          <button
-            type="button"
-            onClick={() => setSimpleView((v) => !v)}
-            className="px-3 py-2 text-sm font-medium border border-gray-200 rounded-md text-gray-700 bg-white hover:bg-gray-50"
-            aria-pressed={simpleView}
-            title="Zjednoduší zobrazení formuláře (méně upozornění)"
-          >
-            {simpleView ? 'Zobrazit upozornění' : 'Skrýt upozornění'}
-          </button>
-          <div className="inline-flex rounded-md border border-gray-200 bg-white p-0.5 shadow-sm">
-            {enabledLangs.map((l) => (
+        <div className="flex min-w-0 flex-1 justify-center">
+          <div className="w-full max-w-6xl">
+          <nav className="mb-3 text-sm text-gray-500" aria-label="Drobečková navigace">
+            <Link to="/" className="hover:text-gray-700">
+              Stránky
+            </Link>
+            <span className="mx-2 text-gray-300">/</span>
+            <span className="font-medium text-gray-900">{pageDef.label}</span>
+          </nav>
+
+          <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <h1 className="text-2xl font-semibold tracking-tight text-gray-900">{pageDef.label}</h1>
+              <p className="mt-1 font-mono text-sm text-gray-500">{pathLabel}</p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2 sm:shrink-0">
               <button
-                key={l}
                 type="button"
-                onClick={() => setLang(l)}
-                className={`px-3 py-1.5 text-sm font-medium rounded ${
-                  lang === l ? 'bg-blue-600 text-white shadow-sm' : 'text-gray-600 hover:bg-gray-50'
-                }`}
+                onClick={() => setSimpleView((v) => !v)}
+                className="rounded-md border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                aria-pressed={simpleView}
+                title="Zjednoduší zobrazení formuláře (méně upozornění)"
               >
-                {l.toUpperCase()}
+                {simpleView ? 'Zobrazit upozornění' : 'Skrýt upozornění'}
               </button>
-            ))}
+              <div className="inline-flex rounded-md border border-gray-200 bg-white p-0.5 shadow-sm">
+                {enabledLangs.map((l) => (
+                  <button
+                    key={l}
+                    type="button"
+                    onClick={() => setLang(l)}
+                    className={`rounded px-3 py-1.5 text-sm font-medium ${
+                      lang === l ? 'bg-blue-600 text-white shadow-sm' : 'text-gray-600 hover:bg-gray-50'
+                    }`}
+                  >
+                    {l.toUpperCase()}
+                  </button>
+                ))}
+              </div>
+              <Link
+                to="/"
+                className="rounded-md border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+              >
+                Zpět na seznam
+              </Link>
+              <button
+                type="button"
+                onClick={handleSave}
+                disabled={saving || !isDirty}
+                className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {saving ? 'Ukládání…' : 'Uložit'}
+              </button>
+            </div>
           </div>
-          <Link
-            to="/"
-            className="px-4 py-2 text-sm font-medium border border-gray-200 rounded-md text-gray-700 bg-white hover:bg-gray-50"
-          >
-            Zpět na seznam
-          </Link>
-          <button
-            type="button"
-            onClick={handleSave}
-            disabled={saving || !isDirty}
-            className="px-4 py-2 text-sm font-medium bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
-          >
-            {saving ? 'Ukládání…' : 'Uložit'}
-          </button>
+
+          {error ? (
+            <div className="mb-6 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">{error}</div>
+          ) : null}
+
+          <div className="space-y-5">
+            <PageContentFields
+              pageId={pageId}
+              fields={pageDef.fields}
+              lang={lang}
+              enabledLangs={enabledLangs}
+              showFieldTranslationBadges={!simpleView && showTranslationBadges}
+              entries={entries}
+              fieldErrors={fieldErrors}
+              entryKey={entryKey}
+              setValue={setValue}
+              setMediaPickerKey={setMediaPickerKey}
+            />
+          </div>
+          </div>
         </div>
-      </div>
-
-      {error && (
-        <div className="mb-6 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">{error}</div>
-      )}
-
-      <div className="space-y-5">
-        <PageContentFields
-          pageId={pageId}
-          fields={pageDef.fields}
-          lang={lang}
-          enabledLangs={enabledLangs}
-          showFieldTranslationBadges={!simpleView && showTranslationBadges}
-          entries={entries}
-          fieldErrors={fieldErrors}
-          entryKey={entryKey}
-          setValue={setValue}
-          setMediaPickerKey={setMediaPickerKey}
-        />
       </div>
 
       <div className="h-20" />

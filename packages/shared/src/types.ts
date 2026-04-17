@@ -4,7 +4,11 @@
 
 export interface ContentField {
   label: string;
-  type?: 'text' | 'textarea' | 'image';
+  type?: 'text' | 'textarea' | 'image' | 'choice';
+  /**
+   * Pro `type: 'choice'` — hodnoty ukládané do obsahu (např. `dual`, `single`).
+   */
+  choices?: Array<{ value: string; label: string }>;
   /** If true, at least one language must have a non-empty value (admin validates on save). */
   required?: boolean;
   /**

@@ -143,7 +143,7 @@ export default function SettingsContact() {
   }
 
   return (
-    <div>
+    <div className="mx-auto w-full max-w-6xl">
       <Toast message={toast} show={toast.length > 0} onClose={() => setToast('')} />
       <nav className="text-sm text-gray-500 mb-3" aria-label="Drobečková navigace">
         <Link to="/metadata" className="hover:text-gray-700">

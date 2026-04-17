@@ -112,8 +112,8 @@ export default function Layout() {
     'px-3 pt-5 pb-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-gray-400';
 
   return (
-    <div className="min-h-screen flex bg-[#f5f5f5]">
-      <aside className="w-[220px] shrink-0 bg-white border-r border-gray-200 flex flex-col">
+    <div className="min-h-screen flex items-start bg-[#f5f5f5]">
+      <aside className="sticky top-0 z-30 flex h-screen w-[220px] shrink-0 flex-col overflow-y-auto border-r border-gray-200 bg-white">
         <div className="px-5 py-5 border-b border-gray-200">
           {logoUrl ? (
             <BrandMark logoUrl={logoUrl} siteName={siteName} />
@@ -153,8 +153,8 @@ export default function Layout() {
         </nav>
       </aside>
 
-      <div className="flex-1 flex flex-col min-w-0 min-h-screen">
-        <header className="h-14 shrink-0 bg-white border-b border-gray-200 px-4 md:px-6 flex items-center justify-end gap-4">
+      <div className="flex min-w-0 flex-1 flex-col">
+        <header className="sticky top-0 z-20 flex h-14 shrink-0 items-center justify-end gap-4 border-b border-gray-200 bg-white px-4 md:px-6">
           <div className="flex items-center gap-3 shrink-0">
             <span
               className="hidden md:inline max-w-[180px] truncate text-sm text-gray-500"
@@ -178,8 +178,8 @@ export default function Layout() {
           </div>
         </header>
 
-        <main className="flex-1 overflow-auto bg-white">
-          <div className="max-w-6xl mx-auto px-6 md:px-10 py-8">
+        <main className="min-h-0 flex-1 bg-white">
+          <div className="w-full px-3 py-8 pb-28 pr-5 md:px-4 md:pr-8 lg:pl-3 lg:pr-10">
             <Outlet />
           </div>
         </main>

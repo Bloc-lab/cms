@@ -46,7 +46,7 @@ export default function SitePages() {
   const showingTo = Math.min(total, (safeIndex + 1) * PAGE_SIZE);
 
   return (
-    <div>
+    <div className="mx-auto w-full max-w-6xl">
       <nav className="text-sm text-gray-500 mb-3" aria-label="Drobečková navigace">
         <span className="text-gray-900 font-medium">Stránky webu</span>
       </nav>

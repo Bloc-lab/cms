@@ -5,5 +5,7 @@
 @layer base {
   html {
     @apply antialiased text-gray-900;
+    /* Zabrání horizontálnímu „poskočení“ při objevení svislého scrollbaru */
+    scrollbar-gutter: stable;
   }
 }

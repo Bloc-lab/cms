@@ -1,5 +1,6 @@
 import { storageKey as makeStorageKey, type ContentConfig, type ContentField } from '@nase-cms/shared';
 import { PRIMARY_LANG } from '../lib/languages';
+import { sectionAnchorId } from '../lib/pageFieldSections';
 
 const inputClass =
   'w-full px-3 py-2 border border-gray-200 rounded-md text-sm bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/25 focus:border-blue-500';
@@ -61,7 +62,8 @@ export default function PageContentFields({
         return (
           <section
             key={sectionTitle}
-            className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden"
+            id={sectionAnchorId(pageId, sectionTitle)}
+            className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden scroll-mt-28"
           >
             <div className="px-5 py-3 border-b border-gray-100 bg-gray-50/80 flex items-center justify-between gap-4">
               <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-600">{sectionTitle}</h2>
@@ -103,6 +105,48 @@ export default function PageContentFields({
                       Chybí jiná jazyková verze
                     </span>
                   ) : null;
+
+                if (fieldType === 'choice') {
+                  const choices = field.choices?.length ? field.choices : [];
+                  return (
+                    <div key={fieldKey}>
+                      <label className="block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1.5">
+                        {label}
+                        {labelSuffix}
+                      </label>
+                      {help ? <p className="text-xs text-gray-500 mb-2">{help}</p> : null}
+                      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+                        {choices.map((opt) => {
+                          const selected = value === opt.value;
+                          return (
+                            <button
+                              key={opt.value}
+                              type="button"
+                              onClick={() => setValue(sk, lang, opt.value)}
+                              className={`rounded-lg border px-4 py-2.5 text-left text-sm font-medium transition ${
+                                selected
+                                  ? 'border-blue-600 bg-blue-50 text-blue-900 shadow-sm'
+                                  : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
+                              } ${error ? 'border-red-300' : ''}`}
+                            >
+                              {opt.label}
+                            </button>
+                          );
+                        })}
+                      </div>
+                      {error ? <p className="text-xs text-red-700 mt-1">{error}</p> : null}
+                      {canCopyFromPrimaryToCurrent ? (
+                        <button
+                          type="button"
+                          onClick={() => setValue(sk, lang, primaryValue)}
+                          className="mt-2 text-xs font-semibold text-blue-600 hover:text-blue-800"
+                        >
+                          Zkopírovat z {PRIMARY_LANG.toUpperCase()}
+                        </button>
+                      ) : null}
+                    </div>
+                  );
+                }
 
                 if (fieldType === 'textarea') {
                   return (

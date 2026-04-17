@@ -175,6 +175,7 @@ export default function MediaLibrary() {
 
   return (
     <div
+      className="mx-auto w-full max-w-6xl"
       onClick={() => {
         if (activeMenuId) setActiveMenuId(null);
       }}
