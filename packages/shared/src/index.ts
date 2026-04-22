@@ -123,14 +123,12 @@ export const siteSettingsConfig: ContentConfig = {
     type: 'text',
     helpText: 'Nepovinné.',
     section: 'Firma',
-    advanced: true,
   },
   'company.dic': {
     label: 'DIČ',
     type: 'text',
     helpText: 'Nepovinné.',
     section: 'Firma',
-    advanced: true,
   },
 };
 
