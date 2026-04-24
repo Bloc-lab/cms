@@ -7,6 +7,9 @@ import { adminMediaRoutes } from './routes/admin/media.js';
 import { adminContentRoutes } from './routes/admin/content.js';
 import { adminPagesRoutes } from './routes/admin/pages.js';
 import { publicSiteInfoRoutes } from './routes/public/site-info.js';
+import { publicSiteSettingsRoutes } from './routes/public/site-settings.js';
+import { publicLeadRoutes } from './routes/public/lead.js';
+import { adminSiteSettingsRoutes } from './routes/admin/site-settings.js';
 
 const app = Fastify({ logger: true });
 
@@ -15,9 +18,12 @@ const PORT = parseInt(process.env.PORT ?? '3000', 10);
 await app.register(tenantPlugin);
 await app.register(contentPagesRoutes);
 await app.register(publicSiteInfoRoutes);
+await app.register(publicSiteSettingsRoutes);
+await app.register(publicLeadRoutes);
 await app.register(adminMediaRoutes);
 await app.register(adminContentRoutes);
 await app.register(adminPagesRoutes);
+await app.register(adminSiteSettingsRoutes);
 
 // Health check (no tenant required)
 app.get('/health', async () => {

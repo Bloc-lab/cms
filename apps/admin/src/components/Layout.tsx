@@ -146,6 +146,9 @@ export default function Layout() {
             <NavLink to="/metadata" className={({ isActive }) => navItemClass(isActive)}>
               Základní nastavení
             </NavLink>
+            <NavLink to="/settings/template" className={({ isActive }) => navItemClass(isActive)}>
+              Šablona / Vzhled
+            </NavLink>
             <NavLink to="/settings/contact" className={({ isActive }) => navItemClass(isActive)}>
               Kontakt a firma
             </NavLink>

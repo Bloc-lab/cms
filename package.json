@@ -16,6 +16,10 @@
     "start": "npm run start -w @nase-cms/backend",
     "typecheck": "npm run typecheck -w @nase-cms/backend",
     "hash-api-key": "node scripts/hash-api-key.mjs",
-    "seed:content": "npm run seed:content -w @nase-cms/backend"
+    "seed:content": "npm run seed:content -w @nase-cms/backend",
+    "db:init": "supabase init",
+    "db:link": "supabase link",
+    "db:push": "supabase db push",
+    "db:status": "supabase status"
   }
 }
