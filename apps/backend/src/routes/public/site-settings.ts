@@ -15,7 +15,7 @@ export async function publicSiteSettingsRoutes(app: FastifyInstance) {
     const { data: row, error } = await supabaseAdmin
       .from('site_settings')
       .select(
-        'template_id, theme_primary, theme_secondary1, theme_secondary2, cta_variant, cta_phone_label, cta_email_label, cta_submit_label, cta_success_message'
+        'template_id, theme_primary, theme_secondary1, theme_secondary2, cta_variant, cta_submit_label, cta_success_message, cta_form_layout'
       )
       .eq('tenant_id', tenantId)
       .maybeSingle();
@@ -47,10 +47,9 @@ export async function publicSiteSettingsRoutes(app: FastifyInstance) {
         theme_secondary1: string | null;
         theme_secondary2: string | null;
         cta_variant: string | null;
-        cta_phone_label: string | null;
-        cta_email_label: string | null;
         cta_submit_label: string | null;
         cta_success_message: string | null;
+        cta_form_layout?: string | null;
       })
     );
   });

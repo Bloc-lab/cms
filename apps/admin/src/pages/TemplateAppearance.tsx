@@ -11,15 +11,6 @@ type SiteSettingsPublic = {
     secondary1: string;
     secondary2?: string;
   };
-  cta: {
-    variant: 'buttons' | 'form';
-    buttons?: { phoneLabel?: string; emailLabel?: string };
-    form?: { submitLabel?: string; successMessage?: string };
-  };
-  lead?: {
-    notificationEmail?: string;
-    formspreeUrl?: string;
-  };
 };
 
 const inputClass =
@@ -68,7 +59,6 @@ export default function TemplateAppearance() {
   const [value, setValue] = useState<SiteSettingsPublic>({
     templateId: 'redus',
     theme: { primary: '#2c4ab1', secondary1: '#5a4fcf', secondary2: '' },
-    cta: { variant: 'buttons', buttons: { phoneLabel: '', emailLabel: '' } },
   });
 
   const isDirty = useMemo(() => JSON.stringify(value) !== JSON.stringify(baseline), [value, baseline]);
@@ -85,21 +75,6 @@ export default function TemplateAppearance() {
             primary: safeColor(data.theme?.primary ?? '', '#2c4ab1'),
             secondary1: safeColor(data.theme?.secondary1 ?? '', '#5a4fcf'),
             secondary2: data.theme?.secondary2 ? safeColor(data.theme.secondary2, '#000000') : '',
-          },
-          cta: {
-            variant: data.cta?.variant === 'form' ? 'form' : 'buttons',
-            buttons: {
-              phoneLabel: data.cta?.buttons?.phoneLabel ?? '',
-              emailLabel: data.cta?.buttons?.emailLabel ?? '',
-            },
-            form: {
-              submitLabel: data.cta?.form?.submitLabel ?? '',
-              successMessage: data.cta?.form?.successMessage ?? '',
-            },
-          },
-          lead: {
-            notificationEmail: data.lead?.notificationEmail ?? '',
-            formspreeUrl: data.lead?.formspreeUrl ?? '',
           },
         };
         setValue(normalized);
@@ -120,7 +95,9 @@ export default function TemplateAppearance() {
     setSaving(true);
     setError('');
     try {
-      const payload: SiteSettingsPublic = {
+      const existing = await apiGet<any>('/api/v1/admin/site-settings');
+      const merged = {
+        ...existing,
         templateId: value.templateId?.trim() || undefined,
         theme: {
           primary: safeColor(value.theme.primary, '#2c4ab1'),
@@ -129,28 +106,9 @@ export default function TemplateAppearance() {
             ? { secondary2: safeColor(value.theme.secondary2, '#000000') }
             : {}),
         },
-        cta: value.cta.variant === 'form'
-          ? {
-              variant: 'form',
-              form: {
-                submitLabel: value.cta.form?.submitLabel?.trim() || undefined,
-                successMessage: value.cta.form?.successMessage?.trim() || undefined,
-              },
-            }
-          : {
-              variant: 'buttons',
-              buttons: {
-                phoneLabel: value.cta.buttons?.phoneLabel?.trim() || undefined,
-                emailLabel: value.cta.buttons?.emailLabel?.trim() || undefined,
-              },
-            },
-        lead: {
-          notificationEmail: value.lead?.notificationEmail?.trim() || undefined,
-          formspreeUrl: value.lead?.formspreeUrl?.trim() || undefined,
-        },
       };
 
-      await apiPut('/api/v1/admin/site-settings', payload);
+      await apiPut('/api/v1/admin/site-settings', merged);
       setBaseline(JSON.parse(JSON.stringify(value)) as SiteSettingsPublic);
       setLastSavedAt(new Date());
       setToast('Vše uloženo');
@@ -186,7 +144,7 @@ export default function TemplateAppearance() {
         <div>
           <h1 className="text-2xl font-semibold text-gray-900 tracking-tight">Šablona / Vzhled</h1>
           <p className="text-sm text-gray-500 mt-1 max-w-xl">
-            Veřejná nastavení pro šablony (barvy a CTA). Změny se projeví okamžitě přes public endpoint.
+            Veřejná nastavení pro šablony (barvy). Změny se projeví okamžitě přes public endpoint.
           </p>
         </div>
         <div className="flex items-center gap-2 sm:shrink-0">
@@ -282,157 +240,6 @@ export default function TemplateAppearance() {
               </div>
             );
           })}
-        </div>
-      </section>
-
-      <section className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
-        <div className="px-5 py-3 border-b border-gray-100 bg-gray-50/80">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-600">CTA</h2>
-        </div>
-        <div className="p-5 space-y-5">
-          <div className="max-w-md">
-            <label className="block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1.5">
-              Varianta
-            </label>
-            <select
-              value={value.cta.variant}
-              onChange={(e) =>
-                setValue((p) => ({
-                  ...p,
-                  cta: { ...p.cta, variant: e.target.value === 'form' ? 'form' : 'buttons' },
-                }))
-              }
-              className={selectClass}
-            >
-              <option value="buttons">Tlačítka (telefon / e‑mail)</option>
-              <option value="form">Formulář</option>
-            </select>
-          </div>
-
-          {value.cta.variant === 'buttons' ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              <div className="max-w-md">
-                <label className="block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1.5">
-                  Phone label
-                </label>
-                <input
-                  type="text"
-                  value={value.cta.buttons?.phoneLabel ?? ''}
-                  onChange={(e) =>
-                    setValue((p) => ({
-                      ...p,
-                      cta: { ...p.cta, buttons: { ...(p.cta.buttons ?? {}), phoneLabel: e.target.value } },
-                    }))
-                  }
-                  placeholder="Zavolat"
-                  className={inputClass}
-                />
-              </div>
-              <div className="max-w-md">
-                <label className="block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1.5">
-                  Email label
-                </label>
-                <input
-                  type="text"
-                  value={value.cta.buttons?.emailLabel ?? ''}
-                  onChange={(e) =>
-                    setValue((p) => ({
-                      ...p,
-                      cta: { ...p.cta, buttons: { ...(p.cta.buttons ?? {}), emailLabel: e.target.value } },
-                    }))
-                  }
-                  placeholder="Napsat e‑mail"
-                  className={inputClass}
-                />
-              </div>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              <div className="max-w-md">
-                <label className="block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1.5">
-                  Submit label
-                </label>
-                <input
-                  type="text"
-                  value={value.cta.form?.submitLabel ?? ''}
-                  onChange={(e) =>
-                    setValue((p) => ({
-                      ...p,
-                      cta: { ...p.cta, form: { ...(p.cta.form ?? {}), submitLabel: e.target.value } },
-                    }))
-                  }
-                  placeholder="Odeslat"
-                  className={inputClass}
-                />
-              </div>
-              <div className="max-w-md">
-                <label className="block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1.5">
-                  Success message
-                </label>
-                <input
-                  type="text"
-                  value={value.cta.form?.successMessage ?? ''}
-                  onChange={(e) =>
-                    setValue((p) => ({
-                      ...p,
-                      cta: { ...p.cta, form: { ...(p.cta.form ?? {}), successMessage: e.target.value } },
-                    }))
-                  }
-                  placeholder="Děkujeme, ozveme se co nejdříve."
-                  className={inputClass}
-                />
-              </div>
-            </div>
-          )}
-        </div>
-      </section>
-
-      <section className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden mt-6">
-        <div className="px-5 py-3 border-b border-gray-100 bg-gray-50/80">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-600">Leady (CTA formulář)</h2>
-        </div>
-        <div className="p-5 space-y-4">
-          <div className="max-w-xl">
-            <label className="block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1.5">
-              Notifikační e‑mail (pro tento web)
-            </label>
-            <input
-              type="email"
-              value={value.lead?.notificationEmail ?? ''}
-              onChange={(e) =>
-                setValue((p) => ({
-                  ...p,
-                  lead: { ...(p.lead ?? {}), notificationEmail: e.target.value },
-                }))
-              }
-              placeholder="např. info@domena.cz"
-              className={inputClass}
-            />
-            <p className="text-xs text-gray-500 mt-1">
-              Pokud je vyplněno a backend má nakonfigurovaný mailer, přijde notifikace při odeslání formuláře.
-            </p>
-          </div>
-
-          <div className="max-w-xl">
-            <label className="block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1.5">
-              Formspree URL (pro tento web)
-            </label>
-            <input
-              type="url"
-              value={value.lead?.formspreeUrl ?? ''}
-              onChange={(e) =>
-                setValue((p) => ({
-                  ...p,
-                  lead: { ...(p.lead ?? {}), formspreeUrl: e.target.value },
-                }))
-              }
-              placeholder="https://formspree.io/f/xxxxxxx"
-              className={inputClass}
-            />
-            <p className="text-xs text-gray-500 mt-1">
-              Když je vyplněno, backend po uložení leadu odešle payload také do Formspree (per‑web formulář).
-            </p>
-          </div>
         </div>
       </section>
 

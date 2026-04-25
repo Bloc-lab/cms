@@ -8,6 +8,7 @@ export const REDUS_PUBLIC_DEFAULTS: Record<string, string> = {
   'admin.siteName': 'REDUS',
   'admin.tagline': '\u00da\u010cETN\u00cd A DA\u0148OV\u00c1 KANCEL\u00c1\u0158',
 
+  'hero.enabled': 'show',
   'hero.badge': 'Vaše finance v bezpečných rukou od roku 2003',
   'hero.title': 'Profesionální účetnictví a daňová řešení pro váš růst',
   'hero.titleAccent': 'účetnictví',
@@ -19,6 +20,7 @@ export const REDUS_PUBLIC_DEFAULTS: Record<string, string> = {
   'hero.ctaPrimary': 'Nezávazná konzultace zdarma',
   'hero.ctaSecondary': 'Naše služby',
 
+  'services.enabled': 'show',
   'services.sectionTitle': 'Komplexní služby pro vaše podnikání',
   'services.sectionDesc':
     'Od vedení účetnictví přes daňová přiznání až po strategické poradenství — vše pod jednou střechou.',
@@ -35,6 +37,7 @@ export const REDUS_PUBLIC_DEFAULTS: Record<string, string> = {
   'services.4.desc':
     'Strategické konzultace při změnách ve firmě, investicích nebo restrukturalizacích.',
 
+  'why.enabled': 'show',
   'why.title': 'Proč si vybrat REDUS?',
   'why.text':
     'Působíme na trhu dlouhodobě a kombinujeme odborné know-how s lidským přístupem ke každému klientovi.',
@@ -49,10 +52,24 @@ export const REDUS_PUBLIC_DEFAULTS: Record<string, string> = {
   'why.image2':
     'https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=800&q=80',
 
+  'pricing.enabled': 'show',
+  'tax.enabled': 'show',
+  'cta.enabled': 'show',
   'cta.title': 'Připraveni optimalizovat své účetnictví?',
   'cta.desc': 'Domluvte si nezávaznou úvodní konzultaci — rádi vám ukážeme, jak můžeme pomoci.',
   'cta.btnPhone': '',
   'cta.btnEmail': 'Napište nám e-mail',
+
+  'cta.form.badge': 'Nezávazně',
+  'cta.form.title': 'Domluvme si úvodní konzultaci',
+  'cta.form.lead': 'Vyplňte krátký formulář a ozveme se vám co nejdříve.',
+  'cta.form.bullet1': 'Odpověď do 24 hodin',
+  'cta.form.bullet2': 'Nezávazně a zdarma',
+  'cta.form.bullet3': 'Individuální přístup',
+  'cta.form.nameLabel': 'Jméno',
+  'cta.form.phoneLabel': 'Telefon',
+  'cta.form.emailLabel': 'E-mail',
+  'cta.form.messageLabel': 'Zpráva',
 
   'pricing.title': 'Ceník',
   'pricing.teaser':

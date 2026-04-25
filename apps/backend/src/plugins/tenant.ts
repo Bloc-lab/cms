@@ -18,12 +18,29 @@ async function tenantPlugin(app: FastifyInstance) {
 
     if (url.startsWith('/api/v1/public/')) {
       const host = request.headers.host ?? '';
-      const result = await resolveTenantBySubdomain(host);
-      request.log.info({ host, publicRoute: true, result: result.ok ? 'ok' : result }, 'Tenant resolution');
-      if (!result.ok) {
-        return reply.status(result.status).send({ error: result.message });
+      const byHost = await resolveTenantBySubdomain(host);
+      if (byHost.ok) {
+        request.tenantId = byHost.tenantId;
+        request.tenantSource = 'public';
+        return;
       }
-      request.tenantId = result.tenantId;
+
+      // Fallback for public endpoints when web uses API key (no tenant subdomain).
+      const raw = request.headers['x-api-key'];
+      const apiKey = Array.isArray(raw) ? raw[0] : raw;
+      const byKey = await resolveTenantByApiKey(typeof apiKey === 'string' ? apiKey : undefined);
+
+      const chosen = byKey.ok ? byKey : byHost;
+      request.log.info(
+        { host, publicRoute: true, byHost: byHost.ok ? 'ok' : byHost, byKey: byKey.ok ? 'ok' : byKey },
+        'Tenant resolution'
+      );
+
+      if (!chosen.ok) {
+        return reply.status(chosen.status).send({ error: chosen.message });
+      }
+
+      request.tenantId = chosen.tenantId;
       request.tenantSource = 'public';
       return;
     }

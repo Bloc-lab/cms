@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, Navigate, useParams } from 'react-router-dom';
 import { apiGet, apiPut } from '../lib/api';
 import {
@@ -20,6 +20,17 @@ interface ContentEntry {
   lang: string;
   value: string;
 }
+
+type AdminSiteSettings = {
+  templateId?: string;
+  theme: { primary: string; secondary1: string; secondary2?: string };
+  cta: {
+    variant: 'buttons' | 'form';
+    buttons?: { phoneLabel?: string; emailLabel?: string };
+    form?: { submitLabel?: string; successMessage?: string; layout?: 'center' | 'split' };
+  };
+  lead?: { notificationEmail?: string; formspreeUrl?: string };
+};
 
 function formatSavedAt(d: Date): string {
   return d.toLocaleString('cs-CZ', {
@@ -47,12 +58,14 @@ export default function PageContentEdit() {
   const [simpleView, setSimpleView] = useState<boolean>(false);
   const [toast, setToast] = useState('');
   const [recentlySaved, setRecentlySaved] = useState(false);
+  const [siteSettings, setSiteSettings] = useState<AdminSiteSettings | null>(null);
+  const [baselineSiteSettings, setBaselineSiteSettings] = useState<AdminSiteSettings | null>(null);
 
   const entryKey = (key: string, l: string) => `${key}:${l}`;
   const enabledLangs = parseEnabledLangs(entries);
   const showTranslationBadges = parseShowTranslationBadges(entries);
 
-  const isDirty = (() => {
+  const isContentDirty = (() => {
     for (const [fieldKey] of Object.entries(pageDef?.fields ?? {})) {
       const sk = storageKey(pageId ?? '', fieldKey);
       for (const l of enabledLangs) {
@@ -62,6 +75,14 @@ export default function PageContentEdit() {
     }
     return false;
   })();
+
+  const isSiteSettingsDirty = useMemo(() => {
+    if (pageId !== 'main') return false;
+    if (!siteSettings || !baselineSiteSettings) return false;
+    return JSON.stringify(siteSettings) !== JSON.stringify(baselineSiteSettings);
+  }, [pageId, siteSettings, baselineSiteSettings]);
+
+  const isDirty = isContentDirty || isSiteSettingsDirty;
 
   useEffect(() => {
     if (!pageDef) return;
@@ -89,6 +110,25 @@ export default function PageContentEdit() {
         setBaseline({ ...map });
         setError('');
         setSaveNotice('');
+
+        // Load tenant-level settings only for main page (CTA lives there)
+        if (pageId === 'main') {
+          try {
+            const s = await apiGet<AdminSiteSettings>('/api/v1/admin/site-settings');
+            if (!cancelled) {
+              setSiteSettings(s);
+              setBaselineSiteSettings(JSON.parse(JSON.stringify(s)) as AdminSiteSettings);
+            }
+          } catch {
+            if (!cancelled) {
+              setSiteSettings(null);
+              setBaselineSiteSettings(null);
+            }
+          }
+        } else {
+          setSiteSettings(null);
+          setBaselineSiteSettings(null);
+        }
       } catch (err) {
         if (!cancelled) setError(err instanceof Error ? err.message : 'Chyba při načítání');
       } finally {
@@ -139,6 +179,13 @@ export default function PageContentEdit() {
         }
       }
       await apiPut('/api/v1/admin/content', { entries: contentEntries });
+
+      // Save site settings together with content (main page only)
+      if (pageId === 'main' && siteSettings) {
+        await apiPut('/api/v1/admin/site-settings', siteSettings);
+        setBaselineSiteSettings(JSON.parse(JSON.stringify(siteSettings)) as AdminSiteSettings);
+      }
+
       setBaseline({ ...entries });
       const now = new Date();
       setLastSavedAt(now);
@@ -156,6 +203,9 @@ export default function PageContentEdit() {
 
   const handleDiscard = () => {
     setEntries({ ...baseline });
+    if (baselineSiteSettings) {
+      setSiteSettings(JSON.parse(JSON.stringify(baselineSiteSettings)) as AdminSiteSettings);
+    }
     setError('');
     setSaveNotice('');
   };
@@ -318,6 +368,8 @@ export default function PageContentEdit() {
               entryKey={entryKey}
               setValue={setValue}
               setMediaPickerKey={setMediaPickerKey}
+              siteSettings={siteSettings}
+              setSiteSettings={setSiteSettings}
             />
           </div>
           </div>

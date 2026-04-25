@@ -10,7 +10,7 @@ export type SiteSettingsPublic = {
   cta: {
     variant: 'buttons' | 'form';
     buttons?: { phoneLabel?: string; emailLabel?: string };
-    form?: { submitLabel?: string; successMessage?: string };
+    form?: { submitLabel?: string; successMessage?: string; layout?: 'center' | 'split' };
   };
 };
 
@@ -105,13 +105,12 @@ export function validateAndNormalizePublicSiteSettings(input: unknown): { ok: tr
   const variant = (typeof ctaRaw.variant === 'string' ? ctaRaw.variant.trim() : '') as string;
   const variantNormalized: 'buttons' | 'form' = variant === 'form' ? 'form' : 'buttons';
 
-  const buttonsRaw = (ctaRaw.buttons ?? {}) as Record<string, unknown>;
   const formRaw = (ctaRaw.form ?? {}) as Record<string, unknown>;
 
-  const phoneLabel = cleanOptionalText(buttonsRaw.phoneLabel, 100);
-  const emailLabel = cleanOptionalText(buttonsRaw.emailLabel, 100);
   const submitLabel = cleanOptionalText(formRaw.submitLabel, 100);
   const successMessage = cleanOptionalText(formRaw.successMessage, 300);
+  const layoutRaw = typeof formRaw.layout === 'string' ? formRaw.layout.trim().toLowerCase() : '';
+  const layout: 'center' | 'split' | undefined = layoutRaw === 'split' ? 'split' : layoutRaw === 'center' ? 'center' : undefined;
 
   const out: SiteSettingsPublic = {
     ...(templateId ? { templateId } : {}),
@@ -123,8 +122,14 @@ export function validateAndNormalizePublicSiteSettings(input: unknown): { ok: tr
     cta: {
       variant: variantNormalized,
       ...(variantNormalized === 'buttons'
-        ? { buttons: { ...(phoneLabel ? { phoneLabel } : {}), ...(emailLabel ? { emailLabel } : {}) } }
-        : { form: { ...(submitLabel ? { submitLabel } : {}), ...(successMessage ? { successMessage } : {}) } }),
+        ? { buttons: {} }
+        : {
+            form: {
+              ...(submitLabel ? { submitLabel } : {}),
+              ...(successMessage ? { successMessage } : {}),
+              ...(layout ? { layout } : {}),
+            },
+          }),
     },
   };
 
@@ -166,10 +171,9 @@ export function toPublicSiteSettings(row: {
   theme_secondary1: string | null;
   theme_secondary2: string | null;
   cta_variant: string | null;
-  cta_phone_label: string | null;
-  cta_email_label: string | null;
   cta_submit_label: string | null;
   cta_success_message: string | null;
+  cta_form_layout?: string | null;
 }): SiteSettingsPublic {
   const fromDb: SiteSettingsPublic = {
     ...(row.template_id ? { templateId: row.template_id } : {}),
@@ -184,14 +188,12 @@ export function toPublicSiteSettings(row: {
   };
 
   if (fromDb.cta.variant === 'buttons') {
-    fromDb.cta.buttons = {
-      ...(row.cta_phone_label ? { phoneLabel: row.cta_phone_label } : {}),
-      ...(row.cta_email_label ? { emailLabel: row.cta_email_label } : {}),
-    };
+    fromDb.cta.buttons = {};
   } else {
     fromDb.cta.form = {
       ...(row.cta_submit_label ? { submitLabel: row.cta_submit_label } : {}),
       ...(row.cta_success_message ? { successMessage: row.cta_success_message } : {}),
+      ...(row.cta_form_layout === 'split' ? { layout: 'split' } : row.cta_form_layout === 'center' ? { layout: 'center' } : {}),
     };
   }
 
@@ -206,10 +208,9 @@ export function toAdminSiteSettings(row: {
   theme_secondary1: string | null;
   theme_secondary2: string | null;
   cta_variant: string | null;
-  cta_phone_label: string | null;
-  cta_email_label: string | null;
   cta_submit_label: string | null;
   cta_success_message: string | null;
+  cta_form_layout?: string | null;
   lead_notification_email?: string | null;
   lead_formspree_url?: string | null;
 }): SiteSettingsAdmin {
@@ -232,6 +233,7 @@ export function toDbSiteSettings(input: SiteSettingsPublic): {
   cta_email_label: string | null;
   cta_submit_label: string | null;
   cta_success_message: string | null;
+  cta_form_layout: 'center' | 'split';
   updated_at: string;
 } {
   const normalized = validateAndNormalizePublicSiteSettings(input);
@@ -243,10 +245,11 @@ export function toDbSiteSettings(input: SiteSettingsPublic): {
     theme_secondary1: v.theme.secondary1,
     theme_secondary2: v.theme.secondary2 ?? null,
     cta_variant: v.cta.variant,
-    cta_phone_label: v.cta.variant === 'buttons' ? (v.cta.buttons?.phoneLabel?.trim() ?? null) : null,
-    cta_email_label: v.cta.variant === 'buttons' ? (v.cta.buttons?.emailLabel?.trim() ?? null) : null,
+    cta_phone_label: null,
+    cta_email_label: null,
     cta_submit_label: v.cta.variant === 'form' ? (v.cta.form?.submitLabel?.trim() ?? null) : null,
     cta_success_message: v.cta.variant === 'form' ? (v.cta.form?.successMessage?.trim() ?? null) : null,
+    cta_form_layout: v.cta.variant === 'form' && v.cta.form?.layout === 'split' ? 'split' : 'center',
     updated_at: new Date().toISOString(),
   };
 }
