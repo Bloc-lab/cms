@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import Layout from './components/Layout';
+import PlatformLayout from './components/PlatformLayout';
 import Login from './pages/Login';
 import SitePages from './pages/SitePages';
 import Metadata from './pages/Metadata';
@@ -8,6 +9,8 @@ import MediaLibrary from './pages/MediaLibrary';
 import PageContentEdit from './pages/PageContentEdit';
 import SettingsContact from './pages/SettingsContact';
 import TemplateAppearance from './pages/TemplateAppearance';
+import DevTenants from './pages/DevTenants';
+import PlatformTenantDetail from './pages/PlatformTenantDetail';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -22,10 +25,33 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+function HomeRedirect() {
+  const host = window.location.host.toLowerCase();
+  if (host.startsWith('admin.localhost')) {
+    return <Navigate to="/platform/tenants" replace />;
+  }
+  return <SitePages />;
+}
+
 export default function App() {
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
+
+      <Route
+        path="/platform"
+        element={
+          <ProtectedRoute>
+            <PlatformLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<Navigate to="/platform/tenants" replace />} />
+        <Route path="tenants" element={<DevTenants />} />
+        <Route path="tenants/:tenantId" element={<Navigate to="overview" replace />} />
+        <Route path="tenants/:tenantId/:section" element={<PlatformTenantDetail />} />
+      </Route>
+
       <Route
         path="/"
         element={
@@ -34,7 +60,7 @@ export default function App() {
           </ProtectedRoute>
         }
       >
-        <Route index element={<SitePages />} />
+        <Route index element={<HomeRedirect />} />
         <Route path="content" element={<Navigate to="/" replace />} />
         <Route path="metadata" element={<Metadata />} />
         <Route path="settings/template" element={<TemplateAppearance />} />

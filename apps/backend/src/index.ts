@@ -10,6 +10,9 @@ import { publicSiteInfoRoutes } from './routes/public/site-info.js';
 import { publicSiteSettingsRoutes } from './routes/public/site-settings.js';
 import { publicLeadRoutes } from './routes/public/lead.js';
 import { adminSiteSettingsRoutes } from './routes/admin/site-settings.js';
+import { adminMeRoutes } from './routes/admin/me.js';
+import { devTenantsRoutes } from './routes/dev/tenants.js';
+import { platformTenantsRoutes } from './routes/platform/tenants.js';
 
 const app = Fastify({ logger: true });
 
@@ -24,6 +27,9 @@ await app.register(adminMediaRoutes);
 await app.register(adminContentRoutes);
 await app.register(adminPagesRoutes);
 await app.register(adminSiteSettingsRoutes);
+await app.register(adminMeRoutes);
+await app.register(devTenantsRoutes);
+await app.register(platformTenantsRoutes);
 
 // Health check (no tenant required)
 app.get('/health', async () => {

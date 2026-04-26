@@ -16,6 +16,13 @@ async function tenantPlugin(app: FastifyInstance) {
     const url = request.url;
     if (!url.startsWith('/api/v1/')) return;
 
+    // Platform (company) admin routes: no tenant resolution, just auth later in route handlers.
+    // These endpoints are meant to run on a special URL without tenant subdomain.
+    if (url.startsWith('/api/v1/platform/')) {
+      request.tenantSource = 'platform';
+      return;
+    }
+
     if (url.startsWith('/api/v1/public/')) {
       const host = request.headers.host ?? '';
       const byHost = await resolveTenantBySubdomain(host);

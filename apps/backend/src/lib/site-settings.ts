@@ -1,4 +1,4 @@
-export type TemplateId = 'redus' | 'template2' | 'template3' | (string & {});
+export type TemplateId = 'template1' | 'template2' | 'template3' | (string & {});
 
 export type SiteSettingsPublic = {
   templateId?: string;
@@ -22,7 +22,7 @@ export type SiteSettingsAdmin = SiteSettingsPublic & {
 };
 
 export const DEFAULT_PUBLIC_SITE_SETTINGS: SiteSettingsPublic = {
-  templateId: 'redus',
+  templateId: 'template1',
   theme: {
     primary: '#2c4ab1',
     secondary1: '#5a4fcf',

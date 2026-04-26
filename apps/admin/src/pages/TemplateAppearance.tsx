@@ -43,9 +43,9 @@ function formatSavedAt(d: Date): string {
 }
 
 const TEMPLATE_OPTIONS: Array<{ id: string; label: string }> = [
-  { id: 'redus', label: 'Redus' },
-  { id: 'template2', label: 'Template 2' },
-  { id: 'template3', label: 'Template 3' },
+  { id: 'template1', label: 'Šablona 1' },
+  { id: 'template2', label: 'Šablona 2' },
+  { id: 'template3', label: 'Šablona 3' },
 ];
 
 export default function TemplateAppearance() {
@@ -57,7 +57,7 @@ export default function TemplateAppearance() {
 
   const [baseline, setBaseline] = useState<SiteSettingsPublic | null>(null);
   const [value, setValue] = useState<SiteSettingsPublic>({
-    templateId: 'redus',
+    templateId: 'template1',
     theme: { primary: '#2c4ab1', secondary1: '#5a4fcf', secondary2: '' },
   });
 
@@ -70,7 +70,7 @@ export default function TemplateAppearance() {
         const data = await apiGet<SiteSettingsPublic>('/api/v1/admin/site-settings');
         if (cancelled) return;
         const normalized: SiteSettingsPublic = {
-          templateId: data.templateId ?? 'redus',
+          templateId: data.templateId ?? 'template1',
           theme: {
             primary: safeColor(data.theme?.primary ?? '', '#2c4ab1'),
             secondary1: safeColor(data.theme?.secondary1 ?? '', '#5a4fcf'),
