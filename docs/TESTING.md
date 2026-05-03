@@ -7,6 +7,7 @@
 2. **SQL Editor** → New query
 3. Zkopíruj a spusť `supabase/migrations/001_initial_schema.sql`
 4. Zkopíruj a spusť `supabase/migrations/002_media_bucket_and_metadata.sql`
+5. Spusť další migrace v číselném pořadí (`003`–`011`) podle potřeby. Pro **autosave konceptů a náhled** jsou nutné `010_content_and_site_settings_drafts.sql` a `011_content_preview_tokens.sql` (veřejný náhled přes `?previewToken=`).
 
 ### 1.2 Vytvoření uživatele
 1. **Authentication** → **Users** → **Add user** → **Create new user**
@@ -61,6 +62,8 @@ PORT=3000
 VITE_SUPABASE_URL=https://xxx.supabase.co
 VITE_SUPABASE_ANON_KEY=eyJ...
 VITE_API_URL=
+# Volitelné: základní URL veřejného webu pro tlačítko „Odkaz náhledu na web“ (celá URL se zkopíruje do schránky)
+# VITE_PUBLIC_SITE_URL=https://tvuj-web.cz
 ```
 
 ---
@@ -101,7 +104,10 @@ Očekávaný výstup: `Local: http://localhost:5173/`
 3. Přidej **Text** – napiš obsah v Markdownu
 4. Klikni **Uložit**
 
-### D) Média
+### G) Koncept (autosave) a náhled
+1. Uprav text na stránce v **Obsah webu** — po chvíli se v patičce objeví „Koncept uložen“.
+2. **Odkaz náhledu na web** v administraci zkopíruje URL s `?previewToken=…` pro zobrazení náhledu na frontendu (viz `docs/FRONTEND_PREVIEW_PROMPT.md`).
+3. **Publikovat změny** zapíše do živých tabulek; **Zrušit rozpracované** smaže koncept v DB a vrátí formulář k poslední publikované verzi.
 1. V menu klikni **Média**
 2. **+ Nahrát obrázek** – vyber JPEG/PNG
 3. Obrázek se zobrazí v gridu

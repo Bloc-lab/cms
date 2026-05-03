@@ -1,5 +1,17 @@
 const API_BASE = import.meta.env.VITE_API_URL ?? '';
 
+export class ApiRequestError extends Error {
+  readonly status: number;
+  readonly body: unknown;
+
+  constructor(status: number, message: string, body: unknown) {
+    super(message);
+    this.name = 'ApiRequestError';
+    this.status = status;
+    this.body = body;
+  }
+}
+
 async function getAuthHeaders(): Promise<HeadersInit> {
   const { data: { session } } = await import('../lib/supabase').then((m) => m.supabase.auth.getSession());
   const headers: Record<string, string> = {
@@ -12,19 +24,30 @@ async function getAuthHeaders(): Promise<HeadersInit> {
 }
 
 export async function api<T>(path: string, options?: RequestInit): Promise<T> {
-  const headers = await getAuthHeaders();
+  const headers = (await getAuthHeaders()) as Record<string, string>;
+  const method = (options?.method ?? 'GET').toUpperCase();
+  const merged: Record<string, string> = { ...headers, ...(options?.headers as Record<string, string>) };
+
+  const hasBody =
+    options?.body !== undefined && options?.body !== null && String(options.body).length > 0;
+  if (!hasBody && (method === 'GET' || method === 'HEAD' || method === 'DELETE')) {
+    delete merged['Content-Type'];
+  }
+
   const res = await fetch(`${API_BASE}${path}`, {
     ...options,
-    headers: { ...headers, ...options?.headers },
+    headers: merged,
   });
+  if (res.status === 204) return undefined as T;
   if (!res.ok) {
     const err = (await res.json().catch(() => ({ error: res.statusText }))) as {
       error?: string;
       detail?: string;
+      fieldErrors?: Record<string, string>;
     };
-    throw new Error(err.detail ?? err.error ?? res.statusText);
+    const message = err.detail ?? err.error ?? res.statusText;
+    throw new ApiRequestError(res.status, message, err);
   }
-  if (res.status === 204) return undefined as T;
   return res.json();
 }
 

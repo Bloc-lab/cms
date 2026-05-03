@@ -1,12 +1,15 @@
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
-import { legacyContentKeyToStorageKey, toPublicContentKey } from '@nase-cms/shared';
 import { supabaseAdmin } from '../../lib/supabase.js';
 import { getCached, setCached, cacheKey } from '../../lib/cache.js';
+import { rowsToPublicContentMap } from '../../lib/public-content-map.js';
+import { loadPreviewPayload } from '../../lib/preview-public-data.js';
+import { resolvePreviewTokenPageId } from '../../lib/preview-token.js';
 
 const DEFAULT_LANG = 'cs';
 
 interface ContentQuery {
   lang?: string;
+  previewToken?: string;
 }
 
 export async function contentPagesRoutes(app: FastifyInstance) {
@@ -19,6 +22,27 @@ export async function contentPagesRoutes(app: FastifyInstance) {
       }
 
       const lang = request.query.lang ?? DEFAULT_LANG;
+      const previewToken =
+        typeof request.query.previewToken === 'string' ? request.query.previewToken : undefined;
+
+      if (previewToken?.trim()) {
+        if (!supabaseAdmin) {
+          return reply.status(500).send({ error: 'Server misconfiguration' });
+        }
+        const pageId = await resolvePreviewTokenPageId(tenantId, previewToken);
+        if (!pageId) {
+          return reply.status(403).send({ error: 'Invalid or expired preview token' });
+        }
+        try {
+          const payload = await loadPreviewPayload(tenantId, pageId, lang);
+          return reply.send(payload.content);
+        } catch (e) {
+          request.log.error({ err: e }, 'public content preview');
+          const msg = e instanceof Error ? e.message : 'Preview failed';
+          return reply.status(500).send({ error: 'Failed to load preview content', detail: msg });
+        }
+      }
+
       const cacheKeyStr = cacheKey(tenantId, 'content', lang);
       const cached = getCached<Record<string, string>>(cacheKeyStr);
       if (cached) {
@@ -40,25 +64,7 @@ export async function contentPagesRoutes(app: FastifyInstance) {
         return reply.status(500).send({ error: 'Failed to fetch content' });
       }
 
-      const rows = [...(entries ?? [])].sort((a, b) => {
-        const aNew = !a.key.startsWith('admin.') && a.key.includes(':');
-        const bNew = !b.key.startsWith('admin.') && b.key.includes(':');
-        if (aNew && !bNew) return 1;
-        if (!aNew && bNew) return -1;
-        return 0;
-      });
-
-      const response: Record<string, string> = {};
-      for (const e of rows) {
-        const raw = e.key;
-        if (raw.startsWith('admin.')) {
-          response[raw] = e.value ?? '';
-          continue;
-        }
-        const normalized = legacyContentKeyToStorageKey(raw);
-        const publicKey = toPublicContentKey(normalized);
-        response[publicKey] = e.value ?? '';
-      }
+      const response = rowsToPublicContentMap(entries ?? []);
 
       setCached(cacheKeyStr, response);
       return reply.send(response);
