@@ -65,10 +65,15 @@ function tenantCmsUrl(subdomain: string): string {
 }
 
 const TEMPLATE_OPTIONS: Array<{ id: string; label: string }> = [
-  { id: 'template1', label: 'Šablona 1' },
-  { id: 'template2', label: 'Šablona 2' },
-  { id: 'template3', label: 'Šablona 3' },
+  { id: 'template1', label: 'MONO' },
+  { id: 'template2', label: 'FLOW' },
+  { id: 'template3', label: 'BLOCK' },
 ];
+
+function templateLabel(id: string | null | undefined): string {
+  const key = (id ?? '').trim();
+  return TEMPLATE_OPTIONS.find((o) => o.id === key)?.label ?? (key || '—');
+}
 
 export default function PlatformTenantDetail() {
   const { tenantId } = useParams();
@@ -83,6 +88,7 @@ export default function PlatformTenantDetail() {
   const [data, setData] = useState<TenantDetailResponse | null>(null);
 
   const [editName, setEditName] = useState('');
+  const [editSubdomain, setEditSubdomain] = useState('');
   const [editStatus, setEditStatus] = useState<'active' | 'paused' | 'deleted'>('active');
   const [editNotes, setEditNotes] = useState('');
 
@@ -108,6 +114,7 @@ export default function PlatformTenantDetail() {
       const res = await apiGet<TenantDetailResponse>(`/api/v1/platform/tenants/${id}`);
       setData(res);
       setEditName(res.tenant.name ?? '');
+      setEditSubdomain(res.tenant.admin_subdomain ?? '');
       setEditStatus((res.tenant.status as any) === 'paused' ? 'paused' : (res.tenant.status as any) === 'deleted' ? 'deleted' : 'active');
       setEditNotes((res.tenant.internal_notes ?? '') as string);
       setTemplateId(res.template.id ?? 'template1');
@@ -163,6 +170,7 @@ export default function PlatformTenantDetail() {
     try {
       await apiPatch(`/api/v1/platform/tenants/${id}`, {
         name: editName,
+        adminSubdomain: editSubdomain,
         status: editStatus,
         internal_notes: editNotes,
       });
@@ -534,7 +542,7 @@ export default function PlatformTenantDetail() {
                         Uložit
                       </button>
                       <div className="text-xs text-gray-500">
-                        Aktuálně v DB: {(data.template.id ?? '—')} {data.template.version ? `v${data.template.version}` : ''}
+                        Aktuálně v DB: {templateLabel(data.template.id)} {data.template.version ? `v${data.template.version}` : ''}
                       </div>
                     </div>
                   </div>
@@ -595,6 +603,17 @@ export default function PlatformTenantDetail() {
                         <option value="deleted">deleted</option>
                       </select>
                     </div>
+                  </div>
+
+                  <div className="max-w-md">
+                    <label className="block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1.5">Admin subdoména</label>
+                    <input
+                      value={editSubdomain}
+                      onChange={(e) => setEditSubdomain(e.target.value)}
+                      className={`${inputClass} font-mono`}
+                      placeholder="např. kadernictvi"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Změní URL tenanta (routing podle subdomény). Formát: 2–50 znaků, `a-z`, `0-9`, `-`.</p>
                   </div>
 
                   <div>

@@ -29,6 +29,17 @@ function fmtDate(iso: string): string {
   }
 }
 
+const TEMPLATE_LABELS: Record<string, string> = {
+  template1: 'MONO',
+  template2: 'FLOW',
+  template3: 'BLOCK',
+};
+
+function templateLabel(id: string | null | undefined): string {
+  const key = (id ?? '').trim();
+  return TEMPLATE_LABELS[key] ?? (key || '—');
+}
+
 export default function DevTenants() {
   const navigate = useNavigate();
   const [q, setQ] = useState('');
@@ -240,7 +251,7 @@ export default function DevTenants() {
                         <td className="py-3 pr-4 font-mono text-xs text-gray-700">{t.admin_subdomain}</td>
                         <td className="py-3 pr-4 text-gray-700">{t.custom_domain ?? '—'}</td>
                         <td className="py-3 pr-4 text-gray-700">
-                          {(t.template?.id ?? '—')}{' '}
+                          {templateLabel(t.template?.id ?? null)}{' '}
                           {t.template?.version != null ? <span className="text-xs text-gray-500">v{t.template.version}</span> : null}
                         </td>
                         <td className="py-3 pr-4 text-gray-700">{t.status ?? '—'}</td>

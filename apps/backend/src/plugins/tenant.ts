@@ -1,6 +1,6 @@
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import fp from 'fastify-plugin';
-import { resolveTenantBySubdomain, resolveTenantByApiKey } from '../lib/tenant.js';
+import { resolveTenantByHost, resolveTenantByApiKey } from '../lib/tenant.js';
 import { verifyAdminAuth } from '../lib/auth.js';
 
 /**
@@ -16,6 +16,10 @@ async function tenantPlugin(app: FastifyInstance) {
     const url = request.url;
     if (!url.startsWith('/api/v1/')) return;
 
+    const forwardedHostRaw = request.headers['x-forwarded-host'];
+    const forwardedHost = Array.isArray(forwardedHostRaw) ? forwardedHostRaw[0] : forwardedHostRaw;
+    const host = (typeof forwardedHost === 'string' && forwardedHost.trim()) ? forwardedHost : (request.headers.host ?? '');
+
     // Platform (company) admin routes: no tenant resolution, just auth later in route handlers.
     // These endpoints are meant to run on a special URL without tenant subdomain.
     if (url.startsWith('/api/v1/platform/')) {
@@ -24,8 +28,7 @@ async function tenantPlugin(app: FastifyInstance) {
     }
 
     if (url.startsWith('/api/v1/public/')) {
-      const host = request.headers.host ?? '';
-      const byHost = await resolveTenantBySubdomain(host);
+      const byHost = await resolveTenantByHost(host, 'web');
       if (byHost.ok) {
         request.tenantId = byHost.tenantId;
         request.tenantSource = 'public';
@@ -53,8 +56,7 @@ async function tenantPlugin(app: FastifyInstance) {
     }
 
     if (url.startsWith('/api/v1/admin/')) {
-      const host = request.headers.host ?? '';
-      const result = await resolveTenantBySubdomain(host);
+      const result = await resolveTenantByHost(host, 'admin');
       request.log.info({ host, result: result.ok ? 'ok' : result }, 'Tenant resolution');
       if (!result.ok) {
         return reply.status(result.status).send({ error: result.message });

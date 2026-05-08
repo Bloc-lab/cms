@@ -328,7 +328,7 @@ export async function platformTenantsRoutes(app: FastifyInstance) {
 
   app.patch<{
     Params: { id: string };
-    Body: { name?: string; status?: 'active' | 'paused' | 'deleted'; internal_notes?: string | null };
+    Body: { name?: string; adminSubdomain?: string; status?: 'active' | 'paused' | 'deleted'; internal_notes?: string | null };
   }>('/api/v1/platform/tenants/:id', async (request, reply) => {
     const ok = await verifySuperAdmin(request, reply);
     if (!ok || !supabaseAdmin) return;
@@ -338,6 +338,13 @@ export async function platformTenantsRoutes(app: FastifyInstance) {
 
     const patch: any = { updated_at: new Date().toISOString() };
     if (typeof body.name === 'string') patch.name = body.name.trim();
+    if (typeof body.adminSubdomain === 'string') {
+      const next = body.adminSubdomain.trim().toLowerCase();
+      if (!next || !/^[a-z0-9-]{2,50}$/.test(next)) {
+        return reply.status(400).send({ error: 'adminSubdomain must be 2-50 chars: a-z, 0-9, hyphen' });
+      }
+      patch.admin_subdomain = next;
+    }
     if (body.status === 'active' || body.status === 'paused' || body.status === 'deleted') patch.status = body.status;
     if (body.internal_notes === null) patch.internal_notes = null;
     if (typeof body.internal_notes === 'string') patch.internal_notes = body.internal_notes;
@@ -348,7 +355,14 @@ export async function platformTenantsRoutes(app: FastifyInstance) {
       .eq('id', tenantId)
       .select('id,name,admin_subdomain,custom_domain,status,internal_notes,created_at,updated_at')
       .single();
-    if (error || !updated) return reply.status(404).send({ error: 'Tenant not found' });
+    if (error) {
+      const msg = (error as any)?.message ?? '';
+      if (/duplicate key value|unique constraint|tenants_admin_subdomain_key/i.test(msg)) {
+        return reply.status(409).send({ error: 'adminSubdomain already in use' });
+      }
+      return reply.status(500).send({ error: 'Failed to update tenant', detail: msg || 'Unknown error' });
+    }
+    if (!updated) return reply.status(404).send({ error: 'Tenant not found' });
 
     await supabaseAdmin.from('tenant_audit_log').insert({
       tenant_id: tenantId,

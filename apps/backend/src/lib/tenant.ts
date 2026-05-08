@@ -9,12 +9,18 @@ export type TenantResolution =
   | { ok: false; status: 404; message: string }
   | { ok: false; status: 500; message: string };
 
+export type TenantHostKind = 'web' | 'admin';
+
+function normalizeHost(host: string): string {
+  return host.toLowerCase().split(':')[0] ?? '';
+}
+
 /**
  * Resolve tenant from admin subdomain (e.g. kadernictvi.mojecms.cz → kadernictvi).
  */
 export async function resolveTenantBySubdomain(host: string): Promise<TenantResolution> {
   const baseDomain = ADMIN_BASE_DOMAIN.toLowerCase();
-  const hostLower = host.toLowerCase().split(':')[0]; // strip port
+  const hostLower = normalizeHost(host); // strip port
 
   let subdomain: string;
   if (hostLower.endsWith(`.${baseDomain}`)) {
@@ -44,6 +50,58 @@ export async function resolveTenantBySubdomain(host: string): Promise<TenantReso
   }
 
   return { ok: true, tenantId: data.id };
+}
+
+/**
+ * Resolve tenant from Host header.
+ *
+ * Order:
+ * 1) Exact match in tenant_domains.domain (custom domains)
+ * 2) Subdomain match via ADMIN_BASE_DOMAIN (e.g. redu s.mojecms.cz)
+ * 3) Optional legacy tenants.custom_domain exact match (fallback)
+ */
+export async function resolveTenantByHost(host: string, kind: TenantHostKind): Promise<TenantResolution> {
+  const hostLower = normalizeHost(host);
+  if (!hostLower) return { ok: false, status: 404, message: 'Unknown tenant' };
+
+  if (!supabaseAdmin) {
+    return { ok: false, status: 500, message: 'Server misconfiguration' };
+  }
+
+  // 1) tenant_domains (custom domains)
+  const { data: domainRow, error: domainErr } = await supabaseAdmin
+    .from('tenant_domains')
+    .select('tenant_id,type')
+    .eq('domain', hostLower)
+    .maybeSingle();
+
+  if (domainErr) {
+    return { ok: false, status: 500, message: 'Database error' };
+  }
+  if (domainRow?.tenant_id) {
+    // If kind mismatches, ignore (e.g. admin domain used for web)
+    if ((domainRow as any).type === kind) {
+      return { ok: true, tenantId: (domainRow as any).tenant_id as string };
+    }
+  }
+
+  // 2) subdomain routing
+  const bySub = await resolveTenantBySubdomain(hostLower);
+  if (bySub.ok) return bySub;
+
+  // 3) legacy custom_domain on tenants (optional)
+  const { data: legacyRow, error: legacyErr } = await supabaseAdmin
+    .from('tenants')
+    .select('id')
+    .eq('custom_domain', hostLower)
+    .maybeSingle();
+
+  if (legacyErr) {
+    return { ok: false, status: 500, message: 'Database error' };
+  }
+  if (legacyRow?.id) return { ok: true, tenantId: legacyRow.id };
+
+  return bySub;
 }
 
 /**

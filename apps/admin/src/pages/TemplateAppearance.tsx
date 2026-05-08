@@ -43,9 +43,9 @@ function formatSavedAt(d: Date): string {
 }
 
 const TEMPLATE_OPTIONS: Array<{ id: string; label: string }> = [
-  { id: 'template1', label: 'Šablona 1' },
-  { id: 'template2', label: 'Šablona 2' },
-  { id: 'template3', label: 'Šablona 3' },
+  { id: 'template1', label: 'MONO' },
+  { id: 'template2', label: 'FLOW' },
+  { id: 'template3', label: 'BLOCK' },
 ];
 
 export default function TemplateAppearance() {
