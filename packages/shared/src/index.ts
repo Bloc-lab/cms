@@ -5,7 +5,12 @@
  */
 
 export type { ContentField, ContentConfig } from './types.js';
-export { REDUS_PUBLIC_DEFAULTS, resolveRedusSeedValue } from './redus-public-defaults.js';
+export {
+  REDUS_PUBLIC_DEFAULTS_CS,
+  REDUS_PUBLIC_DEFAULTS_EN,
+  resolveRedusSeedValue,
+  resolveRedusSeedValueByLang,
+} from './redus-public-defaults.js';
 export {
   type SitePageDefinition,
   type SitePagesConfigMap,
@@ -72,6 +77,47 @@ export const metadataConfig: ContentConfig = {
  * aby se nezměnil kontrakt pro web.
  */
 export const siteSettingsConfig: ContentConfig = {
+  'nav.services': {
+    label: 'Menu – Služby (label)',
+    type: 'text',
+    helpText: 'Text položky v hlavním menu (odkaz na sekci Služby na homepage).',
+    section: 'Navigace',
+    recommendedMaxLength: 18,
+    maxLength: 40,
+  },
+  'nav.about': {
+    label: 'Menu – O nás (label)',
+    type: 'text',
+    helpText: 'Text položky v hlavním menu (odkaz na stránku „O nás“).',
+    section: 'Navigace',
+    recommendedMaxLength: 18,
+    maxLength: 40,
+  },
+  'nav.pricing': {
+    label: 'Menu – Ceník (label)',
+    type: 'text',
+    helpText: 'Text položky v hlavním menu (odkaz na sekci Ceník).',
+    section: 'Navigace',
+    recommendedMaxLength: 18,
+    maxLength: 40,
+  },
+  'nav.tax': {
+    label: 'Menu – Daňové poradenství (label)',
+    type: 'text',
+    helpText: 'Text položky v hlavním menu (odkaz na sekci Daňové poradenství).',
+    section: 'Navigace',
+    recommendedMaxLength: 28,
+    maxLength: 60,
+  },
+  'nav.ctaContact': {
+    label: 'Menu – CTA tlačítko (label)',
+    type: 'text',
+    helpText: 'Text akčního tlačítka vpravo (odkaz #kontakt).',
+    section: 'Navigace',
+    recommendedMaxLength: 22,
+    maxLength: 60,
+  },
+
   'main:contact.phone': {
     label: 'Telefon',
     type: 'text',
@@ -104,6 +150,62 @@ export const siteSettingsConfig: ContentConfig = {
     helpText: 'Zobrazí se ve footeru. Můžete používat více řádků.',
     section: 'Footer',
   },
+  'footer.headingContact': {
+    label: 'Footer – nadpis „Kontaktní údaje“',
+    type: 'text',
+    helpText: 'Nadpis sloupce s adresou/telefonem/email.',
+    section: 'Footer',
+    recommendedMaxLength: 24,
+    maxLength: 60,
+  },
+  'footer.headingBilling': {
+    label: 'Footer – nadpis „Fakturační údaje“',
+    type: 'text',
+    helpText: 'Nadpis sloupce s fakturačními údaji.',
+    section: 'Footer',
+    recommendedMaxLength: 24,
+    maxLength: 60,
+  },
+  'footer.linkedinHref': {
+    label: 'Footer – LinkedIn odkaz (URL)',
+    type: 'text',
+    helpText: 'URL profilu/firemní stránky. Prázdné = použije se výchozí.',
+    section: 'Footer',
+    maxLength: 500,
+    advanced: true,
+  },
+  'footer.linkPrivacyLabel': {
+    label: 'Footer – odkaz 1 (label)',
+    type: 'text',
+    helpText: 'Např. Ochrana soukromí / Privacy policy.',
+    section: 'Footer · odkazy',
+    recommendedMaxLength: 22,
+    maxLength: 60,
+  },
+  'footer.linkPrivacyHref': {
+    label: 'Footer – odkaz 1 (href)',
+    type: 'text',
+    helpText: 'Cesta nebo URL (např. /ochrana-soukromi).',
+    section: 'Footer · odkazy',
+    maxLength: 500,
+    advanced: true,
+  },
+  'footer.linkTermsLabel': {
+    label: 'Footer – odkaz 2 (label)',
+    type: 'text',
+    helpText: 'Např. Obchodní podmínky / Terms & conditions.',
+    section: 'Footer · odkazy',
+    recommendedMaxLength: 22,
+    maxLength: 60,
+  },
+  'footer.linkTermsHref': {
+    label: 'Footer – odkaz 2 (href)',
+    type: 'text',
+    helpText: 'Cesta nebo URL (např. /obchodni-podminky).',
+    section: 'Footer · odkazy',
+    maxLength: 500,
+    advanced: true,
+  },
   'footer.copyright': {
     label: 'Copyright',
     type: 'text',
@@ -111,6 +213,33 @@ export const siteSettingsConfig: ContentConfig = {
     section: 'Footer',
     recommendedMaxLength: 80,
     maxLength: 200,
+  },
+
+  'main:cta.form.submitLabel': {
+    label: 'CTA formulář – text tlačítka (odeslat)',
+    type: 'text',
+    helpText: 'Text na submit tlačítku ve formuláři.',
+    section: 'CTA · Formulář (UI)',
+    recommendedMaxLength: 18,
+    maxLength: 60,
+  },
+  'main:cta.form.sendingLabel': {
+    label: 'CTA formulář – text při odesílání',
+    type: 'text',
+    helpText: 'Text na tlačítku během odesílání.',
+    section: 'CTA · Formulář (UI)',
+    recommendedMaxLength: 18,
+    maxLength: 60,
+    advanced: true,
+  },
+  'main:cta.form.successMessage': {
+    label: 'CTA formulář – děkovná hláška po odeslání',
+    type: 'textarea',
+    helpText: 'Zobrazí se po úspěšném odeslání formuláře.',
+    section: 'CTA · Formulář (UI)',
+    recommendedMaxLength: 120,
+    maxLength: 400,
+    advanced: true,
   },
   'company.name': {
     label: 'Název firmy',

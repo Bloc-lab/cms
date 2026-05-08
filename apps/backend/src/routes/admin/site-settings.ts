@@ -18,7 +18,7 @@ export async function adminSiteSettingsRoutes(app: FastifyInstance) {
     const { data: row, error } = await supabaseAdmin
       .from('site_settings')
       .select(
-        'template_id, theme_primary, theme_secondary1, theme_secondary2, cta_variant, cta_submit_label, cta_success_message, cta_form_layout, lead_notification_email, lead_formspree_url'
+        'template_id, theme_primary, theme_secondary1, theme_secondary2, nav_json, cta_variant, cta_submit_label, cta_success_message, cta_form_layout, lead_notification_email, lead_formspree_url'
       )
       .eq('tenant_id', tenantId)
       .maybeSingle();

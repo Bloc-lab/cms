@@ -1,4 +1,4 @@
-import { defaultConfig, resolveRedusSeedValue } from '@nase-cms/shared';
+import { defaultConfig, resolveRedusSeedValueByLang } from '@nase-cms/shared';
 
 export type SeedPreset = 'lorem' | 'redus';
 
@@ -73,8 +73,8 @@ function presetValueForKey(key: string, field: (typeof defaultConfig)[string]): 
   return loremShort(maxLen);
 }
 
-export function resolveSeedValue(preset: SeedPreset, key: string): string {
-  if (preset === 'redus') return resolveRedusSeedValue(key);
+export function resolveSeedValue(preset: SeedPreset, key: string, lang: string): string {
+  if (preset === 'redus') return resolveRedusSeedValueByLang(key, lang);
   const field = defaultConfig[key];
   if (!field) return '';
   return presetValueForKey(key, field);

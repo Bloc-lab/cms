@@ -19,6 +19,13 @@ interface ContentEntry {
 type AdminSiteSettings = {
   templateId?: string;
   theme: { primary: string; secondary1: string; secondary2?: string };
+  nav?: {
+    items?: Array<
+      | { kind: 'section'; section: 'services' | 'pricing' | 'tax' | 'contact'; label?: string }
+      | { kind: 'route'; href: string; label?: string }
+    >;
+    cta?: { href?: string; label?: string };
+  };
   cta: {
     variant: 'buttons' | 'form';
     buttons?: { phoneLabel?: string; emailLabel?: string };

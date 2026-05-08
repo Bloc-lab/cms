@@ -514,7 +514,7 @@ export async function platformTenantsRoutes(app: FastifyInstance) {
     const candidateRows: Row[] = [];
     for (const lang of uniqueLangs) {
       for (const key of configKeys) {
-        const value = resolveSeedValue(preset, key);
+        const value = resolveSeedValue(preset, key, lang);
         candidateRows.push({ tenant_id: tenantId, key, lang, value, updated_at: now });
       }
     }

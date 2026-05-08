@@ -7,6 +7,13 @@ export type SiteSettingsPublic = {
     secondary1: string;
     secondary2?: string;
   };
+  nav?: {
+    items?: Array<
+      | { kind: 'section'; section: 'services' | 'pricing' | 'tax' | 'contact'; label?: string }
+      | { kind: 'route'; href: string; label?: string }
+    >;
+    cta?: { href?: string; label?: string };
+  };
   cta: {
     variant: 'buttons' | 'form';
     buttons?: { phoneLabel?: string; emailLabel?: string };
@@ -76,6 +83,63 @@ function cleanOptionalUrl(value: unknown, maxLen: number): string | undefined {
   }
 }
 
+function cleanOptionalHref(value: unknown, maxLen: number): string | undefined {
+  if (typeof value !== 'string') return undefined;
+  const v = clampLen(value.trim(), maxLen);
+  if (!v) return undefined;
+  if (v.startsWith('/') || v.startsWith('#')) return v;
+  return cleanOptionalUrl(v, maxLen);
+}
+
+function cleanNav(input: unknown): SiteSettingsPublic['nav'] | undefined {
+  if (!input || typeof input !== 'object' || Array.isArray(input)) return undefined;
+  const raw = input as Record<string, unknown>;
+  const out: NonNullable<SiteSettingsPublic['nav']> = {};
+
+  if (Array.isArray(raw.items)) {
+    const items: NonNullable<NonNullable<SiteSettingsPublic['nav']>['items']> = [];
+    for (const it of raw.items) {
+      if (!it || typeof it !== 'object' || Array.isArray(it)) continue;
+      const obj = it as Record<string, unknown>;
+      const kind = typeof obj.kind === 'string' ? obj.kind.trim() : '';
+      const label = cleanOptionalText(obj.label, 30);
+
+      if (kind === 'section') {
+        const section = typeof obj.section === 'string' ? obj.section.trim() : '';
+        if (
+          section === 'services' ||
+          section === 'pricing' ||
+          section === 'tax' ||
+          section === 'contact'
+        ) {
+          items.push({ kind: 'section', section, ...(label ? { label } : {}) });
+        }
+      } else if (kind === 'route') {
+        const href = cleanOptionalHref(obj.href, 300);
+        if (href) items.push({ kind: 'route', href, ...(label ? { label } : {}) });
+      }
+
+      if (items.length >= 8) break;
+    }
+    if (items.length) out.items = items;
+  }
+
+  const ctaRaw =
+    raw.cta && typeof raw.cta === 'object' && !Array.isArray(raw.cta)
+      ? (raw.cta as Record<string, unknown>)
+      : null;
+  const ctaHref = ctaRaw ? cleanOptionalHref(ctaRaw.href, 300) : undefined;
+  const ctaLabel = ctaRaw ? cleanOptionalText(ctaRaw.label, 30) : undefined;
+  if (ctaHref || ctaLabel) {
+    out.cta = {
+      ...(ctaHref ? { href: ctaHref } : {}),
+      ...(ctaLabel ? { label: ctaLabel } : {}),
+    };
+  }
+
+  return out.items || out.cta ? out : undefined;
+}
+
 function normalizeHexColor(input: unknown): string | undefined {
   if (typeof input !== 'string') return undefined;
   const v = input.trim();
@@ -112,6 +176,8 @@ export function validateAndNormalizePublicSiteSettings(input: unknown): { ok: tr
   const layoutRaw = typeof formRaw.layout === 'string' ? formRaw.layout.trim().toLowerCase() : '';
   const layout: 'center' | 'split' | undefined = layoutRaw === 'split' ? 'split' : layoutRaw === 'center' ? 'center' : undefined;
 
+  const nav = cleanNav(raw.nav);
+
   const out: SiteSettingsPublic = {
     ...(templateId ? { templateId } : {}),
     theme: {
@@ -119,6 +185,7 @@ export function validateAndNormalizePublicSiteSettings(input: unknown): { ok: tr
       secondary1,
       ...(secondary2 ? { secondary2 } : {}),
     },
+    ...(nav ? { nav } : {}),
     cta: {
       variant: variantNormalized,
       ...(variantNormalized === 'buttons'
@@ -170,6 +237,7 @@ export function toPublicSiteSettings(row: {
   theme_primary: string | null;
   theme_secondary1: string | null;
   theme_secondary2: string | null;
+  nav_json?: unknown;
   cta_variant: string | null;
   cta_submit_label: string | null;
   cta_success_message: string | null;
@@ -182,6 +250,7 @@ export function toPublicSiteSettings(row: {
       secondary1: row.theme_secondary1 ?? DEFAULT_PUBLIC_SITE_SETTINGS.theme.secondary1,
       ...(row.theme_secondary2 ? { secondary2: row.theme_secondary2 } : {}),
     },
+    ...(cleanNav(row.nav_json) ? { nav: cleanNav(row.nav_json) } : {}),
     cta: {
       variant: row.cta_variant === 'form' ? 'form' : 'buttons',
     },
@@ -207,6 +276,7 @@ export function toAdminSiteSettings(row: {
   theme_primary: string | null;
   theme_secondary1: string | null;
   theme_secondary2: string | null;
+  nav_json?: unknown;
   cta_variant: string | null;
   cta_submit_label: string | null;
   cta_success_message: string | null;
@@ -228,6 +298,7 @@ export function toDbSiteSettings(input: SiteSettingsPublic): {
   theme_primary: string;
   theme_secondary1: string;
   theme_secondary2: string | null;
+  nav_json: unknown;
   cta_variant: 'buttons' | 'form';
   cta_phone_label: string | null;
   cta_email_label: string | null;
@@ -244,6 +315,7 @@ export function toDbSiteSettings(input: SiteSettingsPublic): {
     theme_primary: v.theme.primary,
     theme_secondary1: v.theme.secondary1,
     theme_secondary2: v.theme.secondary2 ?? null,
+    nav_json: v.nav ? v.nav : {},
     cta_variant: v.cta.variant,
     cta_phone_label: null,
     cta_email_label: null,
