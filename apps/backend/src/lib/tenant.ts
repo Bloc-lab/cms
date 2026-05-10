@@ -16,6 +16,19 @@ function normalizeHost(host: string): string {
 }
 
 /**
+ * When the API is called with Host = the backend URL (e.g. *.onrender.com), tenant cannot be
+ * inferred from subdomain. Set BACKEND_SERVICE_HOST + BACKEND_SERVICE_TENANT_ID on the server to
+ * map that hostname to one tenant (single-tenant / PaaS demo).
+ */
+export function resolveTenantIdForServiceHost(host: string): string | null {
+  const configuredHost = process.env.BACKEND_SERVICE_HOST?.trim();
+  const tenantId = process.env.BACKEND_SERVICE_TENANT_ID?.trim();
+  if (!configuredHost || !tenantId) return null;
+  if (normalizeHost(host) !== normalizeHost(configuredHost)) return null;
+  return tenantId;
+}
+
+/**
  * Resolve tenant from admin subdomain (e.g. kadernictvi.mojecms.cz → kadernictvi).
  */
 export async function resolveTenantBySubdomain(host: string): Promise<TenantResolution> {

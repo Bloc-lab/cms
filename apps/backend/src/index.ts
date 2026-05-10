@@ -24,8 +24,41 @@ const corsOrigins = (process.env.CORS_ORIGINS ?? '')
   .split(',')
   .map((o) => o.trim())
   .filter(Boolean);
+
+function allowVercelPreviewOrigins(): boolean {
+  const v = process.env.CORS_ALLOW_VERCEL_PREVIEW?.trim().toLowerCase();
+  return v === '1' || v === 'true' || v === 'yes';
+}
+
+function isVercelAppOrigin(origin: string): boolean {
+  try {
+    const host = new URL(origin).hostname.toLowerCase();
+    return host === 'vercel.app' || host.endsWith('.vercel.app');
+  } catch {
+    return false;
+  }
+}
+
 await app.register(cors, {
-  origin: corsOrigins.length ? corsOrigins : true,
+  origin: (origin, cb) => {
+    if (!origin) {
+      cb(null, true);
+      return;
+    }
+    if (corsOrigins.length === 0) {
+      cb(null, true);
+      return;
+    }
+    if (corsOrigins.includes(origin)) {
+      cb(null, true);
+      return;
+    }
+    if (allowVercelPreviewOrigins() && isVercelAppOrigin(origin)) {
+      cb(null, true);
+      return;
+    }
+    cb(null, false);
+  },
   allowedHeaders: ['Authorization', 'Content-Type', 'X-Requested-With', 'X-API-KEY'],
 });
 
