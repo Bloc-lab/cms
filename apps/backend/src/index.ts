@@ -59,6 +59,7 @@ await app.register(cors, {
     }
     cb(null, false);
   },
+  methods: ['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Authorization', 'Content-Type', 'X-Requested-With', 'X-API-KEY'],
 });
 
