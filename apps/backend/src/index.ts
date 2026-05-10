@@ -1,4 +1,5 @@
 import './env.js';
+import cors from '@fastify/cors';
 import Fastify from 'fastify';
 import { supabase } from './lib/supabase.js';
 import tenantPlugin from './plugins/tenant.js';
@@ -18,6 +19,15 @@ import { platformTenantsRoutes } from './routes/platform/tenants.js';
 const app = Fastify({ logger: true });
 
 const PORT = parseInt(process.env.PORT ?? '3000', 10);
+
+const corsOrigins = (process.env.CORS_ORIGINS ?? '')
+  .split(',')
+  .map((o) => o.trim())
+  .filter(Boolean);
+await app.register(cors, {
+  origin: corsOrigins.length ? corsOrigins : true,
+  allowedHeaders: ['Authorization', 'Content-Type', 'X-Requested-With', 'X-API-KEY'],
+});
 
 await app.register(tenantPlugin);
 await app.register(contentPagesRoutes);
