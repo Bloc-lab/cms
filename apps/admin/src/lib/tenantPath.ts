@@ -32,6 +32,24 @@ export function needsPathTenantSlug(): boolean {
   return true;
 }
 
+/** Absolutní URL přihlášení CMS pro daného tenanta (z platformy `/platform/…`). */
+export function platformTenantCmsUrl(adminSubdomain: string): string {
+  const slug = adminSubdomain.trim().toLowerCase();
+  if (!slug || typeof window === 'undefined') {
+    return '/';
+  }
+
+  if (needsPathTenantSlug()) {
+    return `${window.location.origin}/t/${encodeURIComponent(slug)}/login`;
+  }
+
+  const platformHost = window.location.host;
+  const hostNoPort = platformHost.split(':')[0] ?? platformHost;
+  const port = platformHost.includes(':') ? platformHost.split(':')[1] : '';
+  const tenantHost = `${slug}.${hostNoPort}${port ? `:${port}` : ''}`;
+  return `${window.location.protocol}//${tenantHost}/`;
+}
+
 /** Prefix pro NavLink (/t/slug nebo ''). */
 export function tenantPathPrefix(): string {
   const s = slugFromTenantPath(window.location.pathname);

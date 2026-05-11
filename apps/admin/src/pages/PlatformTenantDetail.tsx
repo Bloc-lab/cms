@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, NavLink, useLocation, useNavigate, useParams } from 'react-router-dom';
 import Toast from '../components/Toast';
 import { apiDelete, apiGet, apiPost, apiPut, apiPatch } from '../lib/api';
+import { platformTenantCmsUrl } from '../lib/tenantPath';
 
 type Tenant = {
   id: string;
@@ -54,14 +55,6 @@ function fmtDate(iso: string): string {
   } catch {
     return iso;
   }
-}
-
-function tenantCmsUrl(subdomain: string): string {
-  const platformHost = window.location.host; // admin.localhost:5173
-  const hostNoPort = platformHost.split(':')[0] ?? platformHost;
-  const port = platformHost.includes(':') ? platformHost.split(':')[1] : '';
-  const tenantHost = `${subdomain}.${hostNoPort}${port ? `:${port}` : ''}`;
-  return `${window.location.protocol}//${tenantHost}/`;
 }
 
 const TEMPLATE_OPTIONS: Array<{ id: string; label: string }> = [
@@ -161,7 +154,10 @@ export default function PlatformTenantDetail() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [section, id]);
 
-  const cmsUrl = useMemo(() => (data ? tenantCmsUrl(data.tenant.admin_subdomain) : ''), [data]);
+  const cmsUrl = useMemo(
+    () => (data ? platformTenantCmsUrl(data.tenant.admin_subdomain) : ''),
+    [data]
+  );
 
   const saveOverview = async () => {
     if (!id) return;
