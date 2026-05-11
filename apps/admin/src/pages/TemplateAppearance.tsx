@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import Toast from '../components/Toast';
 import StickyActionBar from '../components/StickyActionBar';
 import { apiGet, apiPut } from '../lib/api';
+import { tenantHref } from '../lib/tenantPath';
 
 type SiteSettingsPublic = {
   templateId?: string;
@@ -133,7 +134,7 @@ export default function TemplateAppearance() {
       <Toast message={toast} show={toast.length > 0} onClose={() => setToast('')} />
 
       <nav className="text-sm text-gray-500 mb-3" aria-label="Drobečková navigace">
-        <Link to="/metadata" className="hover:text-gray-700">
+        <Link to={tenantHref('/metadata')} className="hover:text-gray-700">
           Nastavení webu
         </Link>
         <span className="mx-2 text-gray-300">/</span>

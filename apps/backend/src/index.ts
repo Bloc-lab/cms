@@ -60,7 +60,14 @@ await app.register(cors, {
     cb(null, false);
   },
   methods: ['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Authorization', 'Content-Type', 'X-Requested-With', 'X-API-KEY'],
+  allowedHeaders: [
+    'Authorization',
+    'Content-Type',
+    'X-Requested-With',
+    'X-API-KEY',
+    'X-Tenant-Host',
+    'X-Tenant-Subdomain',
+  ],
 });
 
 await app.register(tenantPlugin);

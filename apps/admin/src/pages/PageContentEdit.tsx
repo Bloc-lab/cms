@@ -9,6 +9,7 @@ import { getSectionNavStructure, sectionAnchorId, type SectionNavNode } from '..
 import { parseEnabledLangs, parseShowTranslationBadges } from '../lib/languages';
 import StickyActionBar from '../components/StickyActionBar';
 import Toast from '../components/Toast';
+import { tenantHref } from '../lib/tenantPath';
 
 interface ContentEntry {
   key: string;
@@ -243,7 +244,7 @@ export default function PageContentEdit() {
   }, [entries, siteSettings, isDirty, loading, saveDraftToServer]);
 
   if (!pageId || !pageDef) {
-    return <Navigate to="/" replace />;
+    return <Navigate to={tenantHref('/')} replace />;
   }
 
   const setValue = (key: string, l: string, value: string) => {
@@ -344,7 +345,7 @@ export default function PageContentEdit() {
         '/api/v1/admin/content-preview-token',
         { pageId }
       );
-      const base = (import.meta.env.VITE_PUBLIC_SITE_URL as string | undefined)?.trim().replace(/\/$/, '') ?? '';
+      const base = import.meta.env.VITE_PUBLIC_SITE_URL?.trim().replace(/\/$/, '') ?? '';
       const qs = new URLSearchParams({ previewToken: token, lang }).toString();
       const rel = pageDef.slug === '' ? `/?${qs}` : `/${pageDef.slug}?${qs}`;
       const url = base ? `${base}${rel}` : rel;
@@ -441,7 +442,7 @@ export default function PageContentEdit() {
         <div className="flex min-w-0 flex-1 justify-center">
           <div className="w-full max-w-6xl">
             <nav className="mb-3 text-sm text-gray-500" aria-label="Drobečková navigace">
-              <Link to="/" className="hover:text-gray-700">
+              <Link to={tenantHref('/')} className="hover:text-gray-700">
                 Stránky
               </Link>
               <span className="mx-2 text-gray-300">/</span>
@@ -482,7 +483,7 @@ export default function PageContentEdit() {
                   onClick={() => void handleCopyWebPreviewLink()}
                   disabled={publicPreviewBusy}
                   title={
-                    (import.meta.env.VITE_PUBLIC_SITE_URL as string | undefined)?.trim()
+                    import.meta.env.VITE_PUBLIC_SITE_URL?.trim()
                       ? 'Zkopíruje URL veřejného webu s platným náhledovým tokenem'
                       : 'Nastavte VITE_PUBLIC_SITE_URL pro celou URL (jinak zkopíruje jen cestu s parametry)'
                   }
@@ -491,7 +492,7 @@ export default function PageContentEdit() {
                   {publicPreviewBusy ? 'Odkaz…' : 'Odkaz náhledu na web'}
                 </button>
                 <Link
-                  to="/"
+                  to={tenantHref('/')}
                   className="rounded-md border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
                 >
                   Zpět na seznam
@@ -570,7 +571,7 @@ export default function PageContentEdit() {
         right={
           <>
             <Link
-              to="/"
+              to={tenantHref('/')}
               className="rounded-md border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
             >
               Zpět na seznam

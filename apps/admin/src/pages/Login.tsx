@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, Navigate } from 'react-router-dom';
+import { useNavigate, Navigate, useMatch } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { fetchPublicSiteInfo } from '../lib/siteInfo';
+import { needsPathTenantSlug } from '../lib/tenantPath';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -12,9 +13,17 @@ export default function Login() {
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const { user, loading: authLoading, signIn } = useAuth();
   const navigate = useNavigate();
+  const tenantLoginMatch = useMatch('/t/:tenantSlug/login');
+  const pathTenantSlug = tenantLoginMatch?.params.tenantSlug;
+  const defaultAfterLogin =
+    typeof pathTenantSlug === 'string'
+      ? `/t/${pathTenantSlug}/`
+      : needsPathTenantSlug()
+        ? '/platform/tenants'
+        : '/';
 
   useEffect(() => {
-    const envName = (import.meta.env.VITE_SITE_NAME as string | undefined)?.trim() ?? '';
+    const envName = import.meta.env.VITE_SITE_NAME?.trim() ?? '';
     void fetchPublicSiteInfo().then((info) => {
       if (!info) {
         setSiteName(envName);
@@ -32,7 +41,7 @@ export default function Login() {
       </div>
     );
   }
-  if (user) return <Navigate to="/" replace />;
+  if (user) return <Navigate to={defaultAfterLogin} replace />;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,7 +49,7 @@ export default function Login() {
     setLoading(true);
     try {
       await signIn(email, password);
-      navigate('/');
+      navigate(defaultAfterLogin);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Přihlášení selhalo');
     } finally {

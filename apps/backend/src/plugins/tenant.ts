@@ -3,9 +3,68 @@ import fp from 'fastify-plugin';
 import {
   resolveTenantByHost,
   resolveTenantByApiKey,
+  resolveTenantByAdminSubdomainSlug,
   resolveTenantIdForServiceHost,
+  type TenantHostKind,
+  type TenantResolution,
 } from '../lib/tenant.js';
 import { verifyAdminAuth } from '../lib/auth.js';
+
+/** Zdroj vyřešení tenanta (effective host řetězec nebo client headers). */
+type TenantResolveSource = 'requestHost' | 'x-tenant-host' | 'x-tenant-subdomain' | 'none';
+
+function readHeader(request: FastifyRequest, name: string): string | undefined {
+  const raw = request.headers[name];
+  const v = Array.isArray(raw) ? raw[0] : raw;
+  const t = typeof v === 'string' ? v.trim() : '';
+  return t.length > 0 ? t : undefined;
+}
+
+function getEffectiveHost(request: FastifyRequest): string {
+  const forwardedHostRaw = request.headers['x-forwarded-host'];
+  const forwardedHost = Array.isArray(forwardedHostRaw) ? forwardedHostRaw[0] : forwardedHostRaw;
+  if (typeof forwardedHost === 'string' && forwardedHost.trim()) {
+    return forwardedHost.trim();
+  }
+  return request.headers.host ?? '';
+}
+
+async function resolveTenantByHostWithFallback(
+  logicalHost: string,
+  request: FastifyRequest,
+  kind: TenantHostKind
+): Promise<{ result: TenantResolution; source: TenantResolveSource }> {
+  const r1 = await resolveTenantByHost(logicalHost, kind);
+  if (r1.ok) return { result: r1, source: 'requestHost' };
+
+  let last: TenantResolution = r1;
+
+  const tenantHostHeader = readHeader(request, 'x-tenant-host');
+  if (tenantHostHeader) {
+    const r2 = await resolveTenantByHost(tenantHostHeader, kind);
+    last = r2;
+    if (r2.ok) return { result: r2, source: 'x-tenant-host' };
+  }
+
+  const slugHeader = readHeader(request, 'x-tenant-subdomain');
+  if (slugHeader) {
+    const r3 = await resolveTenantByAdminSubdomainSlug(slugHeader);
+    last = r3;
+    if (r3.ok) return { result: r3, source: 'x-tenant-subdomain' };
+  }
+
+  return { result: last, source: 'none' };
+}
+
+function tenantResolutionLogFields(request: FastifyRequest, host: string) {
+  return {
+    effectiveHost: host,
+    headers: {
+      'x-tenant-host': readHeader(request, 'x-tenant-host'),
+      'x-tenant-subdomain': readHeader(request, 'x-tenant-subdomain'),
+    },
+  };
+}
 
 /**
  * Multi-tenancy plugin.
@@ -20,10 +79,7 @@ async function tenantPlugin(app: FastifyInstance) {
     const url = request.url;
     if (!url.startsWith('/api/v1/')) return;
 
-    const forwardedHostRaw = request.headers['x-forwarded-host'];
-    const forwardedHost = Array.isArray(forwardedHostRaw) ? forwardedHostRaw[0] : forwardedHostRaw;
-    const host = (typeof forwardedHost === 'string' && forwardedHost.trim()) ? forwardedHost : (request.headers.host ?? '');
-
+    const host = getEffectiveHost(request);
     const serviceTenantId = resolveTenantIdForServiceHost(host);
 
     // Platform (company) admin routes: no tenant resolution, just auth later in route handlers.
@@ -40,10 +96,16 @@ async function tenantPlugin(app: FastifyInstance) {
         return;
       }
 
-      const byHost = await resolveTenantByHost(host, 'web');
+      const { result: byHost, source } = await resolveTenantByHostWithFallback(host, request, 'web');
       if (byHost.ok) {
         request.tenantId = byHost.tenantId;
         request.tenantSource = 'public';
+        if (source !== 'requestHost' && source !== 'none') {
+          request.log.info(
+            { ...tenantResolutionLogFields(request, host), route: 'public', source, ok: true },
+            'Tenant resolution'
+          );
+        }
         return;
       }
 
@@ -54,7 +116,13 @@ async function tenantPlugin(app: FastifyInstance) {
 
       const chosen = byKey.ok ? byKey : byHost;
       request.log.info(
-        { host, publicRoute: true, byHost: byHost.ok ? 'ok' : byHost, byKey: byKey.ok ? 'ok' : byKey },
+        {
+          ...tenantResolutionLogFields(request, host),
+          route: 'public',
+          source,
+          hostChain: byHost.ok ? 'ok' : byHost,
+          apiKey: byKey.ok ? 'ok' : byKey,
+        },
         'Tenant resolution'
       );
 
@@ -78,8 +146,17 @@ async function tenantPlugin(app: FastifyInstance) {
         return;
       }
 
-      const result = await resolveTenantByHost(host, 'admin');
-      request.log.info({ host, result: result.ok ? 'ok' : result }, 'Tenant resolution');
+      const { result, source } = await resolveTenantByHostWithFallback(host, request, 'admin');
+      request.log.info(
+        {
+          ...tenantResolutionLogFields(request, host),
+          route: 'admin',
+          source,
+          outcome: result.ok ? 'ok' : result,
+        },
+        'Tenant resolution'
+      );
+
       if (!result.ok) {
         return reply.status(result.status).send({ error: result.message });
       }

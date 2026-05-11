@@ -1,4 +1,4 @@
-const API_BASE = import.meta.env.VITE_API_URL ?? '';
+import { API_BASE, tenantContextHeaders } from './api';
 
 export interface PublicSiteInfo {
   siteName: string;
@@ -8,7 +8,9 @@ export interface PublicSiteInfo {
 /** Branding for login (no auth; tenant z Host subdomény). */
 export async function fetchPublicSiteInfo(): Promise<PublicSiteInfo | null> {
   try {
-    const res = await fetch(`${API_BASE}/api/v1/public/site-info`);
+    const res = await fetch(`${API_BASE}/api/v1/public/site-info`, {
+      headers: tenantContextHeaders(),
+    });
     if (!res.ok) return null;
     return (await res.json()) as PublicSiteInfo;
   } catch {

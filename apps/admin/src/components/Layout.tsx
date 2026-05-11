@@ -4,6 +4,7 @@ import { ADMIN_LOGO_KEY, ADMIN_SITE_NAME_KEY, mergeContentEntriesMap } from '@na
 import { useAuth } from '../context/AuthContext';
 import { apiGet } from '../lib/api';
 import { CMS_BRANDING_REFRESH_EVENT } from '../lib/branding';
+import { tenantHref, tenantPathPrefix } from '../lib/tenantPath';
 
 interface ContentEntry {
   key: string;
@@ -76,7 +77,7 @@ export default function Layout() {
       setLogoUrl(pickLogoUrl(map));
       const fromContent = pickSiteName(map);
       const fromTenant = (data.tenantName ?? '').trim();
-      const fromEnv = (import.meta.env.VITE_SITE_NAME as string | undefined)?.trim() ?? '';
+      const fromEnv = import.meta.env.VITE_SITE_NAME?.trim() ?? '';
       setSiteName(fromContent || fromTenant || fromEnv);
     } catch {
       setLogoUrl(null);
@@ -96,7 +97,8 @@ export default function Layout() {
 
   const handleSignOut = async () => {
     await signOut();
-    navigate('/login');
+    const px = tenantPathPrefix();
+    navigate(px ? `${px}/login` : '/login');
   };
 
   const pathname = location.pathname;
@@ -127,8 +129,8 @@ export default function Layout() {
           <div className={navSectionTitleClass}>Obsah</div>
           <div className="px-3 space-y-1">
             <NavLink
-              to="/"
-              className={({ isActive }) => navItemClass(isActive || pathname.startsWith('/page/'))}
+              to={tenantHref('/')}
+              className={({ isActive }) => navItemClass(isActive || pathname.includes('/page/'))}
             >
               Stránky
             </NavLink>
@@ -136,20 +138,20 @@ export default function Layout() {
 
           <div className={navSectionTitleClass}>Média</div>
           <div className="px-3 space-y-1">
-            <NavLink to="/media" className={({ isActive }) => navItemClass(isActive)}>
+            <NavLink to={tenantHref('/media')} className={({ isActive }) => navItemClass(isActive)}>
               Knihovna médií
             </NavLink>
           </div>
 
           <div className={navSectionTitleClass}>Nastavení webu</div>
           <div className="px-3 space-y-1">
-            <NavLink to="/metadata" className={({ isActive }) => navItemClass(isActive)}>
+            <NavLink to={tenantHref('/metadata')} className={({ isActive }) => navItemClass(isActive)}>
               Základní nastavení
             </NavLink>
-            <NavLink to="/settings/template" className={({ isActive }) => navItemClass(isActive)}>
+            <NavLink to={tenantHref('/settings/template')} className={({ isActive }) => navItemClass(isActive)}>
               Šablona / Vzhled
             </NavLink>
-            <NavLink to="/settings/contact" className={({ isActive }) => navItemClass(isActive)}>
+            <NavLink to={tenantHref('/settings/contact')} className={({ isActive }) => navItemClass(isActive)}>
               Kontakt a firma
             </NavLink>
           </div>

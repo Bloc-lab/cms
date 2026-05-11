@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { sitePagesConfig } from '@nase-cms/shared';
+import { tenantHref } from '../lib/tenantPath';
 
 const PAGE_SIZE = 5;
 
@@ -95,7 +96,7 @@ export default function SitePages() {
                     <td className="px-3 py-4 text-gray-600 font-mono text-xs">{p.pathLabel}</td>
                     <td className="px-4 py-4 text-right">
                       <Link
-                        to={`/page/${encodeURIComponent(p.pageId)}`}
+                        to={tenantHref(`/page/${encodeURIComponent(p.pageId)}`)}
                         className="inline-flex items-center justify-center px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wide rounded border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 hover:border-gray-300"
                       >
                         Upravit

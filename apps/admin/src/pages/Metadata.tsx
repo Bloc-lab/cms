@@ -13,6 +13,7 @@ import {
 } from '@nase-cms/shared';
 import MediaPicker from '../components/MediaPicker';
 import { dispatchBrandingRefresh } from '../lib/branding';
+import { tenantHref } from '../lib/tenantPath';
 import {
   AVAILABLE_LANGS,
   parseEnabledLangs,
@@ -208,7 +209,7 @@ export default function Metadata() {
           <h1 className="text-2xl font-semibold text-gray-900 tracking-tight">Základní nastavení</h1>
           <p className="text-sm text-gray-500 mt-1 max-w-xl">
             Základní údaje o webu a administraci. Texty na stránkách upravíte přes{' '}
-            <Link to="/" className="text-blue-600 hover:underline">
+            <Link to={tenantHref('/')} className="text-blue-600 hover:underline">
               Stránky webu
             </Link>
             .

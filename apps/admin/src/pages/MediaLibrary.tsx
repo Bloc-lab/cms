@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, useRef } from 'react';
-import { apiDelete, apiGet, apiPatch } from '../lib/api';
+import { apiDelete, apiGet, apiPatch, API_BASE, tenantContextHeaders } from '../lib/api';
 
 interface MediaItem {
   id: string;
@@ -76,9 +76,12 @@ export default function MediaLibrary() {
       const { data: { session } } = await import('../lib/supabase').then((m) => m.supabase.auth.getSession());
       const formData = new FormData();
       formData.append('file', file);
-      const res = await fetch('/api/v1/admin/media/upload', {
+      const res = await fetch(`${API_BASE}/api/v1/admin/media/upload`, {
         method: 'POST',
-        headers: { Authorization: `Bearer ${session?.access_token}` },
+        headers: {
+          Authorization: `Bearer ${session?.access_token}`,
+          ...tenantContextHeaders(),
+        },
         body: formData,
       });
       if (!res.ok) {

@@ -9,6 +9,7 @@ import {
   type ContentField,
 } from '@nase-cms/shared';
 import { parseEnabledLangs } from '../lib/languages';
+import { tenantHref } from '../lib/tenantPath';
 import StickyActionBar from '../components/StickyActionBar';
 import Toast from '../components/Toast';
 
@@ -193,7 +194,7 @@ export default function SettingsContact() {
     <div className="mx-auto w-full max-w-6xl">
       <Toast message={toast} show={toast.length > 0} onClose={() => setToast('')} />
       <nav className="text-sm text-gray-500 mb-3" aria-label="Drobečková navigace">
-        <Link to="/metadata" className="hover:text-gray-700">
+        <Link to={tenantHref('/metadata')} className="hover:text-gray-700">
           Nastavení webu
         </Link>
         <span className="mx-2 text-gray-300">/</span>

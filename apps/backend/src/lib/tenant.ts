@@ -11,6 +11,17 @@ export type TenantResolution =
 
 export type TenantHostKind = 'web' | 'admin';
 
+const ADMIN_SUBDOMAIN_RE = /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/;
+
+/** Slug jako v `tenants.admin_subdomain` (path-based admin / hlavička). */
+export function parseCanonicalAdminSubdomain(raw: string | undefined): string | undefined {
+  if (!raw || typeof raw !== 'string') return undefined;
+  const t = raw.trim().toLowerCase();
+  if (t.length < 1 || t.length > 63) return undefined;
+  if (!ADMIN_SUBDOMAIN_RE.test(t)) return undefined;
+  return t;
+}
+
 function normalizeHost(host: string): string {
   return host.toLowerCase().split(':')[0] ?? '';
 }
@@ -26,6 +37,24 @@ export function resolveTenantIdForServiceHost(host: string): string | null {
   if (!configuredHost || !tenantId) return null;
   if (normalizeHost(host) !== normalizeHost(configuredHost)) return null;
   return tenantId;
+}
+
+async function tenantByAdminSubdomainRow(subdomainLower: string): Promise<TenantResolution> {
+  if (!supabaseAdmin) {
+    return { ok: false, status: 500, message: 'Server misconfiguration' };
+  }
+
+  const { data, error } = await supabaseAdmin
+    .from('tenants')
+    .select('id')
+    .eq('admin_subdomain', subdomainLower)
+    .single();
+
+  if (error || !data) {
+    return { ok: false, status: 404, message: 'Tenant not found' };
+  }
+
+  return { ok: true, tenantId: data.id };
 }
 
 /**
@@ -48,21 +77,21 @@ export async function resolveTenantBySubdomain(host: string): Promise<TenantReso
     return { ok: false, status: 404, message: 'Unknown tenant' };
   }
 
-  if (!supabaseAdmin) {
-    return { ok: false, status: 500, message: 'Server misconfiguration' };
+  return tenantByAdminSubdomainRow(subdomain);
+}
+
+/**
+ * Path-based admin (např. Vercel). Odkazuje na `tenants.admin_subdomain`.
+ *
+ * Neřeší {@link TenantHostKind} / tenant_domains typ `web` vs `admin`: jde o výběr tenanta pro admin API.
+ */
+export async function resolveTenantByAdminSubdomainSlug(slugRaw: string | undefined): Promise<TenantResolution> {
+  const slug = parseCanonicalAdminSubdomain(slugRaw);
+  if (!slug) {
+    return { ok: false, status: 404, message: 'Unknown tenant' };
   }
 
-  const { data, error } = await supabaseAdmin
-    .from('tenants')
-    .select('id')
-    .eq('admin_subdomain', subdomain)
-    .single();
-
-  if (error || !data) {
-    return { ok: false, status: 404, message: 'Tenant not found' };
-  }
-
-  return { ok: true, tenantId: data.id };
+  return tenantByAdminSubdomainRow(slug);
 }
 
 /**
