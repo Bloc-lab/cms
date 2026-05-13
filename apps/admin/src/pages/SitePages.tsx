@@ -45,16 +45,7 @@ export default function SitePages() {
     }));
   }, [templateId]);
 
-  if (templateId === null) {
-    return (
-      <div className="mx-auto w-full max-w-6xl flex items-center justify-center py-24 text-gray-500 text-sm">
-        Načítání…
-      </div>
-    );
-  }
-
   const [pageIndex, setPageIndex] = useState(0);
-
   const total = pages.length;
   const pageCount = Math.max(1, Math.ceil(total / PAGE_SIZE) || 1);
   const safeIndex = Math.min(pageIndex, Math.max(0, pageCount - 1));
@@ -66,6 +57,14 @@ export default function SitePages() {
 
   const showingFrom = total === 0 ? 0 : safeIndex * PAGE_SIZE + 1;
   const showingTo = Math.min(total, (safeIndex + 1) * PAGE_SIZE);
+
+  if (templateId === null) {
+    return (
+      <div className="mx-auto w-full max-w-6xl flex items-center justify-center py-24 text-gray-500 text-sm">
+        Načítání…
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto w-full max-w-6xl">
