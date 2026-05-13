@@ -20,6 +20,14 @@ function readHeader(request: FastifyRequest, name: string): string | undefined {
   return t.length > 0 ? t : undefined;
 }
 
+/** When set, BACKEND_SERVICE_* pins one tenant — unless the client selects tenant via headers. */
+function hasExplicitTenantSelectionHeaders(request: FastifyRequest): boolean {
+  return (
+    readHeader(request, 'x-tenant-subdomain') !== undefined ||
+    readHeader(request, 'x-tenant-host') !== undefined
+  );
+}
+
 function getEffectiveHost(request: FastifyRequest): string {
   const forwardedHostRaw = request.headers['x-forwarded-host'];
   const forwardedHost = Array.isArray(forwardedHostRaw) ? forwardedHostRaw[0] : forwardedHostRaw;
@@ -90,7 +98,7 @@ async function tenantPlugin(app: FastifyInstance) {
     }
 
     if (url.startsWith('/api/v1/public/')) {
-      if (serviceTenantId) {
+      if (serviceTenantId && !hasExplicitTenantSelectionHeaders(request)) {
         request.tenantId = serviceTenantId;
         request.tenantSource = 'public';
         return;
@@ -136,7 +144,7 @@ async function tenantPlugin(app: FastifyInstance) {
     }
 
     if (url.startsWith('/api/v1/admin/')) {
-      if (serviceTenantId) {
+      if (serviceTenantId && !hasExplicitTenantSelectionHeaders(request)) {
         request.tenantId = serviceTenantId;
         request.tenantSource = 'admin';
 

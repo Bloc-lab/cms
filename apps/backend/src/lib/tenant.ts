@@ -30,6 +30,9 @@ function normalizeHost(host: string): string {
  * When the API is called with Host = the backend URL (e.g. *.onrender.com), tenant cannot be
  * inferred from subdomain. Set BACKEND_SERVICE_HOST + BACKEND_SERVICE_TENANT_ID on the server to
  * map that hostname to one tenant (single-tenant / PaaS demo).
+ *
+ * For `/api/v1/admin/*` and `/api/v1/public/*`, `x-tenant-subdomain` or `x-tenant-host` overrides
+ * this pin so multi-tenant clients can target the correct tenant from one backend URL.
  */
 export function resolveTenantIdForServiceHost(host: string): string | null {
   const configuredHost = process.env.BACKEND_SERVICE_HOST?.trim();
