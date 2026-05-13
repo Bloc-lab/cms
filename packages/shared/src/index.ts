@@ -12,6 +12,14 @@ export {
   resolveRedusSeedValueByLang,
 } from './redus-public-defaults.js';
 export {
+  ARCH_SEED_DEFAULTS_CS,
+  ARCH_SEED_DEFAULTS_EN,
+  resolveArchSeedValue,
+  resolveArchSeedValueByLang,
+  archFlatPublicKeyToStorageKey,
+} from './arch-public-defaults.js';
+export { archSitePagesConfig, archSiteContentConfig } from './arch-site-pages.js';
+export {
   type SitePageDefinition,
   type SitePagesConfigMap,
   type RawContentEntry,
@@ -27,6 +35,9 @@ export {
 
 import type { ContentConfig } from './types.js';
 import { flattenSitePagesFields, type SitePagesConfigMap } from './site-pages.js';
+import { resolveRedusSeedValueByLang } from './redus-public-defaults.js';
+import { resolveArchSeedValueByLang } from './arch-public-defaults.js';
+import { archSitePagesConfig, archSiteContentConfig } from './arch-site-pages.js';
 
 /** Content keys for admin branding (sidebar, login via public API). */
 export const ADMIN_SITE_NAME_KEY = 'admin.siteName';
@@ -861,3 +872,43 @@ export const defaultConfig: ContentConfig = {
   ...siteSettingsConfig,
   ...siteContentConfig,
 };
+
+/** Identifikátor šablony ARCH&CO (sloupec `site_settings.template_id`). */
+export const CMS_TEMPLATE_ARCH = 'arch' as const;
+
+export function getSitePagesForTemplate(templateId: string | null | undefined): SitePagesConfigMap {
+  if ((templateId ?? '').trim() === CMS_TEMPLATE_ARCH) {
+    return archSitePagesConfig;
+  }
+  return sitePagesConfig;
+}
+
+export function getDefaultContentConfigForTemplate(templateId: string | null | undefined): ContentConfig {
+  if ((templateId ?? '').trim() === CMS_TEMPLATE_ARCH) {
+    return { ...metadataConfig, ...archSiteContentConfig };
+  }
+  return defaultConfig;
+}
+
+export function getContactSettingsConfigForTemplate(templateId: string | null | undefined): ContentConfig {
+  if ((templateId ?? '').trim() === CMS_TEMPLATE_ARCH) {
+    const m = archSitePagesConfig.main.fields;
+    return {
+      'main:contact.phone': m['contact.phone']!,
+      'main:contact.email': m['contact.email']!,
+      'main:contact.address': m['contact.address']!,
+    };
+  }
+  return siteSettingsConfig;
+}
+
+export function resolveSeedValueByLang(
+  fullKey: string,
+  lang: string,
+  templateId: string | null | undefined
+): string {
+  if ((templateId ?? '').trim() === CMS_TEMPLATE_ARCH) {
+    return resolveArchSeedValueByLang(fullKey, lang);
+  }
+  return resolveRedusSeedValueByLang(fullKey, lang);
+}

@@ -22,8 +22,9 @@ import { createClient } from '@supabase/supabase-js';
 import {
   ADMIN_ENABLED_LANGS_KEY,
   ADMIN_SHOW_TRANSLATION_BADGES_KEY,
-  defaultConfig,
-  resolveRedusSeedValue,
+  CMS_TEMPLATE_ARCH,
+  getDefaultContentConfigForTemplate,
+  resolveSeedValueByLang,
 } from '@nase-cms/shared';
 
 const ADMIN_KEYS_CS_ONLY = new Set([ADMIN_ENABLED_LANGS_KEY, ADMIN_SHOW_TRANSLATION_BADGES_KEY]);
@@ -70,14 +71,17 @@ async function main(): Promise<void> {
     tenantId = data.id;
   }
 
-  const configKeys = Object.keys(defaultConfig);
-  const csValues: Record<string, string> = {};
-  for (const key of configKeys) {
-    let v = resolveRedusSeedValue(key);
-    if (key === ADMIN_ENABLED_LANGS_KEY) v = 'cs,en,it';
-    if (key === ADMIN_SHOW_TRANSLATION_BADGES_KEY) v = '1';
-    csValues[key] = v;
+  let templateId = 'template1';
+  {
+    const { data: siteRow } = await supabase
+      .from('site_settings')
+      .select('template_id')
+      .eq('tenant_id', tenantId)
+      .maybeSingle();
+    templateId = ((siteRow as { template_id?: string | null } | null)?.template_id ?? '').trim() || 'template1';
   }
+
+  const configKeys = Object.keys(getDefaultContentConfigForTemplate(templateId));
 
   type Row = { tenant_id: string; key: string; lang: string; value: string; updated_at: string };
   const now = new Date().toISOString();
@@ -85,11 +89,16 @@ async function main(): Promise<void> {
   for (const lang of langs) {
     for (const key of configKeys) {
       if (ADMIN_KEYS_CS_ONLY.has(key) && lang !== 'cs') continue;
+      let value = resolveSeedValueByLang(key, lang, templateId);
+      if (key === ADMIN_ENABLED_LANGS_KEY) {
+        value = templateId === CMS_TEMPLATE_ARCH ? 'cs,en' : 'cs,en,it';
+      }
+      if (key === ADMIN_SHOW_TRANSLATION_BADGES_KEY) value = '1';
       candidateRows.push({
         tenant_id: tenantId,
         key,
         lang,
-        value: csValues[key],
+        value,
         updated_at: now,
       });
     }

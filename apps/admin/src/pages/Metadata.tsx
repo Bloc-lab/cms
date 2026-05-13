@@ -6,7 +6,7 @@ import {
   ADMIN_SITE_NAME_KEY,
   ADMIN_ENABLED_LANGS_KEY,
   ADMIN_SHOW_TRANSLATION_BADGES_KEY,
-  defaultConfig,
+  getDefaultContentConfigForTemplate,
   mergeContentEntriesMap,
   metadataConfig,
   type ContentField,
@@ -14,6 +14,7 @@ import {
 import MediaPicker from '../components/MediaPicker';
 import { dispatchBrandingRefresh } from '../lib/branding';
 import { tenantHref } from '../lib/tenantPath';
+import { getTenantTemplateId } from '../lib/tenantTemplateId';
 import {
   AVAILABLE_LANGS,
   parseEnabledLangs,
@@ -51,6 +52,7 @@ export default function Metadata() {
   const [entries, setEntries] = useState<Record<string, string>>({});
   const [baseline, setBaseline] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
+  const [contentTemplateId, setContentTemplateId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [lang, setLang] = useState<string>('cs');
@@ -102,6 +104,16 @@ export default function Metadata() {
     loadContent();
   }, []);
 
+  useEffect(() => {
+    let c = false;
+    void getTenantTemplateId().then((t) => {
+      if (!c) setContentTemplateId(t);
+    });
+    return () => {
+      c = true;
+    };
+  }, []);
+
   const getValue = (key: string, l: string) => entries[entryKey(key, l)] ?? '';
 
   const setValue = (key: string, l: string, value: string) => {
@@ -123,7 +135,8 @@ export default function Metadata() {
         }
       }
       const contentEntries: ContentEntry[] = [];
-      for (const key of Object.keys(defaultConfig)) {
+      const fullCfg = getDefaultContentConfigForTemplate(contentTemplateId ?? 'template1');
+      for (const key of Object.keys(fullCfg)) {
         for (const l of enabledLangs) {
           contentEntries.push({
             key,

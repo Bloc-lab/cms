@@ -1,7 +1,8 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { sitePagesConfig } from '@nase-cms/shared';
+import { getSitePagesForTemplate } from '@nase-cms/shared';
 import { tenantHref } from '../lib/tenantPath';
+import { getTenantTemplateId } from '../lib/tenantTemplateId';
 
 const PAGE_SIZE = 5;
 
@@ -23,14 +24,34 @@ function statusAccent(): string {
 }
 
 export default function SitePages() {
+  const [templateId, setTemplateId] = useState<string | null>(null);
+  useEffect(() => {
+    let c = false;
+    void getTenantTemplateId().then((t) => {
+      if (!c) setTemplateId(t);
+    });
+    return () => {
+      c = true;
+    };
+  }, []);
+
   const pages = useMemo<ConfigPageRow[]>(() => {
-    return Object.entries(sitePagesConfig).map(([pageId, def]) => ({
+    const cfg = getSitePagesForTemplate(templateId ?? 'template1');
+    return Object.entries(cfg).map(([pageId, def]) => ({
       pageId,
       label: def.label,
       slug: def.slug,
       pathLabel: formatPath(def.slug),
     }));
-  }, []);
+  }, [templateId]);
+
+  if (templateId === null) {
+    return (
+      <div className="mx-auto w-full max-w-6xl flex items-center justify-center py-24 text-gray-500 text-sm">
+        Načítání…
+      </div>
+    );
+  }
 
   const [pageIndex, setPageIndex] = useState(0);
 

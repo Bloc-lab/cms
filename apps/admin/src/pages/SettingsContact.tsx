@@ -2,14 +2,14 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { apiGet, apiPut } from '../lib/api';
 import {
-  defaultConfig,
+  getContactSettingsConfigForTemplate,
+  getDefaultContentConfigForTemplate,
   mergeContentEntriesMap,
-  siteSettingsConfig,
-  type ContentConfig,
   type ContentField,
 } from '@nase-cms/shared';
 import { parseEnabledLangs } from '../lib/languages';
 import { tenantHref } from '../lib/tenantPath';
+import { getTenantTemplateId } from '../lib/tenantTemplateId';
 import StickyActionBar from '../components/StickyActionBar';
 import Toast from '../components/Toast';
 
@@ -57,12 +57,11 @@ function formatSavedAt(d: Date): string {
   });
 }
 
-const contactConfig: ContentConfig = siteSettingsConfig;
-
 export default function SettingsContact() {
   const [entries, setEntries] = useState<Record<string, string>>({});
   const [baseline, setBaseline] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
+  const [contentTemplateId, setContentTemplateId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [lang, setLang] = useState<string>('cs');
@@ -71,6 +70,11 @@ export default function SettingsContact() {
   const [recentlySaved, setRecentlySaved] = useState(false);
   const [siteSettings, setSiteSettings] = useState<AdminSiteSettings | null>(null);
   const [baselineSiteSettings, setBaselineSiteSettings] = useState<AdminSiteSettings | null>(null);
+
+  const contactConfig = useMemo(
+    () => getContactSettingsConfigForTemplate(contentTemplateId ?? 'template1'),
+    [contentTemplateId]
+  );
 
   const entryKey = (key: string, l: string) => `${key}:${l}`;
   const getValue = (key: string, l: string) => entries[entryKey(key, l)] ?? '';
@@ -89,6 +93,16 @@ export default function SettingsContact() {
     return JSON.stringify(siteSettings) !== JSON.stringify(baselineSiteSettings);
   }, [siteSettings, baselineSiteSettings]);
   const isDirty = isContentDirty || isSiteSettingsDirty;
+
+  useEffect(() => {
+    let c = false;
+    void getTenantTemplateId().then((t) => {
+      if (!c) setContentTemplateId(t);
+    });
+    return () => {
+      c = true;
+    };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -125,7 +139,7 @@ export default function SettingsContact() {
       out.set(s, arr);
     }
     return [...out.entries()];
-  }, []);
+  }, [contactConfig]);
 
   const setValue = (key: string, l: string, value: string) => {
     setEntries((prev) => ({ ...prev, [entryKey(key, l)]: value }));
@@ -152,7 +166,8 @@ export default function SettingsContact() {
       }
 
       const contentEntries: ContentEntry[] = [];
-      for (const key of Object.keys(defaultConfig)) {
+      const fullCfg = getDefaultContentConfigForTemplate(contentTemplateId ?? 'template1');
+      for (const key of Object.keys(fullCfg)) {
         for (const l of enabledLangs) {
           contentEntries.push({
             key,

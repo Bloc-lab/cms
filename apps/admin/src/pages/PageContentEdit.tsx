@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, Navigate, useParams } from 'react-router-dom';
 import { ApiRequestError, apiDelete, apiGet, apiPost, apiPut } from '../lib/api';
-import { mergeContentEntriesMap, sitePagesConfig, storageKey } from '@nase-cms/shared';
+import { getSitePagesForTemplate, mergeContentEntriesMap, storageKey } from '@nase-cms/shared';
 import PageContentFields from '../components/PageContentFields';
 import MediaPicker from '../components/MediaPicker';
 import { dispatchBrandingRefresh } from '../lib/branding';
@@ -10,6 +10,7 @@ import { parseEnabledLangs, parseShowTranslationBadges } from '../lib/languages'
 import StickyActionBar from '../components/StickyActionBar';
 import Toast from '../components/Toast';
 import { tenantHref } from '../lib/tenantPath';
+import { getTenantTemplateId } from '../lib/tenantTemplateId';
 
 interface ContentEntry {
   key: string;
@@ -55,7 +56,24 @@ function entryKey(key: string, l: string): string {
 
 export default function PageContentEdit() {
   const { pageId } = useParams<{ pageId: string }>();
-  const pageDef = pageId ? sitePagesConfig[pageId] : undefined;
+  const [contentTemplateId, setContentTemplateId] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    void getTenantTemplateId().then((t) => {
+      if (!cancelled) setContentTemplateId(t);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const templateReady = contentTemplateId !== null;
+  const sitePagesForTenant = useMemo(
+    () => getSitePagesForTemplate(contentTemplateId ?? 'template1'),
+    [contentTemplateId]
+  );
+  const pageDef = pageId ? sitePagesForTenant[pageId] : undefined;
 
   const [entries, setEntries] = useState<Record<string, string>>({});
   const [baseline, setBaseline] = useState<Record<string, string>>({});
@@ -136,7 +154,7 @@ export default function PageContentEdit() {
   }, [pageId, pageDef, buildPageDraftEntries]);
 
   useEffect(() => {
-    if (!pageDef || !pageId) return;
+    if (!templateReady || !pageDef || !pageId) return;
     let cancelled = false;
     userEditVersionRef.current = 0;
     (async () => {
@@ -217,7 +235,7 @@ export default function PageContentEdit() {
     return () => {
       cancelled = true;
     };
-  }, [pageDef, pageId]);
+  }, [pageDef, pageId, templateReady]);
 
   useEffect(() => {
     if (loading || !isDirty || userEditVersionRef.current === 0) return;
@@ -243,7 +261,15 @@ export default function PageContentEdit() {
     return () => window.clearTimeout(id);
   }, [entries, siteSettings, isDirty, loading, saveDraftToServer]);
 
-  if (!pageId || !pageDef) {
+  if (!pageId) {
+    return <Navigate to={tenantHref('/')} replace />;
+  }
+  if (!templateReady) {
+    return (
+      <div className="flex items-center justify-center py-24 text-gray-500 text-sm">Načítání…</div>
+    );
+  }
+  if (!pageDef) {
     return <Navigate to={tenantHref('/')} replace />;
   }
 
@@ -533,6 +559,7 @@ export default function PageContentEdit() {
                 setMediaPickerKey={setMediaPickerKey}
                 siteSettings={siteSettings}
                 setSiteSettings={setSiteSettingsFromUser}
+                siteTemplateId={contentTemplateId ?? undefined}
               />
             </div>
           </div>

@@ -1,10 +1,16 @@
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
-import { ADMIN_ENABLED_LANGS_KEY, mergeContentEntriesMap, sitePagesConfig, storageKey } from '@nase-cms/shared';
+import {
+  ADMIN_ENABLED_LANGS_KEY,
+  mergeContentEntriesMap,
+  storageKey,
+  type SitePagesConfigMap,
+} from '@nase-cms/shared';
 import { supabaseAdmin } from '../../lib/supabase.js';
 import { invalidateContentCache } from '../../lib/invalidate.js';
 import { loadPreviewPayload } from '../../lib/preview-public-data.js';
 import { insertContentPreviewToken } from '../../lib/preview-token.js';
 import { toDbAdminSiteSettings, validateAndNormalizeAdminSiteSettings, type SiteSettingsAdmin } from '../../lib/site-settings.js';
+import { loadSitePagesConfigForTenant } from '../../lib/tenant-site-pages.js';
 
 const PRIMARY_LANG = 'cs';
 
@@ -36,21 +42,23 @@ function parseEnabledLangsFromMap(entriesMap: Record<string, string>): string[] 
   return normalizeLangs(langs);
 }
 
-function isValidPageId(pageId: string): boolean {
-  return Boolean(pageId && sitePagesConfig[pageId as keyof typeof sitePagesConfig]);
+function isValidPageId(pages: SitePagesConfigMap, pageId: string): boolean {
+  return Boolean(pageId && pages[pageId]);
 }
 
-function pageStorageKeys(pageId: string): string[] {
-  const def = sitePagesConfig[pageId as keyof typeof sitePagesConfig];
+function pageStorageKeys(pages: SitePagesConfigMap, pageId: string): string[] {
+  const def = pages[pageId];
   if (!def) return [];
   return Object.keys(def.fields).map((fieldKey) => storageKey(pageId, fieldKey));
 }
 
-const allowedKeysSet = (pageId: string) => new Set(pageStorageKeys(pageId));
-
-function validateDraftEntries(pageId: string, entries: ContentEntry[] | undefined): ContentEntry[] | null {
+function validateDraftEntries(
+  pages: SitePagesConfigMap,
+  pageId: string,
+  entries: ContentEntry[] | undefined
+): ContentEntry[] | null {
   if (!Array.isArray(entries)) return null;
-  const allowed = allowedKeysSet(pageId);
+  const allowed = new Set(pageStorageKeys(pages, pageId));
   for (const e of entries) {
     if (!e.key || !e.lang) return null;
     if (!allowed.has(e.key)) return null;
@@ -68,7 +76,8 @@ export async function adminContentDraftsRoutes(app: FastifyInstance) {
       if (!tenantId) {
         return reply.status(500).send({ error: 'Server error' });
       }
-      if (!isValidPageId(pageId)) {
+      const pages = await loadSitePagesConfigForTenant(tenantId);
+      if (!isValidPageId(pages, pageId)) {
         return reply.status(400).send({ error: 'Unknown page' });
       }
       try {
@@ -97,7 +106,8 @@ export async function adminContentDraftsRoutes(app: FastifyInstance) {
       if (!tenantId || !supabaseAdmin) {
         return reply.status(500).send({ error: 'Server error' });
       }
-      if (!isValidPageId(pageId)) {
+      const pages = await loadSitePagesConfigForTenant(tenantId);
+      if (!isValidPageId(pages, pageId)) {
         return reply.status(400).send({ error: 'Unknown page' });
       }
 
@@ -166,11 +176,12 @@ export async function adminContentDraftsRoutes(app: FastifyInstance) {
       if (!tenantId || !supabaseAdmin) {
         return reply.status(500).send({ error: 'Server error' });
       }
-      if (!isValidPageId(pageId)) {
+      const pages = await loadSitePagesConfigForTenant(tenantId);
+      if (!isValidPageId(pages, pageId)) {
         return reply.status(400).send({ error: 'Unknown page' });
       }
 
-      const entries = validateDraftEntries(pageId, request.body?.entries);
+      const entries = validateDraftEntries(pages, pageId, request.body?.entries);
       if (!entries) {
         return reply.status(400).send({ error: 'Invalid entries payload' });
       }
@@ -245,7 +256,8 @@ export async function adminContentDraftsRoutes(app: FastifyInstance) {
       if (!tenantId || !supabaseAdmin) {
         return reply.status(500).send({ error: 'Server error' });
       }
-      if (!isValidPageId(pageId)) {
+      const pages = await loadSitePagesConfigForTenant(tenantId);
+      if (!isValidPageId(pages, pageId)) {
         return reply.status(400).send({ error: 'Unknown page' });
       }
 
@@ -293,7 +305,8 @@ export async function adminContentDraftsRoutes(app: FastifyInstance) {
       if (!tenantId || !supabaseAdmin) {
         return reply.status(500).send({ error: 'Server error' });
       }
-      if (!isValidPageId(pageId)) {
+      const pages = await loadSitePagesConfigForTenant(tenantId);
+      if (!isValidPageId(pages, pageId)) {
         return reply.status(400).send({ error: 'Unknown page' });
       }
 
@@ -356,7 +369,10 @@ export async function adminContentDraftsRoutes(app: FastifyInstance) {
           ? normalizeLangs(request.body.enabledLangs.map((l) => String(l)))
           : parseEnabledLangsFromMap(mergedMap);
 
-      const pageDef = sitePagesConfig[pageId as keyof typeof sitePagesConfig];
+      const pageDef = pages[pageId];
+      if (!pageDef) {
+        return reply.status(400).send({ error: 'Unknown page' });
+      }
       const fieldErrors: Record<string, string> = {};
       for (const [fieldKey, field] of Object.entries(pageDef.fields)) {
         if (!field.required) continue;
@@ -424,7 +440,8 @@ export async function adminContentDraftsRoutes(app: FastifyInstance) {
       if (!tenantId || !supabaseAdmin) {
         return reply.status(500).send({ error: 'Server error' });
       }
-      if (!isValidPageId(pageId)) {
+      const pages = await loadSitePagesConfigForTenant(tenantId);
+      if (!isValidPageId(pages, pageId)) {
         return reply.status(400).send({ error: 'Unknown page' });
       }
 

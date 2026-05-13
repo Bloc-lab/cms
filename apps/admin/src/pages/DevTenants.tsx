@@ -33,6 +33,7 @@ const TEMPLATE_LABELS: Record<string, string> = {
   template1: 'MONO',
   template2: 'FLOW',
   template3: 'BLOCK',
+  arch: 'ARCH (renovace)',
 };
 
 function templateLabel(id: string | null | undefined): string {

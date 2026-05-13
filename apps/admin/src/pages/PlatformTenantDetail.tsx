@@ -61,6 +61,7 @@ const TEMPLATE_OPTIONS: Array<{ id: string; label: string }> = [
   { id: 'template1', label: 'MONO' },
   { id: 'template2', label: 'FLOW' },
   { id: 'template3', label: 'BLOCK' },
+  { id: 'arch', label: 'ARCH (renovace)' },
 ];
 
 function templateLabel(id: string | null | undefined): string {

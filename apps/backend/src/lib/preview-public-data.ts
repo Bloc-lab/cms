@@ -1,4 +1,4 @@
-import { legacyContentKeyToStorageKey, sitePagesConfig, toPublicContentKey } from '@nase-cms/shared';
+import { legacyContentKeyToStorageKey, toPublicContentKey } from '@nase-cms/shared';
 import { supabaseAdmin } from './supabase.js';
 import { rowsToPublicContentMap } from './public-content-map.js';
 import {
@@ -9,6 +9,7 @@ import {
   validateAndNormalizeAdminSiteSettings,
   type SiteSettingsAdmin,
 } from './site-settings.js';
+import { loadSitePagesConfigForTenant } from './tenant-site-pages.js';
 
 export function applyDraftToPublicMap(
   base: Record<string, string>,
@@ -67,7 +68,8 @@ export async function loadPreviewPayload(
   if (!supabaseAdmin) {
     throw new Error('Server misconfiguration');
   }
-  if (!sitePagesConfig[pageId as keyof typeof sitePagesConfig]) {
+  const pages = await loadSitePagesConfigForTenant(tenantId);
+  if (!pages[pageId]) {
     throw new Error('Unknown page');
   }
 

@@ -4,6 +4,7 @@ import Toast from '../components/Toast';
 import StickyActionBar from '../components/StickyActionBar';
 import { apiGet, apiPut } from '../lib/api';
 import { tenantHref } from '../lib/tenantPath';
+import { clearTenantTemplateIdCache } from '../lib/tenantTemplateId';
 
 type SiteSettingsPublic = {
   templateId?: string;
@@ -110,6 +111,7 @@ export default function TemplateAppearance() {
       };
 
       await apiPut('/api/v1/admin/site-settings', merged);
+      clearTenantTemplateIdCache();
       setBaseline(JSON.parse(JSON.stringify(value)) as SiteSettingsPublic);
       setLastSavedAt(new Date());
       setToast('Vše uloženo');

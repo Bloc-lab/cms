@@ -52,6 +52,8 @@ interface Props {
     lead?: { formspreeUrl?: string };
   } | null;
   setSiteSettings?: (next: any) => void;
+  /** Např. `arch` — u některých šablon se neupravuje navigace přes JSON. */
+  siteTemplateId?: string | null;
 }
 
 export default function PageContentFields({
@@ -67,6 +69,7 @@ export default function PageContentFields({
   setMediaPickerKey,
   siteSettings,
   setSiteSettings,
+  siteTemplateId,
 }: Props) {
   const getValue = (fieldKey: string, l: string) =>
     entries[entryKey(makeStorageKey(pageId, fieldKey), l)] ?? '';
@@ -106,7 +109,7 @@ export default function PageContentFields({
   }, [entries, lang, enabledLangs]);
 
   const navEditor =
-    isMainPage && siteSettings && setSiteSettings ? (
+    isMainPage && siteSettings && setSiteSettings && siteTemplateId !== 'arch' ? (
       <div className="rounded-md border border-gray-200 bg-white p-4">
         <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Menu (navigace)</p>
         <p className="text-sm text-gray-700 mt-1">
