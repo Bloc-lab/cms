@@ -66,7 +66,7 @@ const TEMPLATE_OPTIONS: Array<{ id: string; label: string }> = [
 
 function templateLabel(id: string | null | undefined): string {
   const key = (id ?? '').trim();
-  return TEMPLATE_OPTIONS.find((o) => o.id === key)?.label ?? (key || '—');
+  return TEMPLATE_OPTIONS.find((o) => o.id === key)?.label ?? (key || '-');
 }
 
 export default function PlatformTenantDetail() {
@@ -412,7 +412,7 @@ export default function PlatformTenantDetail() {
                           ) : (
                             users.map((u) => (
                               <tr key={u.user_id}>
-                                <td className="py-3 pr-4 text-gray-800">{u.email || '—'}</td>
+                                <td className="py-3 pr-4 text-gray-800">{u.email || '-'}</td>
                                 <td className="py-3 pr-4 text-gray-700">{u.role}</td>
                                 <td className="py-3 pr-4 font-mono text-xs text-gray-600">{u.user_id}</td>
                               </tr>
@@ -642,7 +642,7 @@ export default function PlatformTenantDetail() {
                       <span className="font-mono">admin_subdomain</span>: {data.tenant.admin_subdomain}
                     </div>
                     <div>
-                      <span className="font-mono">custom_domain</span>: {data.tenant.custom_domain ?? '—'}
+                      <span className="font-mono">custom_domain</span>: {data.tenant.custom_domain ?? '-'}
                     </div>
                     <div>
                       <span className="font-mono">updated</span>: {fmtDate(data.tenant.updated_at)}

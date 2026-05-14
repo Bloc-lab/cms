@@ -1,5 +1,5 @@
 /**
- * Výchozí texty šablony ARCH — klíče odpovídají úložišti (`main:hero.title`, …).
+ * Výchozí texty šablony ARCH - klíče odpovídají úložišti (`main:hero.title`, …).
  */
 import { ARCH_FLAT_CS } from './arch-flat-cs.js';
 import { ARCH_FLAT_EN } from './arch-flat-en.js';

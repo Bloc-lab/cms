@@ -269,7 +269,8 @@ export default function SettingsContact() {
                 <div className="rounded-md border border-gray-200 bg-white p-4">
                   <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Menu (navigace)</p>
                   <p className="text-sm text-gray-700 mt-1">
-                    Položky menu se ukládají do Site Settings. Položky, které míří na skryté sekce, se na webu automaticky nezobrazí.
+                    Úpravy horního menu se ukládají do nastavení webu. Položky směřující na skrytou část úvodní stránky
+                    se na webu sama schovají.
                   </p>
 
                   {(() => {
@@ -312,8 +313,8 @@ export default function SettingsContact() {
                                       });
                                     }}
                                   >
-                                    <option value="section">Sekce (scroll)</option>
-                                    <option value="route">URL</option>
+                                    <option value="section">Část úvodní stránky</option>
+                                    <option value="route">Jiná stránka nebo odkaz</option>
                                   </select>
                                 </div>
 
@@ -351,13 +352,13 @@ export default function SettingsContact() {
                                           return next;
                                         })
                                       }
-                                      placeholder="/o-nas nebo /#kontakt"
+                                      placeholder="Např. /o-nas nebo /#kontakt"
                                     />
                                   )}
                                 </div>
 
                                 <div className="md:col-span-4">
-                                  <label className="block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1.5">Label</label>
+                                  <label className="block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1.5">Text v menu</label>
                                   <input
                                     className={inputClass}
                                     value={item.label ?? ''}
@@ -457,7 +458,7 @@ export default function SettingsContact() {
                               })
                             }
                           >
-                            + Přidat položku (sekce)
+                            + Přidat položku na část stránky
                           </button>
                           <button
                             type="button"
@@ -472,7 +473,7 @@ export default function SettingsContact() {
                               })
                             }
                           >
-                            + Přidat položku (URL)
+                            + Přidat položku s vlastním odkazem
                           </button>
                         </div>
                       </>

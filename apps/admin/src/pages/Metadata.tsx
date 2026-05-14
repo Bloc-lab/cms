@@ -197,7 +197,7 @@ export default function Metadata() {
     setValue(ADMIN_SHOW_TRANSLATION_BADGES_KEY, 'cs', setShowTranslationBadgesValue(show));
   };
 
-  /** Pole z `metadataConfig` ve shared — přidáním klíče v balíčku se objeví ve formuláři. */
+  /** Pole z `metadataConfig` ve shared - přidáním klíče v balíčku se objeví ve formuláři. */
   const metadataFields = Object.entries(metadataConfig).filter(
     ([k]) => k !== ADMIN_ENABLED_LANGS_KEY && k !== ADMIN_SHOW_TRANSLATION_BADGES_KEY
   );

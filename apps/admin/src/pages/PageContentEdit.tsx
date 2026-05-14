@@ -5,7 +5,16 @@ import { getSitePagesForTemplate, mergeContentEntriesMap, storageKey } from '@na
 import PageContentFields from '../components/PageContentFields';
 import MediaPicker from '../components/MediaPicker';
 import { dispatchBrandingRefresh } from '../lib/branding';
-import { getSectionNavStructure, sectionAnchorId, type SectionNavNode } from '../lib/pageFieldSections';
+import {
+  CMS_ADMIN_FOCUS_SUBSECTION,
+  getSectionNavStructure,
+  isPatičkaFooterNavChildSection,
+  parseDomPortfolioSubKey,
+  parsePricingPlanIndex,
+  sectionAnchorId,
+  type CmsAdminFocusSubsectionDetail,
+  type SectionNavNode,
+} from '../lib/pageFieldSections';
 import { parseEnabledLangs, parseShowTranslationBadges } from '../lib/languages';
 import StickyActionBar from '../components/StickyActionBar';
 import Toast from '../components/Toast';
@@ -109,6 +118,23 @@ export default function PageContentEdit() {
   const enabledLangs = parseEnabledLangs(entries);
   const showTranslationBadges = parseShowTranslationBadges(entries);
 
+  const patičkaFooterNavLabelOverrides = useMemo(() => {
+    if (pageId !== 'main') return {} as Record<string, string>;
+    const out: Record<string, string> = {};
+    const read = (fieldKey: string) => (entries[entryKey(storageKey('main', fieldKey), lang)] ?? '').trim();
+    const add = (sectionTitle: string, fieldKey: string) => {
+      const v = read(fieldKey);
+      if (v) out[sectionTitle] = v;
+    };
+    add('Patička · Odbornost', 'footer.columnExpertise');
+    add('Patička · Navigace', 'footer.columnNavigation');
+    add('Patička · Kontakt', 'footer.columnConnect');
+    add('Footer · Odbornost', 'footer.columnExpertise');
+    add('Footer · Navigace', 'footer.columnNavigation');
+    add('Footer · Kontakt', 'footer.columnConnect');
+    return out;
+  }, [pageId, entries, lang]);
+
   const isContentDirty = useMemo(() => {
     if (!pageId || !pageDef) return false;
     for (const [fieldKey] of Object.entries(pageDef.fields)) {
@@ -206,7 +232,7 @@ export default function PageContentEdit() {
             `/api/v1/admin/content-drafts/${encodeURIComponent(pageId)}`
           );
         } catch {
-          /* drafts API unavailable — continue without draft */
+          /* drafts API unavailable - continue without draft */
         }
         if (cancelled) return;
 
@@ -393,7 +419,15 @@ export default function PageContentEdit() {
   }
 
   const pathLabel = pageDef.slug === '' ? '/' : `/${pageDef.slug}`;
-  const sectionNav = getSectionNavStructure(pageDef.fields);
+  const sectionNavRaw = getSectionNavStructure(pageDef.fields, {
+    patičkaFooterNavLabels: patičkaFooterNavLabelOverrides,
+  });
+  const sectionNav =
+    pageId === 'main'
+      ? sectionNavRaw.filter(
+          (n) => !(n.type === 'single' && n.sectionTitle.trim().toUpperCase() === 'NAVIGACE')
+        )
+      : sectionNavRaw;
   const canDiscard = isDirty || hasServerDraft;
 
   const scrollToSection = (sectionTitle: string) => {
@@ -432,7 +466,21 @@ export default function PageContentEdit() {
                 <button
                   key={c.sectionTitle}
                   type="button"
-                  onClick={() => scrollToSection(c.sectionTitle)}
+                  onClick={() => {
+                    const detail: CmsAdminFocusSubsectionDetail = { pageId };
+                    const portfolioSub = parseDomPortfolioSubKey(c.sectionTitle);
+                    if (portfolioSub) {
+                      detail.portfolioSub = portfolioSub;
+                    } else {
+                      const planIdx = parsePricingPlanIndex(c.sectionTitle);
+                      if (planIdx !== null) detail.pricingPlan = planIdx;
+                    }
+                    if (isPatičkaFooterNavChildSection(c.sectionTitle)) {
+                      detail.footerSubsectionTitle = c.sectionTitle;
+                    }
+                    window.dispatchEvent(new CustomEvent(CMS_ADMIN_FOCUS_SUBSECTION, { detail }));
+                    scrollToSection(node.primarySection);
+                  }}
                   className={sectionNavChildClassName}
                 >
                   {c.navLabel.toUpperCase()}
@@ -510,8 +558,8 @@ export default function PageContentEdit() {
                   disabled={publicPreviewBusy}
                   title={
                     import.meta.env.VITE_PUBLIC_SITE_URL?.trim()
-                      ? 'Zkopíruje URL veřejného webu s platným náhledovým tokenem'
-                      : 'Nastavte VITE_PUBLIC_SITE_URL pro celou URL (jinak zkopíruje jen cestu s parametry)'
+                      ? 'Zkopíruje odkaz na náhled webu (platí omezenou dobu).'
+                      : 'Zkopíruje odkaz na náhled; celá adresa v prohlížeči závisí na nastavení nasazení webu.'
                   }
                   className="rounded-md border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
                 >

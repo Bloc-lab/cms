@@ -32,7 +32,7 @@ export async function insertContentPreviewToken(params: {
   if (error) {
     const msg = error.message ?? '';
     if (/does not exist|could not find the table/i.test(msg) || (error as { code?: string }).code === '42P01') {
-      throw new Error('Preview tokens table missing — apply migration 011_content_preview_tokens.sql');
+      throw new Error('Preview tokens table missing - apply migration 011_content_preview_tokens.sql');
     }
     throw new Error(error.message);
   }

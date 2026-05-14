@@ -25,7 +25,7 @@ if (!apiKey) {
       if (!res.ok) {
         const hint401 =
           res.status === 401
-            ? `<p style="font-family: system-ui; padding: 0 1rem 1rem; color: #444; font-size: 0.875rem;">401 — plaintext v <code>.env</code> musí odpovídat <code>tenants.api_key_hash</code> (hash: <code>npm run hash-api-key</code> v kořeni repa).</p>`
+            ? `<p style="font-family: system-ui; padding: 0 1rem 1rem; color: #444; font-size: 0.875rem;">401 - plaintext v <code>.env</code> musí odpovídat <code>tenants.api_key_hash</code> (hash: <code>npm run hash-api-key</code> v kořeni repa).</p>`
             : '';
         app.innerHTML = `
           ${hint401}
@@ -34,7 +34,7 @@ if (!apiKey) {
         return;
       }
       app.innerHTML = `
-        <p style="font-family: system-ui; padding: 1rem; color: #166534;">OK — obsah z <code>/api/v1/content</code></p>
+        <p style="font-family: system-ui; padding: 1rem; color: #166534;">OK - obsah z <code>/api/v1/content</code></p>
         <pre style="font-family: ui-monospace; padding: 1rem; background: #f8fafc; overflow: auto; max-height: 80vh;">${JSON.stringify(body, null, 2)}</pre>
       `;
     })

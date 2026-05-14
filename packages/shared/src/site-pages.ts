@@ -9,7 +9,7 @@ export interface SitePageDefinition {
   slug: string;
   /** Název v administraci */
   label: string;
-  /** Pole stejná jako dříve uvnitř jedné flat mapy — klíče typu `hero.title` */
+  /** Pole stejná jako dříve uvnitř jedné flat mapy - klíče typu `hero.title` */
   fields: ContentConfig;
 }
 

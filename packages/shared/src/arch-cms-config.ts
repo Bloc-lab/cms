@@ -1,6 +1,5 @@
 /**
- * CMS metadata pro všechny klíče z arch-cs.json / arch-en.json.
- * Klíče odpovídají flat mapě obsahu na webu i v API.
+ * Popisy polí šablony ARCH v administraci (texty a obrázky na webu).
  */
 
 import type { ContentConfig, ContentField } from './types.js';
@@ -10,434 +9,493 @@ function f(label: string, section: string, rest: Partial<ContentField> = {}): Co
 }
 
 export const archCmsConfig: ContentConfig = {
-  // —— Administrace
+  // -- Administrace
   'admin.siteName': f('Název webu (značka)', 'Administrace', {
     required: true,
-    helpText: 'Zobrazuje se v hlavičce a branding; obvykle ARCH&CO nebo název studia.',
+    helpText: 'Zobrazí se v administraci a nahoře na webu; obvykle název studia nebo značka.',
     recommendedMaxLength: 40,
     maxLength: 80,
   }),
-  'admin.logo': f('Logo (URL)', 'Administrace', {
+  'admin.logo': f('Logo', 'Administrace', {
     type: 'image',
-    helpText: 'Logo pro CMS / web; lze použít i prázdné, pokud stačí textový název.',
+    helpText: 'Logo v administraci a podle šablony i na webu. Může zůstat prázdné, pokud stačí textový název.',
   }),
 
-  // —— Navigace
-  'nav.portfolio': f('Menu — Portfolio', 'Navigace', { recommendedMaxLength: 24, maxLength: 48 }),
-  'nav.process': f('Menu — Postup práce', 'Navigace', { recommendedMaxLength: 28, maxLength: 56 }),
-  'nav.services': f('Menu — Služby', 'Navigace', { recommendedMaxLength: 24, maxLength: 48 }),
-  'nav.about': f('Menu — O nás', 'Navigace', { recommendedMaxLength: 24, maxLength: 48 }),
-  'nav.contact': f('Menu — Kontakt', 'Navigace', { recommendedMaxLength: 24, maxLength: 48 }),
-  'nav.pricing': f('Menu — Ceník', 'Navigace', { recommendedMaxLength: 24, maxLength: 48 }),
-  'nav.ctaQuote': f('Menu — CTA (poptávka)', 'Navigace', {
-    helpText: 'Text primárního tlačítka / odkazu v menu.',
-    recommendedMaxLength: 32,
-    maxLength: 64,
+  // -- Navigace (šablona ARCH: jen stránky O nás, Ceník, Kontakt; bez odkazů na části úvodní stránky)
+  'nav.about': f('Menu - O nás', 'Navigace', {
+    recommendedMaxLength: 24,
+    maxLength: 48,
+    helpText:
+      'Vlastní text v horním menu. Prázdné pole doplní název stránky „O nás“ (odkaz vede na tuto stránku v sekci Stránky).',
+  }),
+  'nav.contact': f('Menu - Kontakt', 'Navigace', {
+    recommendedMaxLength: 24,
+    maxLength: 48,
+    helpText:
+      'Vlastní text v horním menu. Prázdné pole doplní název stránky „Kontakt“ (odkaz na stránku ze sekce Stránky).',
+  }),
+  'nav.pricing': f('Menu - Ceník', 'Navigace', {
+    recommendedMaxLength: 24,
+    maxLength: 48,
+    helpText:
+      'Vlastní text v horním menu. Prázdné pole doplní název stránky „Ceník“ (odkaz na stránku ze sekce Stránky).',
   }),
 
-  // —— Domů · Hero
-  'hero.image': f('Hero — hlavní obrázek', 'Domů · Hero', {
-    type: 'image',
-    helpText: 'Široký vizuál (doporučeno min. ~1600 px šířky).',
+  'nav.menuAbout': f('O nás - zobrazení v menu', 'Navigace', {
+    type: 'choice',
+    choices: [
+      { value: '1', label: 'V menu' },
+      { value: '0', label: 'Skrýt' },
+    ],
+    helpText: 'Při „Skrýt“ se položka v horním menu na webu nezobrazí.',
   }),
-  'hero.imageAlt': f('Hero — alt text obrázku', 'Domů · Hero', {
-    helpText: 'Přístupný popis pro čtečky a SEO.',
+  'nav.menuPricing': f('Ceník - zobrazení v menu', 'Navigace', {
+    type: 'choice',
+    choices: [
+      { value: '1', label: 'V menu' },
+      { value: '0', label: 'Skrýt' },
+    ],
+    helpText: 'Při „Skrýt“ se položka v horním menu na webu nezobrazí.',
+  }),
+  'nav.menuContact': f('Kontakt - zobrazení v menu', 'Navigace', {
+    type: 'choice',
+    choices: [
+      { value: '1', label: 'V menu' },
+      { value: '0', label: 'Skrýt' },
+    ],
+    helpText: 'Při „Skrýt“ se položka v horním menu na webu nezobrazí.',
+  }),
+
+  // -- Domů · Úvod
+  'hero.image': f('Úvod - hlavní obrázek', 'Domů · Úvod', {
+    type: 'image',
+    helpText: 'Velký obrázek nahoře na stránce (doporučeno alespoň kolem 1600 px šířky).',
+  }),
+  'hero.imageAlt': f('Úvod - krátký popis obrázku', 'Domů · Úvod', {
+    helpText: 'Krátký text pro návštěvníky, kteří obrázek nevidí (např. čtečka obrazovky). Doporučeno vyplnit.',
     recommendedMaxLength: 120,
     maxLength: 280,
   }),
-  'hero.badge': f('Hero — štítek nad nadpisem', 'Domů · Hero', {
+  'hero.badge': f('Úvod - malý štítek nad nadpisem', 'Domů · Úvod', {
     recommendedMaxLength: 48,
     maxLength: 100,
   }),
-  'hero.title': f('Hero — hlavní nadpis', 'Domů · Hero', {
+  'hero.title': f('Úvod - hlavní nadpis', 'Domů · Úvod', {
     recommendedMaxLength: 64,
     maxLength: 120,
   }),
-  'hero.lead': f('Hero — perex', 'Domů · Hero', {
+  'hero.lead': f('Úvod - krátký úvodní text', 'Domů · Úvod', {
     type: 'textarea',
     recommendedMaxLength: 280,
     maxLength: 720,
   }),
-  'hero.ctaPrimary': f('Hero — primární tlačítko', 'Domů · Hero', {
+  'hero.ctaPrimary': f('Úvod - hlavní tlačítko', 'Domů · Úvod', {
     recommendedMaxLength: 32,
     maxLength: 72,
   }),
-  'hero.scrollHint': f('Hero — nápověda ke scrollu', 'Domů · Hero', {
-    helpText: 'Krátký text pod CTA (např. „Prohlédnout portfolio“).',
+  'hero.scrollHint': f('Úvod - text pod tlačítky', 'Domů · Úvod', {
+    helpText: 'Krátký text pod hlavním tlačítkem (např. pozvánka posunout stránku níž k další části).',
     recommendedMaxLength: 36,
     maxLength: 80,
   }),
 
-  // —— Domů · Portfolio
-  'portfolio.title': f('Portfolio — nadpis sekce', 'Domů · Portfolio', {
+  // -- Domů · Portfolio
+  'portfolio.title': f('Portfolio - nadpis sekce', 'Domů · Portfolio', {
     recommendedMaxLength: 48,
     maxLength: 100,
   }),
-  'portfolio.desc': f('Portfolio — úvodní text', 'Domů · Portfolio', {
+  'portfolio.desc': f('Portfolio - úvodní text', 'Domů · Portfolio', {
     type: 'textarea',
     recommendedMaxLength: 220,
     maxLength: 600,
   }),
-  'portfolio.tag1': f('Portfolio — filtr / tag 1', 'Domů · Portfolio', {
+  'portfolio.tag1': f('Portfolio - štítek 1', 'Domů · Portfolio', {
     recommendedMaxLength: 24,
     maxLength: 48,
   }),
-  'portfolio.tag2': f('Portfolio — filtr / tag 2', 'Domů · Portfolio', {
+  'portfolio.tag2': f('Portfolio - štítek 2', 'Domů · Portfolio', {
     recommendedMaxLength: 24,
     maxLength: 48,
   }),
-  'portfolio.tag3': f('Portfolio — filtr / tag 3', 'Domů · Portfolio', {
+  'portfolio.tag3': f('Portfolio - štítek 3', 'Domů · Portfolio', {
     recommendedMaxLength: 24,
     maxLength: 48,
   }),
 
-  'portfolio.card1.location': f('Karta 1 — lokalita', 'Domů · Portfolio · Karta 1', {
+  'portfolio.card1.location': f('Karta 1 - lokalita', 'Domů · Portfolio · Karta 1', {
     recommendedMaxLength: 32,
     maxLength: 64,
   }),
-  'portfolio.card1.title': f('Karta 1 — titulek', 'Domů · Portfolio · Karta 1', {
+  'portfolio.card1.title': f('Karta 1 - titulek', 'Domů · Portfolio · Karta 1', {
     recommendedMaxLength: 48,
     maxLength: 100,
   }),
-  'portfolio.card1.image': f('Karta 1 — obrázek', 'Domů · Portfolio · Karta 1', { type: 'image' }),
-  'portfolio.card1.imageAlt': f('Karta 1 — alt obrázku', 'Domů · Portfolio · Karta 1', {
+  'portfolio.card1.image': f('Karta 1 - obrázek', 'Domů · Portfolio · Karta 1', { type: 'image' }),
+  'portfolio.card1.imageAlt': f('Karta 1 - popis obrázku', 'Domů · Portfolio · Karta 1', {
     maxLength: 280,
   }),
 
-  'portfolio.card2.location': f('Karta 2 — lokalita', 'Domů · Portfolio · Karta 2', {
+  'portfolio.card2.location': f('Karta 2 - lokalita', 'Domů · Portfolio · Karta 2', {
     recommendedMaxLength: 32,
     maxLength: 64,
   }),
-  'portfolio.card2.title': f('Karta 2 — titulek', 'Domů · Portfolio · Karta 2', {
+  'portfolio.card2.title': f('Karta 2 - titulek', 'Domů · Portfolio · Karta 2', {
     recommendedMaxLength: 48,
     maxLength: 100,
   }),
-  'portfolio.card2.image': f('Karta 2 — obrázek', 'Domů · Portfolio · Karta 2', { type: 'image' }),
-  'portfolio.card2.imageAlt': f('Karta 2 — alt obrázku', 'Domů · Portfolio · Karta 2', {
+  'portfolio.card2.image': f('Karta 2 - obrázek', 'Domů · Portfolio · Karta 2', { type: 'image' }),
+  'portfolio.card2.imageAlt': f('Karta 2 - popis obrázku', 'Domů · Portfolio · Karta 2', {
     maxLength: 280,
   }),
 
-  'portfolio.beforeLabel': f('Před/po — popisek „Před“', 'Domů · Portfolio · Před a po', {
+  'portfolio.beforeLabel': f('Před/po - popisek „Před“', 'Domů · Portfolio · Před a po', {
     maxLength: 24,
   }),
-  'portfolio.afterLabel': f('Před/po — popisek „Po“', 'Domů · Portfolio · Před a po', { maxLength: 24 }),
-  'portfolio.beforeImage': f('Před/po — obrázek před', 'Domů · Portfolio · Před a po', { type: 'image' }),
-  'portfolio.beforeImageAlt': f('Před/po — alt před', 'Domů · Portfolio · Před a po', { maxLength: 280 }),
-  'portfolio.afterImage': f('Před/po — obrázek po', 'Domů · Portfolio · Před a po', { type: 'image' }),
-  'portfolio.afterImageAlt': f('Před/po — alt po', 'Domů · Portfolio · Před a po', { maxLength: 280 }),
+  'portfolio.afterLabel': f('Před/po - popisek „Po“', 'Domů · Portfolio · Před a po', { maxLength: 24 }),
+  'portfolio.beforeImage': f('Před/po - obrázek před', 'Domů · Portfolio · Před a po', { type: 'image' }),
+  'portfolio.beforeImageAlt': f('Před/po - popis obrázku „před“', 'Domů · Portfolio · Před a po', { maxLength: 280 }),
+  'portfolio.afterImage': f('Před/po - obrázek po', 'Domů · Portfolio · Před a po', { type: 'image' }),
+  'portfolio.afterImageAlt': f('Před/po - popis obrázku „po“', 'Domů · Portfolio · Před a po', { maxLength: 280 }),
 
-  'portfolio.detail1.image': f('Detail 1 — obrázek', 'Domů · Portfolio · Detaily', { type: 'image' }),
-  'portfolio.detail1.imageAlt': f('Detail 1 — alt', 'Domů · Portfolio · Detaily', { maxLength: 280 }),
-  'portfolio.detail2.image': f('Detail 2 — obrázek', 'Domů · Portfolio · Detaily', { type: 'image' }),
-  'portfolio.detail2.imageAlt': f('Detail 2 — alt', 'Domů · Portfolio · Detaily', { maxLength: 280 }),
-  'portfolio.detail3.image': f('Detail 3 — obrázek', 'Domů · Portfolio · Detaily', { type: 'image' }),
-  'portfolio.detail3.imageAlt': f('Detail 3 — alt', 'Domů · Portfolio · Detaily', { maxLength: 280 }),
+  'portfolio.detail1.image': f('Detail 1 - obrázek', 'Domů · Portfolio · Detaily', { type: 'image' }),
+  'portfolio.detail1.imageAlt': f('Detail 1 - popis obrázku', 'Domů · Portfolio · Detaily', { maxLength: 280 }),
+  'portfolio.detail2.image': f('Detail 2 - obrázek', 'Domů · Portfolio · Detaily', { type: 'image' }),
+  'portfolio.detail2.imageAlt': f('Detail 2 - popis obrázku', 'Domů · Portfolio · Detaily', { maxLength: 280 }),
+  'portfolio.detail3.image': f('Detail 3 - obrázek', 'Domů · Portfolio · Detaily', { type: 'image' }),
+  'portfolio.detail3.imageAlt': f('Detail 3 - popis obrázku', 'Domů · Portfolio · Detaily', { maxLength: 280 }),
 
-  // —— Domů · Řemeslo
-  'craft.image': f('Řemeslo — obrázek', 'Domů · Řemeslo', { type: 'image' }),
-  'craft.imageAlt': f('Řemeslo — alt obrázku', 'Domů · Řemeslo', { maxLength: 280 }),
-  'craft.label': f('Řemeslo — malý štítek', 'Domů · Řemeslo', { maxLength: 40 }),
-  'craft.title': f('Řemeslo — nadpis', 'Domů · Řemeslo', { recommendedMaxLength: 64, maxLength: 120 }),
-  'craft.lead': f('Řemeslo — perex', 'Domů · Řemeslo', {
+  // -- Domů · Blok (obrázek, text, odrážky - obecný název v CMS)
+  'craft.image': f('Blok - obrázek', 'Domů · Blok', { type: 'image' }),
+  'craft.imageAlt': f('Blok - popis obrázku', 'Domů · Blok', { maxLength: 280 }),
+  'craft.label': f('Blok - malý štítek', 'Domů · Blok', { maxLength: 40 }),
+  'craft.title': f('Blok - nadpis', 'Domů · Blok', { recommendedMaxLength: 64, maxLength: 120 }),
+  'craft.lead': f('Blok - krátký úvodní text', 'Domů · Blok', {
     type: 'textarea',
     recommendedMaxLength: 260,
     maxLength: 720,
   }),
-  'craft.bullet1.title': f('Řemeslo — bod 1 nadpis', 'Domů · Řemeslo · Body', { maxLength: 80 }),
-  'craft.bullet1.desc': f('Řemeslo — bod 1 popis', 'Domů · Řemeslo · Body', {
+  'craft.bullet1.title': f('Blok - bod 1 nadpis', 'Domů · Blok · Body', { maxLength: 80 }),
+  'craft.bullet1.desc': f('Blok - bod 1 popis', 'Domů · Blok · Body', {
     type: 'textarea',
     maxLength: 400,
   }),
-  'craft.bullet2.title': f('Řemeslo — bod 2 nadpis', 'Domů · Řemeslo · Body', { maxLength: 80 }),
-  'craft.bullet2.desc': f('Řemeslo — bod 2 popis', 'Domů · Řemeslo · Body', {
+  'craft.bullet2.title': f('Blok - bod 2 nadpis', 'Domů · Blok · Body', { maxLength: 80 }),
+  'craft.bullet2.desc': f('Blok - bod 2 popis', 'Domů · Blok · Body', {
     type: 'textarea',
     maxLength: 400,
   }),
 
-  // —— Domů · CTA blok
-  'cta.bgImage': f('CTA — pozadí', 'Domů · CTA', { type: 'image' }),
-  'cta.bgImageAlt': f('CTA — alt pozadí', 'Domů · CTA', { maxLength: 280 }),
-  'cta.title': f('CTA — nadpis', 'Domů · CTA', { recommendedMaxLength: 72, maxLength: 140 }),
-  'cta.lead': f('CTA — text', 'Domů · CTA', {
+  // -- Domů · Kontaktní blok
+  'cta.bgImage': f('Kontaktní blok - obrázek na pozadí', 'Domů · Kontaktní blok', { type: 'image' }),
+  'cta.bgImageAlt': f('Kontaktní blok - popis pozadí', 'Domů · Kontaktní blok', { maxLength: 280 }),
+  'cta.title': f('Kontaktní blok - nadpis', 'Domů · Kontaktní blok', { recommendedMaxLength: 72, maxLength: 140 }),
+  'cta.lead': f('Kontaktní blok - text', 'Domů · Kontaktní blok', {
     type: 'textarea',
     recommendedMaxLength: 200,
     maxLength: 600,
   }),
-  'cta.btnPrimary': f('CTA — primární tlačítko', 'Domů · CTA', { maxLength: 80 }),
-  'cta.btnSecondary': f('CTA — sekundární tlačítko', 'Domů · CTA', { maxLength: 80 }),
+  'cta.btnPrimary': f('Kontaktní blok - první tlačítko', 'Domů · Kontaktní blok', { maxLength: 80 }),
+  'cta.btnSecondary': f('Kontaktní blok - druhé tlačítko', 'Domů · Kontaktní blok', { maxLength: 80 }),
 
-  // —— Footer (hlavní stránka)
-  'footer.blurb': f('Footer — krátký popis', 'Footer', {
+  // -- Patička (hlavní stránka)
+  'footer.blurb': f('Patička - krátký popis', 'Patička', {
     type: 'textarea',
     recommendedMaxLength: 200,
     maxLength: 500,
   }),
-  'footer.columnExpertise': f('Footer — nadpis sloupce Odbornost', 'Footer', { maxLength: 48 }),
-  'footer.linkExp1': f('Footer — odkaz odbornost 1', 'Footer · Odbornost', { maxLength: 80 }),
-  'footer.linkExp2': f('Footer — odkaz odbornost 2', 'Footer · Odbornost', { maxLength: 80 }),
-  'footer.linkExp3': f('Footer — odkaz odbornost 3', 'Footer · Odbornost', { maxLength: 80 }),
-  'footer.linkExp4': f('Footer — odkaz odbornost 4', 'Footer · Odbornost', { maxLength: 80 }),
-  'footer.columnNavigation': f('Footer — nadpis sloupce Navigace', 'Footer', { maxLength: 48 }),
-  'footer.linkNav1': f('Footer — odkaz navigace 1', 'Footer · Navigace', { maxLength: 80 }),
-  'footer.linkNav2': f('Footer — odkaz navigace 2', 'Footer · Navigace', { maxLength: 80 }),
-  'footer.linkNav3': f('Footer — odkaz navigace 3', 'Footer · Navigace', { maxLength: 80 }),
-  'footer.linkNav4': f('Footer — odkaz navigace 4', 'Footer · Navigace', { maxLength: 80 }),
-  'footer.columnConnect': f('Footer — nadpis sloupce Kontakt', 'Footer', { maxLength: 48 }),
-  'footer.addressLine1': f('Footer — adresa řádek 1', 'Footer · Kontakt', { maxLength: 120 }),
-  'footer.addressLine2': f('Footer — adresa řádek 2', 'Footer · Kontakt', { maxLength: 120 }),
-  'footer.email': f('Footer — e-mail', 'Footer · Kontakt', { maxLength: 120 }),
-  'footer.copyright': f('Footer — copyright', 'Footer', { maxLength: 200 }),
-  'footer.privacyLabel': f('Footer — popisek ochrany soukromí', 'Footer · Právní', { maxLength: 48 }),
-  'footer.termsLabel': f('Footer — popisek obchodních podmínek', 'Footer · Právní', { maxLength: 48 }),
-  'footer.linkPrivacyHref': f('Footer — URL ochrany soukromí', 'Footer · Právní', {
-    helpText: 'Kotva nebo absolutní URL.',
+  'footer.columnExpertise': f('Patička - nadpis sloupce Odbornost', 'Patička', { maxLength: 48 }),
+  'footer.linkExp1': f('Odbornost - viditelný text 1', 'Patička · Odbornost', { maxLength: 80 }),
+  'footer.linkExp1Href': f('Odbornost - adresa pro odkaz 1', 'Patička · Odbornost', {
+    helpText:
+      'Kam má vést po kliknutí: stránka na webu (např. /cenik), kotva na úvodní stránce (např. #portfolio) nebo celý odkaz zkopírovaný z prohlížeče. Prázdné: zobrazí se jen text bez prokliku (podle šablony webu).',
     maxLength: 500,
-    advanced: true,
   }),
-  'footer.linkTermsHref': f('Footer — URL obchodních podmínek', 'Footer · Právní', {
+  'footer.linkExp2': f('Odbornost - viditelný text 2', 'Patička · Odbornost', { maxLength: 80 }),
+  'footer.linkExp2Href': f('Odbornost - adresa pro odkaz 2', 'Patička · Odbornost', {
+    helpText:
+      'Kam má vést po kliknutí: stránka na webu, kotva nebo celý odkaz. Prázdné: jen text bez prokliku.',
     maxLength: 500,
-    advanced: true,
+  }),
+  'footer.linkExp3': f('Odbornost - viditelný text 3', 'Patička · Odbornost', { maxLength: 80 }),
+  'footer.linkExp3Href': f('Odbornost - adresa pro odkaz 3', 'Patička · Odbornost', {
+    helpText:
+      'Kam má vést po kliknutí: stránka na webu, kotva nebo celý odkaz. Prázdné: jen text bez prokliku.',
+    maxLength: 500,
+  }),
+  'footer.linkExp4': f('Odbornost - viditelný text 4', 'Patička · Odbornost', { maxLength: 80 }),
+  'footer.linkExp4Href': f('Odbornost - adresa pro odkaz 4', 'Patička · Odbornost', {
+    helpText:
+      'Kam má vést po kliknutí: stránka na webu, kotva nebo celý odkaz. Prázdné: jen text bez prokliku.',
+    maxLength: 500,
+  }),
+  'footer.columnNavigation': f('Patička - nadpis sloupce Navigace', 'Patička', { maxLength: 48 }),
+  'footer.linkNav1': f('Navigace - viditelný text 1', 'Patička · Navigace', { maxLength: 80 }),
+  'footer.linkNav1Href': f('Navigace - adresa pro odkaz 1', 'Patička · Navigace', {
+    helpText:
+      'Kam má vést po kliknutí: stránka na webu (např. /cenik), kotva nebo celý odkaz. Prázdné: jen text bez prokliku.',
+    maxLength: 500,
+  }),
+  'footer.linkNav2': f('Navigace - viditelný text 2', 'Patička · Navigace', { maxLength: 80 }),
+  'footer.linkNav2Href': f('Navigace - adresa pro odkaz 2', 'Patička · Navigace', {
+    helpText:
+      'Kam má vést po kliknutí: stránka na webu, kotva nebo celý odkaz. Prázdné: jen text bez prokliku.',
+    maxLength: 500,
+  }),
+  'footer.linkNav3': f('Navigace - viditelný text 3', 'Patička · Navigace', { maxLength: 80 }),
+  'footer.linkNav3Href': f('Navigace - adresa pro odkaz 3', 'Patička · Navigace', {
+    helpText: 'Např. odkaz na sociální síť (https://…). Prázdné: jen text bez prokliku.',
+    maxLength: 500,
+  }),
+  'footer.linkNav4': f('Navigace - viditelný text 4', 'Patička · Navigace', { maxLength: 80 }),
+  'footer.linkNav4Href': f('Navigace - adresa pro odkaz 4', 'Patička · Navigace', {
+    helpText: 'Např. odkaz na sociální síť (https://…). Prázdné: jen text bez prokliku.',
+    maxLength: 500,
+  }),
+  'footer.columnConnect': f('Patička - nadpis sloupce Kontakt', 'Patička', { maxLength: 48 }),
+  'footer.addressLine1': f('Patička - adresa řádek 1', 'Patička · Kontakt', { maxLength: 120 }),
+  'footer.addressLine2': f('Patička - adresa řádek 2', 'Patička · Kontakt', { maxLength: 120 }),
+  'footer.email': f('Patička - e-mail', 'Patička · Kontakt', { maxLength: 120 }),
+  'footer.copyright': f('Patička - copyright', 'Patička', { maxLength: 200 }),
+  'footer.privacyLabel': f('Patička - popisek ochrany soukromí', 'Patička · Právní', { maxLength: 48 }),
+  'footer.termsLabel': f('Patička - popisek obchodních podmínek', 'Patička · Právní', { maxLength: 48 }),
+  'footer.linkPrivacyHref': f('Patička - adresa stránky o ochraně soukromí', 'Patička · Právní', {
+    helpText: 'Krátká adresa na vašem webu (např. /ochrana-soukromi) nebo celý odkaz zkopírovaný z prohlížeče.',
+    maxLength: 500,
+  }),
+  'footer.linkTermsHref': f('Patička - adresa stránky obchodních podmínek', 'Patička · Právní', {
+    helpText: 'Krátká adresa na vašem webu (např. /obchodni-podminky) nebo celý odkaz zkopírovaný z prohlížeče.',
+    maxLength: 500,
+  }),
+  'footer.socialInstagramHref': f('Patička - odkaz Instagram (ikona pod logem)', 'Patička · Sociální sítě', {
+    helpText: 'Celá adresa profilu (https://…). Prázdné: ikona se nezobrazí.',
+    maxLength: 500,
+  }),
+  'footer.socialLinkedinHref': f('Patička - odkaz LinkedIn (ikona pod logem)', 'Patička · Sociální sítě', {
+    helpText: 'Celá adresa profilu nebo stránky firmy (https://…). Prázdné: ikona se nezobrazí.',
+    maxLength: 500,
+  }),
+  'footer.socialFacebookHref': f('Patička - odkaz Facebook (ikona pod logem)', 'Patička · Sociální sítě', {
+    helpText: 'Volitelné. Celá adresa (https://…). Prázdné: ikona se nezobrazí.',
+    maxLength: 500,
   }),
 
-  // —— Globální kontakt (mimo footer)
-  'contact.phone': f('Kontakt — telefon', 'Kontakt (globální)', { maxLength: 40 }),
-  'contact.email': f('Kontakt — e-mail', 'Kontakt (globální)', { maxLength: 120 }),
-  'contact.address': f('Kontakt — adresa', 'Kontakt (globální)', {
+  // -- Globální kontakt (mimo patičku)
+  'contact.phone': f('Kontakt - telefon', 'Kontakt (všechny stránky)', { maxLength: 40 }),
+  'contact.email': f('Kontakt - e-mail', 'Kontakt (všechny stránky)', { maxLength: 120 }),
+  'contact.address': f('Kontakt - adresa', 'Kontakt (všechny stránky)', {
     type: 'textarea',
     maxLength: 300,
   }),
 
-  'about.text': f('O nás — text', 'Stránka O nás', {
+  'about.text': f('O nás - text', 'Stránka O nás', {
     type: 'textarea',
-    helpText: 'Hlavní text sekce / stránky O nás.',
+    helpText: 'Hlavní text stránky „O nás“, který uvidí návštěvníci webu.',
     maxLength: 4000,
   }),
 
-  // —— Stránka Ceník
-  'pricingPage.hero.badge': f('Ceník — hero štítek', 'Ceník · Hero', { maxLength: 64 }),
-  'pricingPage.hero.title': f('Ceník — hero nadpis', 'Ceník · Hero', { maxLength: 120 }),
-  'pricingPage.hero.lead': f('Ceník — hero perex', 'Ceník · Hero', {
+  // -- Stránka Ceník (samostatná stránka s tarify a kartami)
+  'pricingPage.hero.badge': f('Ceník - malý štítek v úvodu', 'Ceník', { maxLength: 64 }),
+  'pricingPage.hero.title': f('Ceník - hlavní nadpis v úvodu', 'Ceník', { maxLength: 120 }),
+  'pricingPage.hero.lead': f('Ceník - úvodní text', 'Ceník', {
     type: 'textarea',
     maxLength: 720,
   }),
-  'pricingPage.hero.image': f('Ceník — hero obrázek', 'Ceník · Hero', { type: 'image' }),
-  'pricingPage.hero.imageAlt': f('Ceník — hero alt', 'Ceník · Hero', { maxLength: 280 }),
+  'pricingPage.hero.image': f('Ceník - obrázek v úvodu', 'Ceník', { type: 'image' }),
+  'pricingPage.hero.imageAlt': f('Ceník - popis obrázku v úvodu', 'Ceník', { maxLength: 280 }),
 
-  'pricingPage.journey.title': f('Ceník — cesta nadpis', 'Ceník · Cesta rekonstrukce', { maxLength: 100 }),
-  'pricingPage.journey.lead': f('Ceník — cesta úvod', 'Ceník · Cesta rekonstrukce', {
+  'pricingPage.journey.title': f('Ceník - cesta nadpis', 'Ceník', { maxLength: 100 }),
+  'pricingPage.journey.lead': f('Ceník - cesta úvod', 'Ceník', {
     type: 'textarea',
     maxLength: 500,
   }),
-  'pricingPage.journey.step1.title': f('Ceník — krok 1 nadpis', 'Ceník · Cesta · Kroky', { maxLength: 80 }),
-  'pricingPage.journey.step1.desc': f('Ceník — krok 1 popis', 'Ceník · Cesta · Kroky', {
+  'pricingPage.journey.step1.title': f('Ceník - krok 1 nadpis', 'Ceník', { maxLength: 80 }),
+  'pricingPage.journey.step1.desc': f('Ceník - krok 1 popis', 'Ceník', {
     type: 'textarea',
     maxLength: 600,
   }),
-  'pricingPage.journey.step2.title': f('Ceník — krok 2 nadpis', 'Ceník · Cesta · Kroky', { maxLength: 80 }),
-  'pricingPage.journey.step2.desc': f('Ceník — krok 2 popis', 'Ceník · Cesta · Kroky', {
+  'pricingPage.journey.step2.title': f('Ceník - krok 2 nadpis', 'Ceník', { maxLength: 80 }),
+  'pricingPage.journey.step2.desc': f('Ceník - krok 2 popis', 'Ceník', {
     type: 'textarea',
     maxLength: 600,
   }),
-  'pricingPage.journey.step3.title': f('Ceník — krok 3 nadpis', 'Ceník · Cesta · Kroky', { maxLength: 80 }),
-  'pricingPage.journey.step3.desc': f('Ceník — krok 3 popis', 'Ceník · Cesta · Kroky', {
+  'pricingPage.journey.step3.title': f('Ceník - krok 3 nadpis', 'Ceník', { maxLength: 80 }),
+  'pricingPage.journey.step3.desc': f('Ceník - krok 3 popis', 'Ceník', {
     type: 'textarea',
     maxLength: 600,
   }),
 
-  'pricingPage.tiers.eyebrow': f('Ceník — tarify drobný nadpis', 'Ceník · Tarify', { maxLength: 64 }),
-  'pricingPage.tiers.title': f('Ceník — tarify hlavní nadpis', 'Ceník · Tarify', { maxLength: 100 }),
+  'pricingPage.tiers.eyebrow': f('Ceník - tarify drobný nadpis', 'Ceník', { maxLength: 64 }),
+  'pricingPage.tiers.title': f('Ceník - tarify hlavní nadpis', 'Ceník', { maxLength: 100 }),
 
-  'pricingPage.plan1.category': f('Tarif 1 — kategorie', 'Ceník · Tarif 1', { maxLength: 48 }),
-  'pricingPage.plan1.title': f('Tarif 1 — název', 'Ceník · Tarif 1', { maxLength: 100 }),
-  'pricingPage.plan1.pricePrefix': f('Tarif 1 — prefix ceny (např. „od“)', 'Ceník · Tarif 1', {
+  'pricingPage.plan1.category': f('Tarif 1 - kategorie', 'Ceník · Tarif 1', { maxLength: 48 }),
+  'pricingPage.plan1.title': f('Tarif 1 - název', 'Ceník · Tarif 1', { maxLength: 100 }),
+  'pricingPage.plan1.pricePrefix': f('Tarif 1 - slovo před cenou (např. „od“)', 'Ceník · Tarif 1', {
     maxLength: 16,
   }),
-  'pricingPage.plan1.price': f('Tarif 1 — cena', 'Ceník · Tarif 1', { maxLength: 48 }),
-  'pricingPage.plan1.desc': f('Tarif 1 — popis', 'Ceník · Tarif 1', { type: 'textarea', maxLength: 600 }),
-  'pricingPage.plan1.cta': f('Tarif 1 — tlačítko', 'Ceník · Tarif 1', { maxLength: 80 }),
+  'pricingPage.plan1.price': f('Tarif 1 - cena', 'Ceník · Tarif 1', { maxLength: 48 }),
+  'pricingPage.plan1.desc': f('Tarif 1 - popis', 'Ceník · Tarif 1', { type: 'textarea', maxLength: 600 }),
+  'pricingPage.plan1.cta': f('Tarif 1 - tlačítko', 'Ceník · Tarif 1', { maxLength: 80 }),
 
-  'pricingPage.plan2.category': f('Tarif 2 — kategorie', 'Ceník · Tarif 2', { maxLength: 48 }),
-  'pricingPage.plan2.title': f('Tarif 2 — název', 'Ceník · Tarif 2', { maxLength: 100 }),
-  'pricingPage.plan2.pricePrefix': f('Tarif 2 — prefix ceny', 'Ceník · Tarif 2', { maxLength: 16 }),
-  'pricingPage.plan2.price': f('Tarif 2 — cena', 'Ceník · Tarif 2', { maxLength: 48 }),
-  'pricingPage.plan2.desc': f('Tarif 2 — popis', 'Ceník · Tarif 2', { type: 'textarea', maxLength: 600 }),
-  'pricingPage.plan2.cta': f('Tarif 2 — tlačítko', 'Ceník · Tarif 2', { maxLength: 80 }),
-  'pricingPage.plan2.badgePopular': f('Tarif 2 — odznak (oblíbené)', 'Ceník · Tarif 2', { maxLength: 32 }),
+  'pricingPage.plan2.category': f('Tarif 2 - kategorie', 'Ceník · Tarif 2', { maxLength: 48 }),
+  'pricingPage.plan2.title': f('Tarif 2 - název', 'Ceník · Tarif 2', { maxLength: 100 }),
+  'pricingPage.plan2.pricePrefix': f('Tarif 2 - slovo před cenou', 'Ceník · Tarif 2', { maxLength: 16 }),
+  'pricingPage.plan2.price': f('Tarif 2 - cena', 'Ceník · Tarif 2', { maxLength: 48 }),
+  'pricingPage.plan2.desc': f('Tarif 2 - popis', 'Ceník · Tarif 2', { type: 'textarea', maxLength: 600 }),
+  'pricingPage.plan2.cta': f('Tarif 2 - tlačítko', 'Ceník · Tarif 2', { maxLength: 80 }),
+  'pricingPage.plan2.badgePopular': f('Tarif 2 - štítek zvýrazněné karty', 'Ceník · Tarif 2', { maxLength: 32 }),
 
-  'pricingPage.plan3.category': f('Tarif 3 — kategorie', 'Ceník · Tarif 3', { maxLength: 48 }),
-  'pricingPage.plan3.title': f('Tarif 3 — název', 'Ceník · Tarif 3', { maxLength: 100 }),
-  'pricingPage.plan3.pricePrefix': f('Tarif 3 — prefix ceny', 'Ceník · Tarif 3', { maxLength: 16 }),
-  'pricingPage.plan3.price': f('Tarif 3 — cena', 'Ceník · Tarif 3', { maxLength: 48 }),
-  'pricingPage.plan3.desc': f('Tarif 3 — popis', 'Ceník · Tarif 3', { type: 'textarea', maxLength: 600 }),
-  'pricingPage.plan3.cta': f('Tarif 3 — tlačítko', 'Ceník · Tarif 3', { maxLength: 80 }),
+  'pricingPage.plan3.category': f('Tarif 3 - kategorie', 'Ceník · Tarif 3', { maxLength: 48 }),
+  'pricingPage.plan3.title': f('Tarif 3 - název', 'Ceník · Tarif 3', { maxLength: 100 }),
+  'pricingPage.plan3.pricePrefix': f('Tarif 3 - slovo před cenou', 'Ceník · Tarif 3', { maxLength: 16 }),
+  'pricingPage.plan3.price': f('Tarif 3 - cena', 'Ceník · Tarif 3', { maxLength: 48 }),
+  'pricingPage.plan3.desc': f('Tarif 3 - popis', 'Ceník · Tarif 3', { type: 'textarea', maxLength: 600 }),
+  'pricingPage.plan3.cta': f('Tarif 3 - tlačítko', 'Ceník · Tarif 3', { maxLength: 80 }),
 
-  'pricingPage.standard.title': f('Ceník — standard nadpis', 'Ceník · Standard', { maxLength: 100 }),
-  'pricingPage.standard.lead': f('Ceník — standard perex', 'Ceník · Standard', {
+  'pricingPage.standard.title': f('Ceník - standard nadpis', 'Standard', { maxLength: 100 }),
+  'pricingPage.standard.lead': f('Ceník - úvodní text u standardních karet', 'Standard', {
     type: 'textarea',
     maxLength: 500,
   }),
-  'pricingPage.standard.row1.label': f('Standard — řádek 1 popisek', 'Ceník · Standard', { maxLength: 80 }),
-  'pricingPage.standard.row2.label': f('Standard — řádek 2 popisek', 'Ceník · Standard', { maxLength: 80 }),
-  'pricingPage.standard.card1.title': f('Standard — karta 1 nadpis', 'Ceník · Standard · Karty', {
+  'pricingPage.standard.row1.label': f('Standard - řádek 1 popisek', 'Standard', { maxLength: 80 }),
+  'pricingPage.standard.row2.label': f('Standard - řádek 2 popisek', 'Standard', { maxLength: 80 }),
+  'pricingPage.standard.card1.title': f('Nadpis', 'Standard', {
     maxLength: 100,
+    helpText: 'Nadpis karty; stejný text se ukáže i v přepínači karet výše na této stránce.',
   }),
-  'pricingPage.standard.card1.desc': f('Standard — karta 1 popis', 'Ceník · Standard · Karty', {
+  'pricingPage.standard.card1.desc': f('Popis', 'Standard', {
     type: 'textarea',
     maxLength: 400,
+    helpText: 'Delší popis pod nadpisem této karty.',
   }),
-  'pricingPage.standard.card2.title': f('Standard — karta 2 nadpis', 'Ceník · Standard · Karty', {
+  'pricingPage.standard.card2.title': f('Nadpis', 'Standard', {
     maxLength: 100,
+    helpText: 'Nadpis druhé karty (a text v přepínači).',
   }),
-  'pricingPage.standard.card2.desc': f('Standard — karta 2 popis', 'Ceník · Standard · Karty', {
+  'pricingPage.standard.card2.desc': f('Popis', 'Standard', {
     type: 'textarea',
     maxLength: 400,
+    helpText: 'Text druhé karty.',
   }),
-  'pricingPage.standard.card3.title': f('Standard — karta 3 nadpis', 'Ceník · Standard · Karty', {
+  'pricingPage.standard.card3.title': f('Nadpis', 'Standard', {
     maxLength: 100,
+    helpText: 'Nadpis třetí karty (a text v přepínači).',
   }),
-  'pricingPage.standard.card3.desc': f('Standard — karta 3 popis', 'Ceník · Standard · Karty', {
+  'pricingPage.standard.card3.desc': f('Popis', 'Standard', {
     type: 'textarea',
     maxLength: 400,
+    helpText: 'Text třetí karty.',
   }),
-  'pricingPage.standard.card4.title': f('Standard — karta 4 nadpis', 'Ceník · Standard · Karty', {
+  'pricingPage.standard.card4.title': f('Nadpis', 'Standard', {
     maxLength: 100,
+    helpText: 'Nadpis čtvrté karty (a text v přepínači).',
   }),
-  'pricingPage.standard.card4.desc': f('Standard — karta 4 popis', 'Ceník · Standard · Karty', {
+  'pricingPage.standard.card4.desc': f('Popis', 'Standard', {
     type: 'textarea',
     maxLength: 400,
+    helpText: 'Text čtvrté karty.',
   }),
 
-  'pricingPage.final.title': f('Ceník — závěr nadpis', 'Ceník · Závěr', { maxLength: 120 }),
-  'pricingPage.final.lead': f('Ceník — závěr text', 'Ceník · Závěr', {
+  'pricingPage.final.title': f('Ceník - závěr nadpis', 'Závěr', { maxLength: 120 }),
+  'pricingPage.final.lead': f('Ceník - závěr text', 'Závěr', {
     type: 'textarea',
     maxLength: 500,
   }),
-  'pricingPage.final.btnPrimary': f('Ceník — závěr primární tlačítko', 'Ceník · Závěr', { maxLength: 80 }),
-  'pricingPage.final.btnSecondary': f('Ceník — závěr sekundární tlačítko', 'Ceník · Závěr', { maxLength: 80 }),
+  'pricingPage.final.btnPrimary': f('Ceník - závěr, hlavní tlačítko', 'Závěr', { maxLength: 80 }),
+  'pricingPage.final.btnSecondary': f('Ceník - závěr, druhé tlačítko', 'Závěr', { maxLength: 80 }),
 
-  'pricingPage.footer.blurb': f('Ceník footer — popis', 'Ceník · Footer', {
-    type: 'textarea',
-    maxLength: 400,
-  }),
-  'pricingPage.footer.columnCompany': f('Ceník footer — sloupec Společnost', 'Ceník · Footer', {
-    maxLength: 48,
-  }),
-  'pricingPage.footer.linkPortfolio': f('Ceník footer — Portfolio', 'Ceník · Footer · Odkazy', { maxLength: 80 }),
-  'pricingPage.footer.linkProcess': f('Ceník footer — Postup', 'Ceník · Footer · Odkazy', { maxLength: 80 }),
-  'pricingPage.footer.linkSustainability': f('Ceník footer — Udržitelnost', 'Ceník · Footer · Odkazy', {
-    maxLength: 80,
-  }),
-  'pricingPage.footer.columnLegal': f('Ceník footer — sloupec Právní', 'Ceník · Footer', { maxLength: 48 }),
-  'pricingPage.footer.linkPrivacy': f('Ceník footer — Ochrana soukromí', 'Ceník · Footer · Právní', {
-    maxLength: 80,
-  }),
-  'pricingPage.footer.linkTerms': f('Ceník footer — Obchodní podmínky', 'Ceník · Footer · Právní', {
-    maxLength: 80,
-  }),
-  'pricingPage.footer.linkAccessibility': f('Ceník footer — Přístupnost', 'Ceník · Footer · Právní', {
-    maxLength: 80,
-  }),
-  'pricingPage.footer.columnNewsletter': f('Ceník footer — Newsletter nadpis', 'Ceník · Footer', {
-    maxLength: 48,
-  }),
-  'pricingPage.footer.newsletterPlaceholder': f('Ceník footer — placeholder e-mail', 'Ceník · Footer', {
-    maxLength: 40,
-  }),
-  'pricingPage.footer.copyright': f('Ceník footer — copyright', 'Ceník · Footer', { maxLength: 200 }),
-
-  // —— Stránka Kontakt
-  'contactPage.hero.badge': f('Kontakt — hero štítek', 'Kontakt · Hero', { maxLength: 64 }),
-  'contactPage.hero.title': f('Kontakt — hero nadpis', 'Kontakt · Hero', { maxLength: 120 }),
-  'contactPage.hero.lead': f('Kontakt — hero perex', 'Kontakt · Hero', {
+  // -- Stránka Kontakt
+  'contactPage.hero.badge': f('Kontakt - malý štítek v úvodu', 'Kontakt · Úvod', { maxLength: 64 }),
+  'contactPage.hero.title': f('Kontakt - hlavní nadpis v úvodu', 'Kontakt · Úvod', { maxLength: 120 }),
+  'contactPage.hero.lead': f('Kontakt - úvodní text', 'Kontakt · Úvod', {
     type: 'textarea',
     maxLength: 720,
   }),
 
-  'contactPage.trust1.title': f('Kontakt — důvěra 1 nadpis', 'Kontakt · Důvěra', { maxLength: 100 }),
-  'contactPage.trust1.desc': f('Kontakt — důvěra 1 popis', 'Kontakt · Důvěra', {
+  'contactPage.trust1.title': f('Kontakt - důvěra 1 nadpis', 'Kontakt · Důvěra', { maxLength: 100 }),
+  'contactPage.trust1.desc': f('Kontakt - důvěra 1 popis', 'Kontakt · Důvěra', {
     type: 'textarea',
     maxLength: 500,
   }),
-  'contactPage.trust2.title': f('Kontakt — důvěra 2 nadpis', 'Kontakt · Důvěra', { maxLength: 100 }),
-  'contactPage.trust2.desc': f('Kontakt — důvěra 2 popis', 'Kontakt · Důvěra', {
+  'contactPage.trust2.title': f('Kontakt - důvěra 2 nadpis', 'Kontakt · Důvěra', { maxLength: 100 }),
+  'contactPage.trust2.desc': f('Kontakt - důvěra 2 popis', 'Kontakt · Důvěra', {
     type: 'textarea',
     maxLength: 500,
   }),
 
-  'contactPage.office.label': f('Kontakt — štítek sídlo', 'Kontakt · Sídlo', { maxLength: 32 }),
-  'contactPage.office.line1': f('Kontakt — sídlo řádek 1', 'Kontakt · Sídlo', { maxLength: 120 }),
-  'contactPage.office.line2': f('Kontakt — sídlo řádek 2', 'Kontakt · Sídlo', { maxLength: 120 }),
-  'contactPage.office.line3': f('Kontakt — sídlo řádek 3', 'Kontakt · Sídlo', { maxLength: 120 }),
-  'contactPage.direct.label': f('Kontakt — štítek přímý kontakt', 'Kontakt · Přímý kontakt', { maxLength: 32 }),
-  'contactPage.direct.email': f('Kontakt — přímý e-mail', 'Kontakt · Přímý kontakt', { maxLength: 120 }),
-  'contactPage.direct.phone': f('Kontakt — přímý telefon', 'Kontakt · Přímý kontakt', { maxLength: 40 }),
+  'contactPage.office.label': f('Kontakt - štítek sídlo', 'Kontakt · Sídlo', { maxLength: 32 }),
+  'contactPage.office.line1': f('Kontakt - sídlo řádek 1', 'Kontakt · Sídlo', { maxLength: 120 }),
+  'contactPage.office.line2': f('Kontakt - sídlo řádek 2', 'Kontakt · Sídlo', { maxLength: 120 }),
+  'contactPage.office.line3': f('Kontakt - sídlo řádek 3', 'Kontakt · Sídlo', { maxLength: 120 }),
+  'contactPage.direct.label': f('Kontakt - štítek přímý kontakt', 'Kontakt · Přímý kontakt', { maxLength: 32 }),
+  'contactPage.direct.email': f('Kontakt - přímý e-mail', 'Kontakt · Přímý kontakt', { maxLength: 120 }),
+  'contactPage.direct.phone': f('Kontakt - přímý telefon', 'Kontakt · Přímý kontakt', { maxLength: 40 }),
 
-  'contactPage.form.nameLabel': f('Formulář — popisek jméno', 'Kontakt · Formulář', { maxLength: 64 }),
-  'contactPage.form.namePlaceholder': f('Formulář — placeholder jméno', 'Kontakt · Formulář', {
+  'contactPage.form.nameLabel': f('Formulář - popisek jméno', 'Kontakt · Formulář', { maxLength: 64 }),
+  'contactPage.form.namePlaceholder': f('Formulář - nápověda v poli jméno', 'Kontakt · Formulář', {
     maxLength: 80,
   }),
-  'contactPage.form.emailLabel': f('Formulář — popisek e-mail', 'Kontakt · Formulář', { maxLength: 64 }),
-  'contactPage.form.emailPlaceholder': f('Formulář — placeholder e-mail', 'Kontakt · Formulář', {
+  'contactPage.form.emailLabel': f('Formulář - popisek e-mail', 'Kontakt · Formulář', { maxLength: 64 }),
+  'contactPage.form.emailPlaceholder': f('Formulář - nápověda v poli e-mail', 'Kontakt · Formulář', {
     maxLength: 80,
   }),
-  'contactPage.form.projectTypeLabel': f('Formulář — typ projektu label', 'Kontakt · Formulář', {
+  'contactPage.form.projectTypeLabel': f('Formulář - popisek výběru typu projektu', 'Kontakt · Formulář', {
     maxLength: 64,
   }),
-  'contactPage.form.projectTypePlaceholderOption': f('Formulář — placeholder výběr typu', 'Kontakt · Formulář', {
+  'contactPage.form.projectTypePlaceholderOption': f('Formulář - nápověda u výběru typu', 'Kontakt · Formulář', {
     maxLength: 80,
   }),
-  'contactPage.form.optionKitchen': f('Formulář — volba kuchyně', 'Kontakt · Formulář · Volby', {
+  'contactPage.form.optionKitchen': f('Formulář - volba kuchyně', 'Kontakt · Formulář · Volby', {
     maxLength: 120,
   }),
-  'contactPage.form.optionBathroom': f('Formulář — volba koupelna', 'Kontakt · Formulář · Volby', {
+  'contactPage.form.optionBathroom': f('Formulář - volba koupelna', 'Kontakt · Formulář · Volby', {
     maxLength: 120,
   }),
-  'contactPage.form.optionFullHome': f('Formulář — volba celý domov', 'Kontakt · Formulář · Volby', {
+  'contactPage.form.optionFullHome': f('Formulář - volba celý domov', 'Kontakt · Formulář · Volby', {
     maxLength: 120,
   }),
-  'contactPage.form.optionAddition': f('Formulář — volba přístavba', 'Kontakt · Formulář · Volby', {
+  'contactPage.form.optionAddition': f('Formulář - volba přístavba', 'Kontakt · Formulář · Volby', {
     maxLength: 120,
   }),
-  'contactPage.form.optionOutdoor': f('Formulář — volba exteriér', 'Kontakt · Formulář · Volby', {
+  'contactPage.form.optionOutdoor': f('Formulář - volba exteriér', 'Kontakt · Formulář · Volby', {
     maxLength: 120,
   }),
-  'contactPage.form.budgetLabel': f('Formulář — rozpočet label', 'Kontakt · Formulář', { maxLength: 64 }),
-  'contactPage.form.budget1': f('Formulář — rozpočet varianta 1', 'Kontakt · Formulář · Rozpočet', {
+  'contactPage.form.budgetLabel': f('Formulář - popisek výběru rozpočtu', 'Kontakt · Formulář', { maxLength: 64 }),
+  'contactPage.form.budget1': f('Formulář - rozpočet varianta 1', 'Kontakt · Formulář · Rozpočet', {
     maxLength: 48,
   }),
-  'contactPage.form.budget2': f('Formulář — rozpočet varianta 2', 'Kontakt · Formulář · Rozpočet', {
+  'contactPage.form.budget2': f('Formulář - rozpočet varianta 2', 'Kontakt · Formulář · Rozpočet', {
     maxLength: 48,
   }),
-  'contactPage.form.budget3': f('Formulář — rozpočet varianta 3', 'Kontakt · Formulář · Rozpočet', {
+  'contactPage.form.budget3': f('Formulář - rozpočet varianta 3', 'Kontakt · Formulář · Rozpočet', {
     maxLength: 48,
   }),
-  'contactPage.form.detailsLabel': f('Formulář — detaily label', 'Kontakt · Formulář', { maxLength: 64 }),
-  'contactPage.form.detailsPlaceholder': f('Formulář — detaily placeholder', 'Kontakt · Formulář', {
+  'contactPage.form.detailsLabel': f('Formulář - popisek pole pro zprávu', 'Kontakt · Formulář', { maxLength: 64 }),
+  'contactPage.form.detailsPlaceholder': f('Formulář - nápověda v poli zpráva', 'Kontakt · Formulář', {
     type: 'textarea',
     maxLength: 200,
   }),
-  'contactPage.form.submit': f('Formulář — odeslat', 'Kontakt · Formulář', { maxLength: 64 }),
-  'contactPage.form.responseNote': f('Formulář — poznámka odezvy', 'Kontakt · Formulář', { maxLength: 120 }),
+  'contactPage.form.submit': f('Formulář - odeslat', 'Kontakt · Formulář', { maxLength: 64 }),
+  'contactPage.form.responseNote': f('Formulář - poznámka odezvy', 'Kontakt · Formulář', { maxLength: 120 }),
 
-  'contactPage.banner.image': f('Kontakt — banner obrázek', 'Kontakt · Banner', { type: 'image' }),
-  'contactPage.banner.imageAlt': f('Kontakt — banner alt', 'Kontakt · Banner', { maxLength: 280 }),
-  'contactPage.banner.title': f('Kontakt — banner nadpis', 'Kontakt · Banner', { maxLength: 100 }),
-  'contactPage.banner.cta': f('Kontakt — banner CTA', 'Kontakt · Banner', { maxLength: 64 }),
+  'contactPage.banner.image': f('Kontakt - banner obrázek', 'Kontakt · Banner', { type: 'image' }),
+  'contactPage.banner.imageAlt': f('Kontakt - popis obrázku v banneru', 'Kontakt · Banner', { maxLength: 280 }),
+  'contactPage.banner.title': f('Kontakt - banner nadpis', 'Kontakt · Banner', { maxLength: 100 }),
+  'contactPage.banner.cta': f('Kontakt - text tlačítka v banneru', 'Kontakt · Banner', { maxLength: 64 }),
 
-  'contactPage.footer.copyright': f('Kontakt footer — copyright', 'Kontakt · Footer', { maxLength: 200 }),
-  'contactPage.footer.linkPrivacy': f('Kontakt footer — ochrana soukromí', 'Kontakt · Footer', {
+  'contactPage.footer.copyright': f('Kontakt - patička, text copyrightu', 'Kontakt · Patička', { maxLength: 200 }),
+  'contactPage.footer.linkPrivacy': f('Kontakt - patička, text odkazu ochrana soukromí', 'Kontakt · Patička', {
     maxLength: 80,
   }),
-  'contactPage.footer.linkTerms': f('Kontakt footer — obchodní podmínky', 'Kontakt · Footer', {
+  'contactPage.footer.linkTerms': f('Kontakt - patička, text odkazu obchodní podmínky', 'Kontakt · Patička', {
     maxLength: 80,
   }),
-  'contactPage.footer.linkSustainability': f('Kontakt footer — udržitelnost', 'Kontakt · Footer', {
+  'contactPage.footer.linkSustainability': f('Kontakt - patička, text odkazu udržitelnost', 'Kontakt · Patička', {
     maxLength: 80,
   }),
-  'contactPage.footer.linkAccessibility': f('Kontakt footer — přístupnost', 'Kontakt · Footer', {
+  'contactPage.footer.linkAccessibility': f('Kontakt - patička, text odkazu přístupnost', 'Kontakt · Patička', {
     maxLength: 80,
   }),
 };
 
-/** Pořadí klíčů podle arch-cs.json (vhodné pro stabilní UI). */
+/** Pořadí polí ve formuláři (pro stabilní zobrazení v administraci). */
 export const archCmsConfigKeyOrder = Object.keys(archCmsConfig);

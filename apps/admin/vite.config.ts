@@ -1,8 +1,17 @@
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
+const adminDir = path.dirname(fileURLToPath(import.meta.url));
+const sharedSrcEntry = path.resolve(adminDir, '../../packages/shared/src/index.ts');
+
 export default defineConfig({
   plugins: [react()],
+  resolve: {
+    // Dev i build berou konfiguraci přímo ze zdroje shared (bez ručního `npm run build -w @nase-cms/shared`).
+    alias: { '@nase-cms/shared': sharedSrcEntry },
+  },
   server: {
     port: 5173,
     host: true,

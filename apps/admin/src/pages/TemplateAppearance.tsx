@@ -18,9 +18,6 @@ type SiteSettingsPublic = {
 const inputClass =
   'w-full px-3 py-2 border border-gray-200 rounded-md text-sm bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/25 focus:border-blue-500';
 
-const selectClass =
-  'w-full px-3 py-2 border border-gray-200 rounded-md text-sm bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/25 focus:border-blue-500';
-
 function normalizeHex(value: string): string {
   const v = value.trim().toLowerCase();
   if (/^#[0-9a-f]{3}$/.test(v)) {
@@ -44,11 +41,17 @@ function formatSavedAt(d: Date): string {
   });
 }
 
-const TEMPLATE_OPTIONS: Array<{ id: string; label: string }> = [
-  { id: 'template1', label: 'MONO' },
-  { id: 'template2', label: 'FLOW' },
-  { id: 'template3', label: 'BLOCK' },
-];
+/** Jen zobrazení - změna šablony je v platformovém adminu (tenant). */
+function templateDisplayName(id: string | undefined): string {
+  const k = (id ?? '').trim();
+  const map: Record<string, string> = {
+    template1: 'MONO',
+    template2: 'FLOW',
+    template3: 'BLOCK',
+    arch: 'ARCH',
+  };
+  return map[k] || (k.length > 0 ? k : 'MONO');
+}
 
 export default function TemplateAppearance() {
   const [loading, setLoading] = useState(true);
@@ -59,9 +62,9 @@ export default function TemplateAppearance() {
 
   const [baseline, setBaseline] = useState<SiteSettingsPublic | null>(null);
   const [value, setValue] = useState<SiteSettingsPublic>({
-    templateId: 'template1',
     theme: { primary: '#2c4ab1', secondary1: '#5a4fcf', secondary2: '' },
   });
+  const [readOnlyTemplateId, setReadOnlyTemplateId] = useState<string>('template1');
 
   const isDirty = useMemo(() => JSON.stringify(value) !== JSON.stringify(baseline), [value, baseline]);
 
@@ -71,8 +74,9 @@ export default function TemplateAppearance() {
       try {
         const data = await apiGet<SiteSettingsPublic>('/api/v1/admin/site-settings');
         if (cancelled) return;
+        const tid = data.templateId ?? 'template1';
+        setReadOnlyTemplateId(tid);
         const normalized: SiteSettingsPublic = {
-          templateId: data.templateId ?? 'template1',
           theme: {
             primary: safeColor(data.theme?.primary ?? '', '#2c4ab1'),
             secondary1: safeColor(data.theme?.secondary1 ?? '', '#5a4fcf'),
@@ -97,10 +101,9 @@ export default function TemplateAppearance() {
     setSaving(true);
     setError('');
     try {
-      const existing = await apiGet<any>('/api/v1/admin/site-settings');
+      const existing = await apiGet<SiteSettingsPublic>('/api/v1/admin/site-settings');
       const merged = {
         ...existing,
-        templateId: value.templateId?.trim() || undefined,
         theme: {
           primary: safeColor(value.theme.primary, '#2c4ab1'),
           secondary1: safeColor(value.theme.secondary1, '#5a4fcf'),
@@ -140,14 +143,14 @@ export default function TemplateAppearance() {
           Nastavení webu
         </Link>
         <span className="mx-2 text-gray-300">/</span>
-        <span className="text-gray-900 font-medium">Šablona / Vzhled</span>
+        <span className="text-gray-900 font-medium">Vzhled</span>
       </nav>
 
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-2xl font-semibold text-gray-900 tracking-tight">Šablona / Vzhled</h1>
+          <h1 className="text-2xl font-semibold text-gray-900 tracking-tight">Vzhled a barvy</h1>
           <p className="text-sm text-gray-500 mt-1 max-w-xl">
-            Veřejná nastavení pro šablony (barvy). Změny se projeví okamžitě přes public endpoint.
+            Veřejná nastavení motivu (barvy). Změna šablony webu probíhá jen v administraci platformy, ne zde.
           </p>
         </div>
         <div className="flex items-center gap-2 sm:shrink-0">
@@ -172,26 +175,15 @@ export default function TemplateAppearance() {
         <div className="px-5 py-3 border-b border-gray-100 bg-gray-50/80">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-600">Šablona</h2>
         </div>
-        <div className="p-5 space-y-4">
-          <div className="max-w-md">
-            <label className="block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1.5">
-              Template ID
-            </label>
-            <select
-              value={value.templateId ?? ''}
-              onChange={(e) => setValue((p) => ({ ...p, templateId: e.target.value }))}
-              className={selectClass}
-            >
-              {TEMPLATE_OPTIONS.map((o) => (
-                <option key={o.id} value={o.id}>
-                  {o.label}
-                </option>
-              ))}
-            </select>
-            <p className="text-xs text-gray-500 mt-1">
-              Připraveno tak, aby šlo snadno přidat další šablony.
-            </p>
-          </div>
+        <div className="p-5">
+          <p className="text-sm text-gray-800">
+            <span className="font-medium">Aktuální šablona:</span>{' '}
+            <span className="font-mono text-gray-700">{templateDisplayName(readOnlyTemplateId)}</span>
+            <span className="text-gray-400 font-mono text-xs ml-2">({readOnlyTemplateId})</span>
+          </p>
+          <p className="text-xs text-gray-500 mt-2 max-w-lg">
+            Pro přepnutí šablony kontaktuj správce platformy - v tomto CMS lze upravovat jen obsah a barvy.
+          </p>
         </div>
       </section>
 
@@ -205,7 +197,7 @@ export default function TemplateAppearance() {
             { key: 'secondary1', label: 'Secondary 1', required: true, fallback: '#5a4fcf' },
             { key: 'secondary2', label: 'Secondary 2', required: false, fallback: '#000000' },
           ].map((f) => {
-            const current = (value.theme as any)[f.key] as string;
+            const current = (value.theme as Record<string, string>)[f.key] as string;
             const colorValue = safeColor(current || f.fallback, f.fallback);
             return (
               <div key={f.key} className="max-w-md">
@@ -283,4 +275,3 @@ export default function TemplateAppearance() {
     </div>
   );
 }
-

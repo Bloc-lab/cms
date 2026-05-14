@@ -1,4 +1,11 @@
-import { legacyContentKeyToStorageKey, toPublicContentKey } from '@nase-cms/shared';
+import {
+  applyArchNavPublicFallbacks,
+  applyArchNavMenuHiding,
+  stripArchNavDeprecatedKeys,
+  CMS_TEMPLATE_ARCH,
+  legacyContentKeyToStorageKey,
+  toPublicContentKey,
+} from '@nase-cms/shared';
 import { supabaseAdmin } from './supabase.js';
 import { rowsToPublicContentMap } from './public-content-map.js';
 import {
@@ -9,7 +16,7 @@ import {
   validateAndNormalizeAdminSiteSettings,
   type SiteSettingsAdmin,
 } from './site-settings.js';
-import { loadSitePagesConfigForTenant } from './tenant-site-pages.js';
+import { loadTenantSiteContext } from './tenant-site-pages.js';
 
 export function applyDraftToPublicMap(
   base: Record<string, string>,
@@ -68,7 +75,7 @@ export async function loadPreviewPayload(
   if (!supabaseAdmin) {
     throw new Error('Server misconfiguration');
   }
-  const pages = await loadSitePagesConfigForTenant(tenantId);
+  const { pages, templateId } = await loadTenantSiteContext(tenantId);
   if (!pages[pageId]) {
     throw new Error('Unknown page');
   }
@@ -97,6 +104,11 @@ export async function loadPreviewPayload(
   let content = rowsToPublicContentMap(publishedRows ?? []);
   if (draftRows?.length) {
     content = applyDraftToPublicMap(content, draftRows);
+  }
+  if (templateId === CMS_TEMPLATE_ARCH) {
+    applyArchNavPublicFallbacks(content, lang);
+    applyArchNavMenuHiding(content);
+    stripArchNavDeprecatedKeys(content);
   }
 
   const out: PreviewPayload = { lang, content };

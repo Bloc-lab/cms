@@ -20,7 +20,7 @@ function readHeader(request: FastifyRequest, name: string): string | undefined {
   return t.length > 0 ? t : undefined;
 }
 
-/** When set, BACKEND_SERVICE_* pins one tenant — unless the client selects tenant via headers. */
+/** When set, BACKEND_SERVICE_* pins one tenant - unless the client selects tenant via headers. */
 function hasExplicitTenantSelectionHeaders(request: FastifyRequest): boolean {
   return (
     readHeader(request, 'x-tenant-subdomain') !== undefined ||

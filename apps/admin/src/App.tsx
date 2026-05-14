@@ -9,6 +9,7 @@ import MediaLibrary from './pages/MediaLibrary';
 import PageContentEdit from './pages/PageContentEdit';
 import SettingsContact from './pages/SettingsContact';
 import TemplateAppearance from './pages/TemplateAppearance';
+import MenuSettings from './pages/MenuSettings';
 import DevTenants from './pages/DevTenants';
 import PlatformTenantDetail from './pages/PlatformTenantDetail';
 import { needsPathTenantSlug, tenantHref } from './lib/tenantPath';
@@ -83,6 +84,7 @@ const CMS_NESTED_ROUTES = [
   <Route key="index" index element={<HomeRedirect />} />,
   <Route key="content" path="content" element={<ContentScopeRedirect />} />,
   <Route key="metadata" path="metadata" element={<Metadata />} />,
+  <Route key="menu" path="settings/menu" element={<MenuSettings />} />,
   <Route key="tpl" path="settings/template" element={<TemplateAppearance />} />,
   <Route key="contact" path="settings/contact" element={<SettingsContact />} />,
   <Route key="media" path="media" element={<MediaLibrary />} />,

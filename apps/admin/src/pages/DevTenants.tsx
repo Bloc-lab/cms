@@ -38,7 +38,7 @@ const TEMPLATE_LABELS: Record<string, string> = {
 
 function templateLabel(id: string | null | undefined): string {
   const key = (id ?? '').trim();
-  return TEMPLATE_LABELS[key] ?? (key || '—');
+  return TEMPLATE_LABELS[key] ?? (key || '-');
 }
 
 export default function DevTenants() {
@@ -250,12 +250,12 @@ export default function DevTenants() {
                           <div className="text-xs text-gray-500">{t.id}</div>
                         </td>
                         <td className="py-3 pr-4 font-mono text-xs text-gray-700">{t.admin_subdomain}</td>
-                        <td className="py-3 pr-4 text-gray-700">{t.custom_domain ?? '—'}</td>
+                        <td className="py-3 pr-4 text-gray-700">{t.custom_domain ?? '-'}</td>
                         <td className="py-3 pr-4 text-gray-700">
                           {templateLabel(t.template?.id ?? null)}{' '}
                           {t.template?.version != null ? <span className="text-xs text-gray-500">v{t.template.version}</span> : null}
                         </td>
-                        <td className="py-3 pr-4 text-gray-700">{t.status ?? '—'}</td>
+                        <td className="py-3 pr-4 text-gray-700">{t.status ?? '-'}</td>
                         <td className="py-3 pr-4 text-gray-700">{fmtDate(t.updated_at)}</td>
                         <td className="py-3 pl-4">
                           <div className="flex items-center justify-end text-gray-400 font-semibold">›</div>

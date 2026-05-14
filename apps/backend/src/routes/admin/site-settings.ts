@@ -50,12 +50,31 @@ export async function adminSiteSettingsRoutes(app: FastifyInstance) {
         return reply.status(500).send({ error: 'Server error' });
       }
 
-      const parsed = validateAndNormalizeAdminSiteSettings(request.body);
+      const { data: existingRow, error: existingErr } = await supabaseAdmin
+        .from('site_settings')
+        .select('template_id')
+        .eq('tenant_id', tenantId)
+        .maybeSingle();
+
+      if (existingErr) {
+        request.log.error({ err: existingErr }, 'admin site-settings load template_id');
+        return reply.status(500).send({ error: 'Failed to load site settings' });
+      }
+
+      const body = { ...(request.body as Record<string, unknown>) };
+      delete body.templateId;
+
+      const parsed = validateAndNormalizeAdminSiteSettings(body);
       if (!parsed.ok) {
         return reply.status(400).send({ error: parsed.error });
       }
 
       const dbRow = toDbAdminSiteSettings(parsed.value);
+      const preserved =
+        typeof (existingRow as { template_id?: string | null } | null)?.template_id === 'string'
+          ? (existingRow as { template_id: string }).template_id.trim()
+          : '';
+      dbRow.template_id = preserved.length > 0 ? preserved : dbRow.template_id ?? 'template1';
 
       const { error } = await supabaseAdmin
         .from('site_settings')

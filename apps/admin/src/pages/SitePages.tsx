@@ -79,9 +79,12 @@ export default function SitePages() {
             Podle konfigurace · {total} {total === 1 ? 'stránka' : total < 5 ? 'stránky' : 'stránek'}
           </p>
         </div>
-        <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-blue-600 shrink-0">
-          <span className="inline-block h-2 w-2 rounded-full bg-blue-500" aria-hidden />
-          Synchronizace aktivní
+        <div
+          className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-gray-500 shrink-0"
+          title="Stránky a pole odpovídají šabloně v kódu (shared balíček)."
+        >
+          <span className="inline-block h-2 w-2 rounded-full bg-gray-400" aria-hidden />
+          {templateId === 'arch' ? 'Šablona ARCH' : 'Výchozí šablona'}
         </div>
       </div>
 
@@ -150,7 +153,7 @@ export default function SitePages() {
                 onClick={() => setPageIndex((i) => Math.min(pageCount - 1, i + 1))}
                 className="px-3 py-1.5 font-semibold uppercase tracking-wide rounded text-blue-600 hover:text-blue-800 disabled:opacity-40 disabled:cursor-not-allowed"
               >
-                Další stránka
+                Další
               </button>
             </div>
           </div>

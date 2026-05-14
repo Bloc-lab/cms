@@ -51,7 +51,7 @@ export const REDUS_PUBLIC_DEFAULTS_CS: Record<string, string> = {
   'why.bullet2': 'Zkušenosti s firmami i OSVČ',
   'why.bullet3': 'Včasnost a transparentní komunikace',
   'why.quote':
-    '„Nabízíme víc než jen účetnictví — dodáme vám jistotu, přehled a řešení, která podporují růst podnikání.“',
+    '„Nabízíme víc než jen účetnictví - dodáme vám jistotu, přehled a řešení, která podporují růst podnikání.“',
   'why.quoteAuthor': 'Martin Rada, vedoucí kanceláře',
   'why.image1':
     'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=800&q=80',
@@ -101,7 +101,7 @@ export const REDUS_PUBLIC_DEFAULTS_CS: Record<string, string> = {
   'pricing.plan2.priceMonthly': '1 490 Kč / měsíc',
   'pricing.plan2.priceYearly': '14 300 Kč / rok',
   'pricing.plan2.desc':
-    'Pro firmy, které potřebují víc než minimum — rychlejší reakce a širší rozsah služeb.',
+    'Pro firmy, které potřebují víc než minimum - rychlejší reakce a širší rozsah služeb.',
   'pricing.plan2.cta': 'Nezávazně poptat',
   'pricing.plan2.ctaHref': '',
   'pricing.plan2.popularBadge': 'Nejoblíbenější',
@@ -111,7 +111,7 @@ export const REDUS_PUBLIC_DEFAULTS_CS: Record<string, string> = {
   'pricing.plan3.priceMonthly': 'Individuálně',
   'pricing.plan3.priceYearly': 'Individuálně',
   'pricing.plan3.desc':
-    'Na míru pro větší organizace a složitější struktury — domluvíme rozsah podle vašich potřeb.',
+    'Na míru pro větší organizace a složitější struktury - domluvíme rozsah podle vašich potřeb.',
   'pricing.plan3.cta': 'Domluvit konzultaci',
   'pricing.plan3.ctaHref': '',
   'pricing.plan3.popularBadge': '',
@@ -168,7 +168,7 @@ export const REDUS_PUBLIC_DEFAULTS_EN: Record<string, string> = {
 
   'hero.enabled': 'show',
   'hero.badge': 'Accounting office in Prague 8 (Čimice) · experienced and personal',
-  'hero.title': 'Accounting, payroll and taxes—handled',
+  'hero.title': 'Accounting, payroll and taxes-handled',
   'hero.titleAccent': 'Accounting',
   'hero.lead':
     'End-to-end accounting, payroll and tax returns for freelancers and companies. Clear, on time and fully compliant with current legislation.',
@@ -193,7 +193,7 @@ export const REDUS_PUBLIC_DEFAULTS_EN: Record<string, string> = {
     'Full payroll processing, communication with authorities and support for HR administration for small and larger teams.',
   'services.4.title': 'Accounting outsourcing',
   'services.4.desc':
-    'We can take over your finance office: documents, invoicing, banking payments, representation at authorities and regular reporting—under clear contractual terms.',
+    'We can take over your finance office: documents, invoicing, banking payments, representation at authorities and regular reporting-under clear contractual terms.',
 
   'why.enabled': 'show',
   'why.title': 'Why choose REDUS?',
@@ -203,7 +203,7 @@ export const REDUS_PUBLIC_DEFAULTS_EN: Record<string, string> = {
   'why.bullet2': 'Experience with companies and freelancers',
   'why.bullet3': 'On-time delivery and transparent communication',
   'why.quote':
-    '“We offer more than accounting—we bring certainty, clarity and solutions that support sustainable growth.”',
+    '“We offer more than accounting-we bring certainty, clarity and solutions that support sustainable growth.”',
   'why.quoteAuthor': 'Martin Rada, head of office',
   'why.image1':
     'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=800&q=80',
@@ -244,7 +244,7 @@ export const REDUS_PUBLIC_DEFAULTS_EN: Record<string, string> = {
   'pricing.plan1.priceMonthly': 'from 690 CZK / month',
   'pricing.plan1.priceYearly': 'from 6,600 CZK / year',
   'pricing.plan1.desc':
-    'A good fit for freelancers and smaller businesses that want their accounting in order—without hassle.',
+    'A good fit for freelancers and smaller businesses that want their accounting in order-without hassle.',
   'pricing.plan1.cta': 'Request an offer',
   'pricing.plan1.ctaHref': '',
   'pricing.plan1.popularBadge': '',
@@ -254,7 +254,7 @@ export const REDUS_PUBLIC_DEFAULTS_EN: Record<string, string> = {
   'pricing.plan2.priceMonthly': 'from 1,490 CZK / month',
   'pricing.plan2.priceYearly': 'from 14,300 CZK / year',
   'pricing.plan2.desc':
-    'For businesses that need more—faster responses and a broader service scope.',
+    'For businesses that need more-faster responses and a broader service scope.',
   'pricing.plan2.cta': 'Request an offer',
   'pricing.plan2.ctaHref': '',
   'pricing.plan2.popularBadge': 'Most popular',
@@ -264,7 +264,7 @@ export const REDUS_PUBLIC_DEFAULTS_EN: Record<string, string> = {
   'pricing.plan3.priceMonthly': 'Custom',
   'pricing.plan3.priceYearly': 'Custom',
   'pricing.plan3.desc':
-    'Tailored for larger organisations and complex structures—scope defined to your needs.',
+    'Tailored for larger organisations and complex structures-scope defined to your needs.',
   'pricing.plan3.cta': 'Book a consultation',
   'pricing.plan3.ctaHref': '',
   'pricing.plan3.popularBadge': '',

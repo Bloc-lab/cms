@@ -19,7 +19,7 @@ export function slugFromAdminHostname(hostname: string, adminBaseDomain: string 
 }
 
 /**
- * true = sdílená URL bez tenantové subdomény (typicky *.vercel.app) — použij /t/&lt;slug&gt;/….
+ * true = sdílená URL bez tenantové subdomény (typicky *.vercel.app) - použij /t/&lt;slug&gt;/….
  */
 export function needsPathTenantSlug(): boolean {
   if (typeof window === 'undefined') return false;

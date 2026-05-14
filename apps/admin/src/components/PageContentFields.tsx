@@ -1,19 +1,53 @@
 import { useEffect, useMemo, useState } from 'react';
 import { storageKey as makeStorageKey, type ContentConfig, type ContentField } from '@nase-cms/shared';
 import { PRIMARY_LANG } from '../lib/languages';
-import { sectionAnchorId } from '../lib/pageFieldSections';
+import {
+  CMS_ADMIN_FOCUS_SUBSECTION,
+  getPatičkaFooterBlockRoot,
+  getPatičkaFooterSubsectionDisplayLabel,
+  isPatičkaFooterChildSectionTitle,
+  parseDomPortfolioSubKey,
+  parsePricingPlanIndex,
+  sectionAnchorId,
+  type CmsAdminFocusSubsectionDetail,
+} from '../lib/pageFieldSections';
 
 const inputClass =
   'w-full px-3 py-2 border border-gray-200 rounded-md text-sm bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/25 focus:border-blue-500';
 
-const selectClass =
-  'w-full px-3 py-2 border border-gray-200 rounded-md text-sm bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/25 focus:border-blue-500';
-
-function parsePricingPlanIndex(sectionTitle: string): number | null {
-  const m = sectionTitle.trim().match(/^Ceník\s*·\s*Tarif\s*(\d+)\s*$/i);
+/** ARCH stránka ceníku: `standard.card1.title` → 1 */
+function parseArchStandardCardIndex(fieldKey: string): number | null {
+  const m = fieldKey.match(/^standard\.card(\d+)\./);
   if (!m) return null;
   const n = parseInt(m[1] ?? '', 10);
   return Number.isFinite(n) ? n : null;
+}
+
+const DOMU_PORTFOLIO_INTRO = 'Domů · Portfolio';
+
+function domPortfolioSubSortOrder(sectionTitle: string): number {
+  const k = parseDomPortfolioSubKey(sectionTitle);
+  if (!k) return 999;
+  if (k.startsWith('card:')) return parseInt(k.slice(5), 10);
+  if (k === 'beforeAfter') return 10;
+  if (k === 'details') return 11;
+  return 999;
+}
+
+function domPortfolioTabLabel(sectionTitle: string): string {
+  const k = parseDomPortfolioSubKey(sectionTitle);
+  if (k?.startsWith('card:')) return `Karta ${k.slice(5)}`;
+  if (k === 'beforeAfter') return 'Před a po';
+  if (k === 'details') return 'Detaily';
+  return sectionTitle;
+}
+
+function isContactFormVolbyOrRozpocetSection(title: string): boolean {
+  const t = title.trim();
+  return (
+    /^Kontakt\s*·\s*Formulář\s*·\s*Volby\s*$/i.test(t) ||
+    /^Kontakt\s*·\s*Formulář\s*·\s*Rozpočet\s*$/i.test(t)
+  );
 }
 
 function fieldKeyMatchesAny(fieldKey: string, keys: string[]): boolean {
@@ -52,7 +86,7 @@ interface Props {
     lead?: { formspreeUrl?: string };
   } | null;
   setSiteSettings?: (next: any) => void;
-  /** Např. `arch` — u některých šablon se neupravuje navigace přes JSON. */
+  /** Volitelné - šablona (např. arch); předává se kvůli budoucím větvím v editoru. */
   siteTemplateId?: string | null;
 }
 
@@ -69,7 +103,7 @@ export default function PageContentFields({
   setMediaPickerKey,
   siteSettings,
   setSiteSettings,
-  siteTemplateId,
+  siteTemplateId: _siteTemplateId,
 }: Props) {
   const getValue = (fieldKey: string, l: string) =>
     entries[entryKey(makeStorageKey(pageId, fieldKey), l)] ?? '';
@@ -97,212 +131,6 @@ export default function PageContentFields({
   };
 
   const isMainPage = pageId === 'main';
-  const navItems = (siteSettings?.nav?.items ?? []).slice(0, 8);
-  const navAvailableSections = useMemo(() => {
-    const enabled = (key: string) => (getValue(key, PRIMARY_LANG) ?? '').trim() !== 'hide';
-    const out: Array<{ id: 'services' | 'pricing' | 'tax' | 'contact'; label: string }> = [];
-    if (enabled('services.enabled')) out.push({ id: 'services', label: 'Služby' });
-    if (enabled('pricing.enabled')) out.push({ id: 'pricing', label: 'Ceník' });
-    if (enabled('tax.enabled')) out.push({ id: 'tax', label: 'Daňové poradenství' });
-    if (enabled('cta.enabled')) out.push({ id: 'contact', label: 'Kontakt (CTA)' });
-    return out;
-  }, [entries, lang, enabledLangs]);
-
-  const navEditor =
-    isMainPage && siteSettings && setSiteSettings && siteTemplateId !== 'arch' ? (
-      <div className="rounded-md border border-gray-200 bg-white p-4">
-        <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Menu (navigace)</p>
-        <p className="text-sm text-gray-700 mt-1">
-          Přidej položky menu a vyber, na jakou sekci (scroll) nebo URL mají vést. Položky na skryté sekce se na webu automaticky nezobrazí.
-        </p>
-
-        <div className="mt-4 space-y-3">
-          {navItems.length === 0 ? (
-            <p className="text-sm text-gray-500">Zatím žádné položky.</p>
-          ) : null}
-
-          {navItems.map((item, idx) => {
-            const kind = item.kind;
-            return (
-              <div
-                key={`${kind}-${idx}`}
-                className="rounded-md border border-gray-200 bg-gray-50/60 p-3"
-              >
-                <div className="grid grid-cols-1 gap-3 md:grid-cols-12 md:items-end">
-                  <div className="md:col-span-3">
-                    <label className="block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1.5">
-                      Typ
-                    </label>
-                    <select
-                      className={selectClass}
-                      value={kind}
-                      onChange={(e) => {
-                        const nextKind = e.target.value === 'route' ? 'route' : 'section';
-                        updateSiteSettings((prev) => {
-                          const items = [...(prev.nav?.items ?? [])];
-                          items[idx] =
-                            nextKind === 'section'
-                              ? { kind: 'section', section: navAvailableSections[0]?.id ?? 'services', label: item.label }
-                              : { kind: 'route', href: '/', label: item.label };
-                          return { ...prev, nav: { ...(prev.nav ?? {}), items } };
-                        });
-                      }}
-                    >
-                      <option value="section">Sekce (scroll)</option>
-                      <option value="route">URL</option>
-                    </select>
-                  </div>
-
-                  <div className="md:col-span-4">
-                    <label className="block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1.5">
-                      Cíl
-                    </label>
-                    {kind === 'section' ? (
-                      <select
-                        className={selectClass}
-                        value={item.section}
-                        onChange={(e) => {
-                          const section = e.target.value as any;
-                          updateSiteSettings((prev) => {
-                            const items = [...(prev.nav?.items ?? [])];
-                            items[idx] = { ...(items[idx] ?? {}), kind: 'section', section };
-                            return { ...prev, nav: { ...(prev.nav ?? {}), items } };
-                          });
-                        }}
-                      >
-                        {navAvailableSections.map((s) => (
-                          <option key={s.id} value={s.id}>
-                            {s.label}
-                          </option>
-                        ))}
-                      </select>
-                    ) : (
-                      <input
-                        className={inputClass}
-                        value={(item as any).href ?? ''}
-                        onChange={(e) =>
-                          updateSiteSettings((prev) => {
-                            const items = [...(prev.nav?.items ?? [])];
-                            items[idx] = { ...(items[idx] ?? {}), kind: 'route', href: e.target.value };
-                            return { ...prev, nav: { ...(prev.nav ?? {}), items } };
-                          })
-                        }
-                        placeholder="/o-nas nebo /#kontakt"
-                      />
-                    )}
-                  </div>
-
-                  <div className="md:col-span-4">
-                    <label className="block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1.5">
-                      Label
-                    </label>
-                    <input
-                      className={inputClass}
-                      value={item.label ?? ''}
-                      onChange={(e) =>
-                        updateSiteSettings((prev) => {
-                          const items = [...(prev.nav?.items ?? [])];
-                          items[idx] = { ...(items[idx] ?? {}), label: e.target.value };
-                          return { ...prev, nav: { ...(prev.nav ?? {}), items } };
-                        })
-                      }
-                      placeholder="Text v menu"
-                    />
-                  </div>
-
-                  <div className="md:col-span-1 md:flex md:justify-end">
-                    <div className="flex gap-2 md:flex-col md:items-end">
-                      <div className="flex gap-1">
-                        <button
-                          type="button"
-                          className="px-2 py-2 text-sm font-semibold border border-gray-200 rounded-md bg-white hover:bg-gray-50 disabled:opacity-50"
-                          disabled={idx === 0}
-                          title="Přesunout nahoru"
-                          onClick={() =>
-                            updateSiteSettings((prev) => {
-                              const items = [...(prev.nav?.items ?? [])];
-                              if (idx <= 0 || idx >= items.length) return prev;
-                              const tmp = items[idx - 1];
-                              items[idx - 1] = items[idx];
-                              items[idx] = tmp;
-                              return { ...prev, nav: { ...(prev.nav ?? {}), items } };
-                            })
-                          }
-                        >
-                          ↑
-                        </button>
-                        <button
-                          type="button"
-                          className="px-2 py-2 text-sm font-semibold border border-gray-200 rounded-md bg-white hover:bg-gray-50 disabled:opacity-50"
-                          disabled={idx >= navItems.length - 1}
-                          title="Přesunout dolů"
-                          onClick={() =>
-                            updateSiteSettings((prev) => {
-                              const items = [...(prev.nav?.items ?? [])];
-                              if (idx < 0 || idx >= items.length - 1) return prev;
-                              const tmp = items[idx + 1];
-                              items[idx + 1] = items[idx];
-                              items[idx] = tmp;
-                              return { ...prev, nav: { ...(prev.nav ?? {}), items } };
-                            })
-                          }
-                        >
-                          ↓
-                        </button>
-                      </div>
-                      <button
-                        type="button"
-                        className="px-3 py-2 text-sm font-semibold text-red-700 hover:bg-red-50 rounded-md"
-                        onClick={() =>
-                          updateSiteSettings((prev) => {
-                            const items = [...(prev.nav?.items ?? [])];
-                            items.splice(idx, 1);
-                            return { ...prev, nav: { ...(prev.nav ?? {}), items } };
-                          })
-                        }
-                      >
-                        Smazat
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-        <div className="mt-4 flex flex-wrap gap-2">
-          <button
-            type="button"
-            className="px-3 py-2 text-sm font-semibold border border-gray-200 rounded-md bg-white hover:bg-gray-50 disabled:opacity-50"
-            disabled={navItems.length >= navAvailableSections.length && navAvailableSections.length > 0}
-            onClick={() =>
-              updateSiteSettings((prev) => {
-                const items = [...(prev.nav?.items ?? [])];
-                const first = navAvailableSections[0]?.id ?? 'services';
-                items.push({ kind: 'section', section: first, label: '' });
-                return { ...prev, nav: { ...(prev.nav ?? {}), items } };
-              })
-            }
-          >
-            + Přidat položku (sekce)
-          </button>
-          <button
-            type="button"
-            className="px-3 py-2 text-sm font-semibold border border-gray-200 rounded-md bg-white hover:bg-gray-50"
-            onClick={() =>
-              updateSiteSettings((prev) => {
-                const items = [...(prev.nav?.items ?? [])];
-                items.push({ kind: 'route', href: '/', label: '' });
-                return { ...prev, nav: { ...(prev.nav ?? {}), items } };
-              })
-            }
-          >
-            + Přidat položku (URL)
-          </button>
-        </div>
-      </div>
-    ) : null;
 
   const bySection = new Map<string, Array<[string, ContentField]>>();
   for (const [fieldKey, field] of Object.entries(fields)) {
@@ -318,10 +146,37 @@ export default function PageContentFields({
     .filter(([title]) => parsePricingPlanIndex(title) !== null)
     .sort((a, b) => (parsePricingPlanIndex(a[0]) ?? 0) - (parsePricingPlanIndex(b[0]) ?? 0));
 
+  const domPortfolioSubsections = sectionsRaw
+    .filter(([title]) => parseDomPortfolioSubKey(title) !== null)
+    .sort((a, b) => domPortfolioSubSortOrder(a[0]) - domPortfolioSubSortOrder(b[0]));
+
+  const contactFormSubSections = sectionsRaw
+    .filter(([title]) => isContactFormVolbyOrRozpocetSection(title))
+    .sort((a, b) => (a[0].includes('Volby') ? 0 : 1) - (b[0].includes('Volby') ? 0 : 1));
+
   const ctaFormSection = sectionsRaw.find(([title]) => title.trim() === 'CTA · Formulář') ?? null;
 
+  const patičkaFooterSubsections = sectionsRaw.filter(([title]) => isPatičkaFooterChildSectionTitle(title));
+
+  let patičkaFooterRootTitle: 'Patička' | 'Footer' | null = null;
+  for (const [title] of sectionsRaw) {
+    const r = getPatičkaFooterBlockRoot(title);
+    if (r && title.trim() === r) {
+      patičkaFooterRootTitle = r;
+      break;
+    }
+  }
+  if (!patičkaFooterRootTitle && patičkaFooterSubsections.length > 0) {
+    patičkaFooterRootTitle = getPatičkaFooterBlockRoot(patičkaFooterSubsections[0]![0]) ?? null;
+  }
+
   const sections = sectionsRaw.filter(
-    ([title]) => parsePricingPlanIndex(title) === null && title.trim() !== 'CTA · Formulář'
+    ([title]) =>
+      parsePricingPlanIndex(title) === null &&
+      parseDomPortfolioSubKey(title) === null &&
+      !isContactFormVolbyOrRozpocetSection(title) &&
+      title.trim() !== 'CTA · Formulář' &&
+      !isPatičkaFooterChildSectionTitle(title)
   );
 
   const [activePricingPlan, setActivePricingPlan] = useState<number>(1);
@@ -331,6 +186,61 @@ export default function PageContentFields({
     const first = parsePricingPlanIndex(pricingPlanSections[0]?.[0] ?? '') ?? 1;
     setActivePricingPlan(first);
   }, [pricingPlanSections, activePricingPlan]);
+
+  const archStandardCardIndices = useMemo(() => {
+    if (pageId !== 'pricingPage') return [] as number[];
+    const ids = new Set<number>();
+    for (const [k] of Object.entries(fields)) {
+      const n = parseArchStandardCardIndex(k);
+      if (n !== null) ids.add(n);
+    }
+    return [...ids].sort((a, b) => a - b);
+  }, [pageId, fields]);
+
+  const [activeArchStandardCard, setActiveArchStandardCard] = useState<number>(1);
+  useEffect(() => {
+    if (archStandardCardIndices.length === 0) return;
+    if (archStandardCardIndices.includes(activeArchStandardCard)) return;
+    setActiveArchStandardCard(archStandardCardIndices[0] ?? 1);
+  }, [archStandardCardIndices, activeArchStandardCard]);
+
+  const [activeDomPortfolioSub, setActiveDomPortfolioSub] = useState<string>('card:1');
+  useEffect(() => {
+    if (domPortfolioSubsections.length === 0) return;
+    const keys = domPortfolioSubsections.map(([t]) => parseDomPortfolioSubKey(t)!).filter(Boolean);
+    if (keys.includes(activeDomPortfolioSub)) return;
+    setActiveDomPortfolioSub(keys[0] ?? 'card:1');
+  }, [domPortfolioSubsections, activeDomPortfolioSub]);
+
+  const [activePatičkaFooterSubTitle, setActivePatičkaFooterSubTitle] = useState('');
+  useEffect(() => {
+    if (patičkaFooterSubsections.length === 0) return;
+    if (patičkaFooterSubsections.some(([t]) => t === activePatičkaFooterSubTitle)) return;
+    setActivePatičkaFooterSubTitle(patičkaFooterSubsections[0]![0]);
+  }, [patičkaFooterSubsections, activePatičkaFooterSubTitle]);
+
+  useEffect(() => {
+    const handler = (ev: Event) => {
+      const e = ev as CustomEvent<CmsAdminFocusSubsectionDetail>;
+      const d = e.detail;
+      if (!d || d.pageId !== pageId) return;
+      if (typeof d.portfolioSub === 'string' && d.portfolioSub.length > 0) {
+        setActiveDomPortfolioSub(d.portfolioSub);
+      }
+      if (typeof d.pricingPlan === 'number' && Number.isFinite(d.pricingPlan)) {
+        setActivePricingPlan(d.pricingPlan);
+      }
+      if (typeof d.footerSubsectionTitle === 'string' && d.footerSubsectionTitle.trim().length > 0) {
+        if (isPatičkaFooterChildSectionTitle(d.footerSubsectionTitle)) {
+          setActivePatičkaFooterSubTitle(d.footerSubsectionTitle);
+        }
+      }
+    };
+    window.addEventListener(CMS_ADMIN_FOCUS_SUBSECTION, handler as EventListener);
+    return () => window.removeEventListener(CMS_ADMIN_FOCUS_SUBSECTION, handler as EventListener);
+  }, [pageId]);
+
+  const [activeContactFormTab, setActiveContactFormTab] = useState<0 | 1 | 2>(0);
 
   const renderField = (fieldKey: string, field: ContentField) => {
     const fieldType = field?.type ?? 'text';
@@ -584,6 +494,9 @@ export default function PageContentFields({
             : 'center';
 
         const isNavSection = isMainPage && sectionTitle.trim().toUpperCase() === 'NAVIGACE';
+        if (isNavSection) {
+          return null;
+        }
 
         const ctaLayoutToggle =
           isCtaSection && ctaVariant === 'form' ? (
@@ -659,7 +572,6 @@ export default function PageContentFields({
               {headerRight}
             </div>
             <div className={`p-5 ${isPricingPlanSection && !isCollapsed ? 'space-y-4' : 'space-y-5'}`}>
-              {isNavSection ? navEditor : null}
               {isHidden && sectionEnabledKey ? (
                 <p className="text-sm text-gray-500">
                   Sekce je skrytá. Přepni na „Zobrazit“ pro editaci obsahu.
@@ -744,7 +656,7 @@ export default function PageContentFields({
                       </div>
                       <div className="md:col-span-2">
                         <label className="block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1.5">
-                          Formspree URL (pro tento web)
+                          Odkaz pro odeslání formuláře (služba Formspree)
                         </label>
                         <input
                           type="url"
@@ -797,6 +709,279 @@ export default function PageContentFields({
                 if (sectionTitle.trim() === 'Ceník' && isSingleBillingMode) {
                   finalFields = finalFields.filter(
                     ([k]) => !fieldKeyMatchesAny(k, ['pricing.billingMonthly', 'pricing.billingYearly'])
+                  );
+                }
+
+                // ARCH domů - Portfolio: karty / před–po / detaily pod záložkami.
+                if (
+                  !isHidden &&
+                  pageId === 'main' &&
+                  sectionTitle.trim() === DOMU_PORTFOLIO_INTRO &&
+                  domPortfolioSubsections.length > 0
+                ) {
+                  const selectedSub = domPortfolioSubsections.find(
+                    ([t]) => parseDomPortfolioSubKey(t) === activeDomPortfolioSub
+                  );
+                  return (
+                    <>
+                      {finalFields.length > 0 ? (
+                        <div className="space-y-5">
+                          {finalFields.map(([fieldKey, field]) => renderField(fieldKey, field))}
+                        </div>
+                      ) : null}
+                      <div className="mt-6 rounded-lg border border-gray-200 bg-gray-50/40 p-4">
+                        <div className="flex flex-wrap items-center justify-between gap-3">
+                          <div>
+                            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Portfolio</p>
+                            <p className="text-sm text-gray-700 mt-0.5">
+                              Karty, před/po a detaily - přepínej záložkami (stejný princip jako tarify u ceníku).
+                            </p>
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            {domPortfolioSubsections.map(([subTitle]) => {
+                              const subKey = parseDomPortfolioSubKey(subTitle)!;
+                              const isActive = subKey === activeDomPortfolioSub;
+                              return (
+                                <button
+                                  key={subTitle}
+                                  type="button"
+                                  onClick={() => setActiveDomPortfolioSub(subKey)}
+                                  className={`rounded-lg border px-4 py-2.5 text-sm font-medium transition ${
+                                    isActive
+                                      ? 'border-blue-600 bg-blue-50 text-blue-900 shadow-sm'
+                                      : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
+                                  }`}
+                                >
+                                  {domPortfolioTabLabel(subTitle)}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                        <div className="mt-5 grid grid-cols-1 md:grid-cols-2 gap-5">
+                          {(selectedSub?.[1] ?? []).map(([fieldKey, field]) => {
+                            const fieldType = field?.type ?? 'text';
+                            const fullSpan =
+                              fieldType === 'textarea' ||
+                              fieldKey.endsWith('.desc') ||
+                              fieldType === 'image' ||
+                              fieldKey.endsWith('imageAlt');
+                            return (
+                              <div key={fieldKey} className={fullSpan ? 'md:col-span-2' : ''}>
+                                {renderField(fieldKey, field)}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </>
+                  );
+                }
+
+                // ARCH kontakt - formulář: Volby a rozpočet pod záložkami.
+                if (
+                  !isHidden &&
+                  pageId === 'contactPage' &&
+                  sectionTitle.trim() === 'Kontakt · Formulář' &&
+                  contactFormSubSections.length > 0
+                ) {
+                  const volbyTuple = contactFormSubSections.find(([t]) => t.trim() === 'Kontakt · Formulář · Volby');
+                  const rozpočetTuple = contactFormSubSections.find(
+                    ([t]) => t.trim() === 'Kontakt · Formulář · Rozpočet'
+                  );
+                  const tabFields: Array<[string, ContentField]> =
+                    activeContactFormTab === 0
+                      ? finalFields
+                      : activeContactFormTab === 1
+                        ? (volbyTuple?.[1] ?? [])
+                        : (rozpočetTuple?.[1] ?? []);
+
+                  return (
+                    <>
+                      <div className="rounded-lg border border-gray-200 bg-gray-50/40 p-4 mb-5">
+                        <div className="flex flex-wrap items-center justify-between gap-3">
+                          <div>
+                            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Formulář</p>
+                            <p className="text-sm text-gray-700 mt-0.5">
+                              Obecné popisky, volby typu projektu a varianty rozpočtu.
+                            </p>
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            {(['Obecné', 'Typ projektu', 'Rozpočet'] as const).map((label, idx) => {
+                              const i = idx as 0 | 1 | 2;
+                              const isActive = activeContactFormTab === i;
+                              return (
+                                <button
+                                  key={label}
+                                  type="button"
+                                  onClick={() => setActiveContactFormTab(i)}
+                                  className={`rounded-lg border px-4 py-2.5 text-sm font-medium transition ${
+                                    isActive
+                                      ? 'border-blue-600 bg-blue-50 text-blue-900 shadow-sm'
+                                      : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
+                                  }`}
+                                >
+                                  {label}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        {tabFields.map(([fieldKey, field]) => {
+                          const fieldType = field?.type ?? 'text';
+                          const fullSpan =
+                            fieldType === 'textarea' ||
+                            fieldKey.endsWith('.desc') ||
+                            fieldType === 'image' ||
+                            fieldKey.endsWith('Placeholder');
+                          return (
+                            <div key={fieldKey} className={fullSpan ? 'md:col-span-2' : ''}>
+                              {renderField(fieldKey, field)}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </>
+                  );
+                }
+
+                // Patička / Footer: sloupce a odkazy pod záložkami (jeden blok jako portfolio).
+                if (
+                  !isHidden &&
+                  patičkaFooterRootTitle &&
+                  sectionTitle.trim() === patičkaFooterRootTitle &&
+                  patičkaFooterSubsections.length > 0
+                ) {
+                  const selectedPatSub =
+                    patičkaFooterSubsections.find(([t]) => t === activePatičkaFooterSubTitle) ??
+                    patičkaFooterSubsections[0]!;
+                  return (
+                    <>
+                      {finalFields.length > 0 ? (
+                        <div className="space-y-5">
+                          {finalFields.map(([fieldKey, field]) => renderField(fieldKey, field))}
+                        </div>
+                      ) : null}
+                      <div className="mt-6 rounded-lg border border-gray-200 bg-gray-50/40 p-4">
+                        <div className="flex flex-wrap items-center justify-between gap-3">
+                          <div>
+                            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                              {patičkaFooterRootTitle === 'Footer' ? 'Footer' : 'Patička'}
+                            </p>
+                            <p className="text-sm text-gray-700 mt-0.5">
+                              Sloupce a odkazy – přepínej záložkami (stejný princip jako portfolio nebo tarify).
+                            </p>
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            {patičkaFooterSubsections.map(([subTitle]) => {
+                              const isActive = subTitle === activePatičkaFooterSubTitle;
+                              return (
+                                <button
+                                  key={subTitle}
+                                  type="button"
+                                  onClick={() => setActivePatičkaFooterSubTitle(subTitle)}
+                                  className={`rounded-lg border px-4 py-2.5 text-sm font-medium transition ${
+                                    isActive
+                                      ? 'border-blue-600 bg-blue-50 text-blue-900 shadow-sm'
+                                      : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
+                                  }`}
+                                >
+                                  {getPatičkaFooterSubsectionDisplayLabel(subTitle, (fk) =>
+                                    (getValue(fk, lang) ?? '').trim()
+                                  )}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                        <div className="mt-5 grid grid-cols-1 md:grid-cols-2 gap-5">
+                          {(selectedPatSub[1] ?? []).map(([fieldKey, field]) => {
+                            const fieldType = field?.type ?? 'text';
+                            const fullSpan =
+                              fieldType === 'textarea' ||
+                              fieldType === 'image' ||
+                              fieldKey.endsWith('imageAlt') ||
+                              fieldKey.endsWith('Href');
+                            return (
+                              <div key={fieldKey} className={fullSpan ? 'md:col-span-2' : ''}>
+                                {renderField(fieldKey, field)}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </>
+                  );
+                }
+
+                // ARCH /pricing - sekce Standard: karty pod záložkami (stejný UX vzor jako tarify u MONO).
+                if (
+                  !isHidden &&
+                  pageId === 'pricingPage' &&
+                  sectionTitle.trim() === 'Standard' &&
+                  archStandardCardIndices.length > 0
+                ) {
+                  const introFields = finalFields.filter(([k]) => parseArchStandardCardIndex(k) === null);
+                  const cardFieldsFor = (n: number) =>
+                    finalFields
+                      .filter(([k]) => parseArchStandardCardIndex(k) === n)
+                      .sort(([a], [b]) => a.localeCompare(b));
+
+                  return (
+                    <>
+                      {introFields.length > 0 ? (
+                        <div className="space-y-5">
+                          {introFields.map(([fieldKey, field]) => renderField(fieldKey, field))}
+                        </div>
+                      ) : null}
+
+                      <div className="mt-6 rounded-lg border border-gray-200 bg-gray-50/40 p-4">
+                        <div className="flex flex-wrap items-center justify-between gap-3">
+                          <div>
+                            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Karty</p>
+                            <p className="text-sm text-gray-700 mt-0.5">
+                              Vyber kartu - upraví se jen nadpis a popis té karty (méně scrollu).
+                            </p>
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            {archStandardCardIndices.map((n) => {
+                              const titleKey = `standard.card${n}.title`;
+                              const raw = (getValue(titleKey, lang) ?? '').trim();
+                              const label =
+                                raw.length > 22 ? `${raw.slice(0, 20)}…` : raw.length > 0 ? raw : `Karta ${n}`;
+                              const isActive = n === activeArchStandardCard;
+                              return (
+                                <button
+                                  key={n}
+                                  type="button"
+                                  onClick={() => setActiveArchStandardCard(n)}
+                                  className={`rounded-lg border px-4 py-2.5 text-sm font-medium transition ${
+                                    isActive
+                                      ? 'border-blue-600 bg-blue-50 text-blue-900 shadow-sm'
+                                      : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
+                                  }`}
+                                >
+                                  {label}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                        <div className="mt-5 grid grid-cols-1 md:grid-cols-2 gap-5">
+                          {cardFieldsFor(activeArchStandardCard).map(([fieldKey, field]) => {
+                            const fieldType = field?.type ?? 'text';
+                            const fullSpan = fieldType === 'textarea' || fieldKey.endsWith('.desc');
+                            return (
+                              <div key={fieldKey} className={fullSpan ? 'md:col-span-2' : ''}>
+                                {renderField(fieldKey, field)}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </>
                   );
                 }
 
@@ -860,28 +1045,37 @@ export default function PageContentFields({
               ) : null}
 
               {sectionTitle.trim() === 'Ceník' && pricingPlanSections.length > 0 ? (
-                <div className="mt-6 rounded-lg border border-gray-200 bg-white p-4">
+                <div className="mt-6 rounded-lg border border-gray-200 bg-gray-50/40 p-4">
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
                       <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Tarify</p>
                       <p className="text-sm text-gray-700 mt-0.5">Klikni na kartu a uprav daný tarif.</p>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2">
                       {pricingPlanSections.map(([title]) => {
                         const idx = parsePricingPlanIndex(title) ?? 0;
                         const isActive = idx === activePricingPlan;
+                        const titleFieldKey =
+                          pageId === 'pricingPage' ? `plan${idx}.title` : `pricing.plan${idx}.title`;
+                        const rawTitle = (getValue(titleFieldKey, lang) ?? '').trim();
+                        const tabLabel =
+                          rawTitle.length > 26
+                            ? `${rawTitle.slice(0, 23)}…`
+                            : rawTitle.length > 0
+                              ? rawTitle
+                              : `Tarif ${idx}`;
                         return (
                           <button
                             key={title}
                             type="button"
                             onClick={() => setActivePricingPlan(idx)}
-                            className={`rounded-md border px-3 py-2 text-sm font-semibold transition ${
+                            className={`rounded-lg border px-4 py-2.5 text-sm font-medium transition ${
                               isActive
-                                ? 'border-blue-600 bg-blue-50 text-blue-900'
+                                ? 'border-blue-600 bg-blue-50 text-blue-900 shadow-sm'
                                 : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
                             }`}
                           >
-                            Tarif {idx}
+                            {tabLabel}
                           </button>
                         );
                       })}
@@ -893,8 +1087,9 @@ export default function PageContentFields({
                     if (!selected) return null;
                     const [, planFields] = selected;
 
-                    const planMonthlyKey = `pricing.plan${activePricingPlan}.priceMonthly`;
-                    const planYearlyKey = `pricing.plan${activePricingPlan}.priceYearly`;
+                    const planFieldPrefix = pageId === 'pricingPage' ? 'pricingPage' : 'pricing';
+                    const planMonthlyKey = `${planFieldPrefix}.plan${activePricingPlan}.priceMonthly`;
+                    const planYearlyKey = `${planFieldPrefix}.plan${activePricingPlan}.priceYearly`;
 
                     const filteredPlanFields = planFields.filter(([k]) => {
                       if (isSingleBillingMode && k === planMonthlyKey) return false;

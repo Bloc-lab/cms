@@ -38,8 +38,8 @@ function buildTenantHeaders(
 
 /**
  * Tenant při odlišném hostname API vs admin:
- * — /t/&lt;slug&gt;/… → X-Tenant-Subdomain (+ syntetický X-Tenant-Host pokud znám base doménu)
- * — jinak X-Tenant-Host = hostname stránky
+ * - /t/&lt;slug&gt;/… → X-Tenant-Subdomain (+ syntetický X-Tenant-Host pokud znám base doménu)
+ * - jinak X-Tenant-Host = hostname stránky
  */
 export function tenantContextHeaders(): Record<string, string> {
   if (typeof window === 'undefined') return {};

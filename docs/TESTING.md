@@ -105,7 +105,7 @@ Očekávaný výstup: `Local: http://localhost:5173/`
 4. Klikni **Uložit**
 
 ### G) Koncept (autosave) a náhled
-1. Uprav text na stránce v **Obsah webu** — po chvíli se v patičce objeví „Koncept uložen“.
+1. Uprav text na stránce v **Obsah webu** - po chvíli se v patičce objeví „Koncept uložen“.
 2. **Odkaz náhledu na web** v administraci zkopíruje URL s `?previewToken=…` pro zobrazení náhledu na frontendu (viz `docs/FRONTEND_PREVIEW_PROMPT.md`).
 3. **Publikovat změny** zapíše do živých tabulek; **Zrušit rozpracované** smaže koncept v DB a vrátí formulář k poslední publikované verzi.
 1. V menu klikni **Média**

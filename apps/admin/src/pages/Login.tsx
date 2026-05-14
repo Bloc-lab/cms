@@ -57,7 +57,7 @@ export default function Login() {
     }
   };
 
-  const title = siteName.trim() || '—';
+  const title = siteName.trim() || '-';
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#f5f5f5] px-4">

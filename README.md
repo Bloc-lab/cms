@@ -99,7 +99,7 @@ npm run dev          # backend :3000
 npm run dev:web-demo # demo :5174
 ```
 
-Otevři http://localhost:5174 — zobrazí JSON obsahu nebo chybu z API.
+Otevři http://localhost:5174 - zobrazí JSON obsahu nebo chybu z API.
 
 **Stále 401?** Ověř v Supabase (stejný projekt jako `SUPABASE_*` v `apps/backend/.env`):
 

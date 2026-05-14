@@ -41,7 +41,7 @@ export async function publicSiteSettingsRoutes(app: FastifyInstance) {
             return reply.status(500).send({ error: 'Failed to load preview site settings', detail: msg });
           }
         }
-        /* Token scoped to non-main page: draft site_settings does not apply — return published. */
+        /* Token scoped to non-main page: draft site_settings does not apply - return published. */
       }
 
       const { data: row, error } = await supabaseAdmin

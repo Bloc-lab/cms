@@ -3,7 +3,7 @@
 -- POZOR: Nejdřív vytvoř uživatele v Supabase Auth (Authentication → Users → Add user)
 -- Pak získej jeho UUID z Authentication → Users a nahraď USER_ID níže
 
--- 1. Vytvoř testovací tenanta (api_key_hash pro GET /api/v1/content — viz README „hash-api-key“)
+-- 1. Vytvoř testovací tenanta (api_key_hash pro GET /api/v1/content - viz README „hash-api-key“)
 INSERT INTO tenants (name, admin_subdomain)
 VALUES ('Test Kadernictví', 'kadernictvi')
 ON CONFLICT (admin_subdomain) DO NOTHING;

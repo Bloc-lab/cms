@@ -1,7 +1,6 @@
 /**
- * Content config shared across CMS apps.
- * Defines named keys for content management - admin panel generates form from this,
- * frontend uses it for type-safe API response.
+ * Sdílená konfigurace obsahu pro CMS a web.
+ * Z těchto popisů se v administraci skládají formuláře; uložené hodnoty se zobrazují na webu.
  */
 
 export type { ContentField, ContentConfig } from './types.js';
@@ -19,6 +18,13 @@ export {
   archFlatPublicKeyToStorageKey,
 } from './arch-public-defaults.js';
 export { archSitePagesConfig, archSiteContentConfig } from './arch-site-pages.js';
+export {
+  applyArchNavPublicFallbacks,
+  applyArchNavMenuHiding,
+  stripArchNavDeprecatedKeys,
+  ARCH_NAV_LABEL_AND_MENU,
+  ARCH_NAV_DEPRECATED_PUBLIC_KEYS,
+} from './arch-nav-public-fallbacks.js';
 export {
   type SitePageDefinition,
   type SitePagesConfigMap,
@@ -39,91 +45,91 @@ import { resolveRedusSeedValueByLang } from './redus-public-defaults.js';
 import { resolveArchSeedValueByLang } from './arch-public-defaults.js';
 import { archSitePagesConfig, archSiteContentConfig } from './arch-site-pages.js';
 
-/** Content keys for admin branding (sidebar, login via public API). */
+/** Interní identifikátory polí pro branding (název webu, logo) v administraci. */
 export const ADMIN_SITE_NAME_KEY = 'admin.siteName';
 export const ADMIN_LOGO_KEY = 'admin.logo';
 export const ADMIN_TAGLINE_KEY = 'admin.tagline';
 export const ADMIN_ENABLED_LANGS_KEY = 'admin.enabledLangs';
 export const ADMIN_SHOW_TRANSLATION_BADGES_KEY = 'admin.showTranslationBadges';
 
-/** Branding / CMS metadata (název, logo) — samostatná stránka v administraci. */
+/** Branding / CMS metadata (název, logo) - samostatná stránka v administraci. */
 export const metadataConfig: ContentConfig = {
   [ADMIN_SITE_NAME_KEY]: {
     label: 'Název webu',
     type: 'text',
     required: true,
-    helpText: 'Zobrazí se v administraci a může se použít i na webu (např. ve footeru).',
+    helpText: 'Zobrazí se v administraci a může se použít i na webu (např. v patičce).',
   },
   [ADMIN_TAGLINE_KEY]: {
-    label: 'Tagline (krátký popisek)',
+    label: 'Krátký popisek pod názvem',
     type: 'text',
-    helpText: 'Krátký text pod názvem webu (např. v headeru).',
+    helpText: 'Krátký text pod názvem webu (např. v horní liště u návštěvníků).',
     placeholder: 'Např. ÚČETNÍ A DAŇOVÁ KANCELÁŘ',
     recommendedMaxLength: 40,
     maxLength: 80,
   },
   [ADMIN_LOGO_KEY]: {
-    label: 'Logo webu (CMS)',
+    label: 'Logo webu',
     type: 'image',
     required: true,
-    helpText: 'Použije se v administraci (sidebar, přihlášení). Doporučeno PNG/SVG s průhledným pozadím.',
+    helpText:
+      'Zobrazí se v administraci (postranní panel a přihlášení). Šablona ho může použít i na webu pro návštěvníky. Doporučeno PNG nebo SVG s průhledným pozadím.',
   },
   [ADMIN_ENABLED_LANGS_KEY]: {
     label: 'Jazyky webu',
     type: 'text',
-    helpText: 'Interní nastavení administrace (zobrazuje se jako přepínače).',
+    helpText: 'Nastavení pro překlady a přepínače jazyků v administraci.',
     advanced: true,
   },
   [ADMIN_SHOW_TRANSLATION_BADGES_KEY]: {
     label: 'Upozornění na chybějící překlady',
     type: 'text',
-    helpText: 'Interní nastavení administrace.',
+    helpText: 'Upozornění v editoru, pokud chybí text v jiném zapnutém jazyce.',
     advanced: true,
   },
 };
 
 /**
- * Globální údaje, které se nemají míchat do editace konkrétní stránky.
- * Klíče pro kontakty zachováváme v public tvaru `contact.*` (ukládá se do `main:contact.*`),
- * aby se nezměnil kontrakt pro web.
+ * Globální údaje mimo jednotlivé stránky (menu v patičce, kontakty, odkazy v patičce).
+ * Kontaktní údaje se na webu zobrazují stejně jako dříve v sekci kontakt.
  */
 export const siteSettingsConfig: ContentConfig = {
   'nav.services': {
-    label: 'Menu – Služby (label)',
+    label: 'Menu - text položky Služby',
     type: 'text',
-    helpText: 'Text položky v hlavním menu (odkaz na sekci Služby na homepage).',
+    helpText: 'Text v horním menu; odkaz vede na sekci Služby na úvodní stránce.',
     section: 'Navigace',
     recommendedMaxLength: 18,
     maxLength: 40,
   },
   'nav.about': {
-    label: 'Menu – O nás (label)',
+    label: 'Menu - text položky O nás',
     type: 'text',
-    helpText: 'Text položky v hlavním menu (odkaz na stránku „O nás“).',
+    helpText: 'Text v horním menu; odkaz vede na stránku „O nás“.',
     section: 'Navigace',
     recommendedMaxLength: 18,
     maxLength: 40,
   },
   'nav.pricing': {
-    label: 'Menu – Ceník (label)',
+    label: 'Menu - text položky Ceník',
     type: 'text',
-    helpText: 'Text položky v hlavním menu (odkaz na sekci Ceník).',
+    helpText: 'Text v horním menu; odkaz vede na sekci Ceník na úvodní stránce.',
     section: 'Navigace',
     recommendedMaxLength: 18,
     maxLength: 40,
   },
   'nav.tax': {
-    label: 'Menu – Daňové poradenství (label)',
+    label: 'Menu - text položky Daňové poradenství',
     type: 'text',
-    helpText: 'Text položky v hlavním menu (odkaz na sekci Daňové poradenství).',
+    helpText: 'Text v horním menu; odkaz vede na příslušnou sekci na úvodní stránce.',
     section: 'Navigace',
     recommendedMaxLength: 28,
     maxLength: 60,
   },
   'nav.ctaContact': {
-    label: 'Menu – CTA tlačítko (label)',
+    label: 'Menu - text tlačítka vpravo',
     type: 'text',
-    helpText: 'Text akčního tlačítka vpravo (odkaz #kontakt).',
+    helpText: 'Text výrazného tlačítka vpravo; obvykle vede ke kontaktu na úvodní stránce.',
     section: 'Navigace',
     recommendedMaxLength: 22,
     maxLength: 60,
@@ -136,118 +142,118 @@ export const siteSettingsConfig: ContentConfig = {
     section: 'Kontakt',
   },
   'main:contact.email': {
-    label: 'Email',
+    label: 'E-mail',
     type: 'text',
-    helpText: 'Hlavní kontaktní email.',
+    helpText: 'Hlavní kontaktní e-mail.',
     section: 'Kontakt',
   },
   'main:contact.address': {
     label: 'Adresa',
     type: 'textarea',
-    helpText: 'Zobrazí se ve footeru nebo v kontaktní sekci.',
+    helpText: 'Zobrazí se v patičce nebo v kontaktní sekci.',
     section: 'Kontakt',
   },
   'footer.blurb': {
-    label: 'Text ve footeru (krátký popis)',
+    label: 'Patička – krátký popis pod názvem',
     type: 'textarea',
-    helpText: 'Krátký text pod názvem webu ve footeru.',
-    section: 'Footer',
+    helpText: 'Krátký text pod názvem webu v patičce.',
+    section: 'Patička',
     recommendedMaxLength: 200,
     maxLength: 600,
   },
   'footer.billing': {
     label: 'Fakturační údaje',
     type: 'textarea',
-    helpText: 'Zobrazí se ve footeru. Můžete používat více řádků.',
-    section: 'Footer',
+    helpText: 'Zobrazí se v patičce. Můžete používat více řádků.',
+    section: 'Patička',
   },
   'footer.headingContact': {
-    label: 'Footer – nadpis „Kontaktní údaje“',
+    label: 'Patička – nadpis sloupce s kontaktem',
     type: 'text',
     helpText: 'Nadpis sloupce s adresou/telefonem/email.',
-    section: 'Footer',
+    section: 'Patička',
     recommendedMaxLength: 24,
     maxLength: 60,
   },
   'footer.headingBilling': {
-    label: 'Footer – nadpis „Fakturační údaje“',
+    label: 'Patička – nadpis nad fakturačními údaji',
     type: 'text',
     helpText: 'Nadpis sloupce s fakturačními údaji.',
-    section: 'Footer',
+    section: 'Patička',
     recommendedMaxLength: 24,
     maxLength: 60,
   },
   'footer.linkedinHref': {
-    label: 'Footer – LinkedIn odkaz (URL)',
+    label: 'Patička – odkaz na LinkedIn',
     type: 'text',
-    helpText: 'URL profilu/firemní stránky. Prázdné = použije se výchozí.',
-    section: 'Footer',
+    helpText: 'Odkaz na váš profil nebo firmu. Pokud necháte prázdné, použije se výchozí z šablony.',
+    section: 'Patička',
     maxLength: 500,
     advanced: true,
   },
   'footer.linkPrivacyLabel': {
-    label: 'Footer – odkaz 1 (label)',
+    label: 'Patička – text prvního odkazu',
     type: 'text',
-    helpText: 'Např. Ochrana soukromí / Privacy policy.',
-    section: 'Footer · odkazy',
+    helpText: 'Např. Ochrana osobních údajů.',
+    section: 'Patička · odkazy',
     recommendedMaxLength: 22,
     maxLength: 60,
   },
   'footer.linkPrivacyHref': {
-    label: 'Footer – odkaz 1 (href)',
+    label: 'Patička – adresa stránky k prvnímu odkazu',
     type: 'text',
-    helpText: 'Cesta nebo URL (např. /ochrana-soukromi).',
-    section: 'Footer · odkazy',
+    helpText: 'Adresa stránky na webu (např. /ochrana-soukromi) nebo celý odkaz zkopírovaný z prohlížeče.',
+    section: 'Patička · odkazy',
     maxLength: 500,
     advanced: true,
   },
   'footer.linkTermsLabel': {
-    label: 'Footer – odkaz 2 (label)',
+    label: 'Patička – text druhého odkazu',
     type: 'text',
-    helpText: 'Např. Obchodní podmínky / Terms & conditions.',
-    section: 'Footer · odkazy',
+    helpText: 'Např. Obchodní podmínky.',
+    section: 'Patička · odkazy',
     recommendedMaxLength: 22,
     maxLength: 60,
   },
   'footer.linkTermsHref': {
-    label: 'Footer – odkaz 2 (href)',
+    label: 'Patička – adresa stránky ke druhému odkazu',
     type: 'text',
-    helpText: 'Cesta nebo URL (např. /obchodni-podminky).',
-    section: 'Footer · odkazy',
+    helpText: 'Adresa stránky na webu (např. /obchodni-podminky) nebo celý odkaz zkopírovaný z prohlížeče.',
+    section: 'Patička · odkazy',
     maxLength: 500,
     advanced: true,
   },
   'footer.copyright': {
     label: 'Copyright',
     type: 'text',
-    helpText: 'Spodní řádek ve footeru.',
-    section: 'Footer',
+    helpText: 'Spodní řádek v patičce (obvykle rok a název firmy).',
+    section: 'Patička',
     recommendedMaxLength: 80,
     maxLength: 200,
   },
 
   'main:cta.form.submitLabel': {
-    label: 'CTA formulář – text tlačítka (odeslat)',
+    label: 'Formulář – text tlačítka Odeslat',
     type: 'text',
-    helpText: 'Text na submit tlačítku ve formuláři.',
-    section: 'CTA · Formulář (UI)',
+    helpText: 'Text na tlačítku „Odeslat“ ve formuláři.',
+    section: 'Spodní blok · Formulář',
     recommendedMaxLength: 18,
     maxLength: 60,
   },
   'main:cta.form.sendingLabel': {
-    label: 'CTA formulář – text při odesílání',
+    label: 'Formulář – text při odesílání',
     type: 'text',
     helpText: 'Text na tlačítku během odesílání.',
-    section: 'CTA · Formulář (UI)',
+    section: 'Spodní blok · Formulář',
     recommendedMaxLength: 18,
     maxLength: 60,
     advanced: true,
   },
   'main:cta.form.successMessage': {
-    label: 'CTA formulář – děkovná hláška po odeslání',
+    label: 'Formulář – poděkování po odeslání',
     type: 'textarea',
     helpText: 'Zobrazí se po úspěšném odeslání formuláře.',
-    section: 'CTA · Formulář (UI)',
+    section: 'Spodní blok · Formulář',
     recommendedMaxLength: 120,
     maxLength: 400,
     advanced: true,
@@ -273,8 +279,7 @@ export const siteSettingsConfig: ContentConfig = {
 };
 
 /**
- * Všechny stránky a jejich pole. Klíč (`main`, `about`, …) je id stránky v CMS;
- * `slug` určuje URL; pole jsou jako dřív uvnitř jedné stránky (`hero.title`, …).
+ * Jednotlivé stránky webu a jejich pole. Každá stránka má adresu (slug) a vlastní obsahová pole.
  */
 export const sitePagesConfig: SitePagesConfigMap = {
   main: {
@@ -282,10 +287,10 @@ export const sitePagesConfig: SitePagesConfigMap = {
     label: 'Domů',
     fields: {
       'hero.enabled': {
-        label: 'Zobrazit sekci Hero',
+        label: 'Zobrazit horní úvodní blok',
         type: 'choice',
-        section: 'Hero',
-        helpText: 'Skryje celou sekci na webu.',
+        section: 'Úvodní blok',
+        helpText: 'Skryje celou horní část úvodní stránky (obrázek, nadpisy, tlačítka).',
         choices: [
           { value: 'show', label: 'Zobrazit' },
           { value: 'hide', label: 'Skrýt' },
@@ -294,14 +299,14 @@ export const sitePagesConfig: SitePagesConfigMap = {
       },
       'hero.badge': {
         label: 'Štítek nad nadpisem',
-        section: 'Hero',
-        helpText: 'Krátký text v badge (malý štítek nad hlavním nadpisem).',
+        section: 'Úvodní blok',
+        helpText: 'Krátký text v malém štítku nad hlavním nadpisem.',
         recommendedMaxLength: 60,
         maxLength: 120,
       },
       'hero.title': {
         label: 'Hlavní nadpis',
-        section: 'Hero',
+        section: 'Úvodní blok',
         helpText: 'Krátký a výstižný nadpis. Doporučeno max. 50 znaků.',
         recommendedMaxLength: 50,
         maxLength: 80,
@@ -309,7 +314,7 @@ export const sitePagesConfig: SitePagesConfigMap = {
       },
       'hero.titleAccent': {
         label: 'Zvýrazněné slovo v nadpisu',
-        section: 'Hero',
+        section: 'Úvodní blok',
         helpText: 'Část nadpisu, která se zvýrazní barvou (musí se v nadpisu vyskytovat).',
         recommendedMaxLength: 20,
         maxLength: 40,
@@ -317,7 +322,7 @@ export const sitePagesConfig: SitePagesConfigMap = {
       },
       'hero.subtitle': {
         label: 'Podnadpis',
-        section: 'Hero',
+        section: 'Úvodní blok',
         helpText: 'Jedna věta, která vysvětlí hodnotu. Doporučeno max. 120 znaků.',
         recommendedMaxLength: 120,
         maxLength: 180,
@@ -325,9 +330,9 @@ export const sitePagesConfig: SitePagesConfigMap = {
         advanced: true,
       },
       'hero.lead': {
-        label: 'Perex (hlavní popis)',
+        label: 'Krátký úvodní text',
         type: 'textarea',
-        section: 'Hero',
+        section: 'Úvodní blok',
         helpText: 'Krátký odstavec pod nadpisem.',
         recommendedMaxLength: 240,
         maxLength: 600,
@@ -335,27 +340,27 @@ export const sitePagesConfig: SitePagesConfigMap = {
       'hero.image': {
         label: 'Hlavní obrázek',
         type: 'image',
-        section: 'Hero',
+        section: 'Úvodní blok',
         helpText: 'Ideálně široký obrázek (min. 1600 px).',
       },
       'hero.cardTitle': {
         label: 'Text karty na obrázku',
-        section: 'Hero',
+        section: 'Úvodní blok',
         helpText: 'Krátký text v malé kartě překryté přes obrázek.',
         recommendedMaxLength: 40,
         maxLength: 120,
       },
       'hero.ctaPrimary': {
-        label: 'Primární tlačítko',
-        section: 'Hero',
-        helpText: 'Text hlavního CTA tlačítka.',
+        label: 'Hlavní tlačítko',
+        section: 'Úvodní blok',
+        helpText: 'Text hlavního výrazného tlačítka.',
         recommendedMaxLength: 32,
         maxLength: 80,
       },
       'hero.ctaSecondary': {
-        label: 'Sekundární tlačítko',
-        section: 'Hero',
-        helpText: 'Text vedlejšího CTA tlačítka.',
+        label: 'Druhé tlačítko',
+        section: 'Úvodní blok',
+        helpText: 'Text druhého tlačítka vedle hlavního.',
         recommendedMaxLength: 24,
         maxLength: 80,
       },
@@ -532,11 +537,11 @@ export const sitePagesConfig: SitePagesConfigMap = {
         advanced: true,
       },
       'pricing.billingMode': {
-        label: 'Režim zobrazení cen',
+        label: 'Jak zobrazit ceny u tarifů',
         type: 'choice',
         section: 'Ceník',
         helpText:
-          'Dvě varianty: přepínač měsíčně/ročně a u každé karty dvě ceny. Jen 3 karty: bez přepínače, u karty se zobrazí jedna cena (použije se roční, pokud je vyplněná, jinak měsíční).',
+          'Buď přepínač měsíčně / ročně a u každého tarifu dvě ceny, nebo tři karty s jednou cenou bez přepínače (pokud vyplníte obě částky, zobrazí se přednostně roční).',
         choices: [
           { value: 'dual', label: 'Dvě varianty (měsíčně / ročně)' },
           { value: 'single', label: 'Jen 3 karty (jedna cena)' },
@@ -559,7 +564,7 @@ export const sitePagesConfig: SitePagesConfigMap = {
         label: 'Přepínač – měsíční fakturace',
         section: 'Ceník',
         helpText:
-          'Použije se jen při režimu „Dvě varianty“. Text druhé volby přepínače (např. Měsíčně).',
+          'Zobrazí se jen při volbě „Dvě varianty (měsíčně / ročně)“. Text druhé možnosti přepínače (např. Měsíčně).',
         recommendedMaxLength: 24,
         maxLength: 60,
       },
@@ -567,7 +572,7 @@ export const sitePagesConfig: SitePagesConfigMap = {
         label: 'Přepínač – roční fakturace',
         section: 'Ceník',
         helpText:
-          'Použije se jen při režimu „Dvě varianty“. Text první volby (např. Ročně – sleva 20 %).',
+          'Zobrazí se jen při volbě „Dvě varianty (měsíčně / ročně)“. Text první možnosti (např. Ročně – sleva 20 %).',
         recommendedMaxLength: 32,
         maxLength: 80,
       },
@@ -587,14 +592,14 @@ export const sitePagesConfig: SitePagesConfigMap = {
         label: 'Tarif 1 – cena (měsíčně)',
         section: 'Ceník · Tarif 1',
         helpText:
-          'Režim dvě varianty: zobrazí se při přepínači „měsíčně“. Režim jen karty: volitelné; pokud nevyplníte roční cenu, použije se tato.',
+          'Při přepínači „měsíčně / ročně“: cena pro měsíční variantu. Pokud na kartě zobrazujete jen jednu cenu a roční nevyplníte, použije se tato.',
         maxLength: 80,
       },
       'pricing.plan1.priceYearly': {
         label: 'Tarif 1 – cena (ročně)',
         section: 'Ceník · Tarif 1',
         helpText:
-          'Režim dvě varianty: zobrazí se při přepínači „ročně“. Režim jen karty: zobrazí se tato cena (má přednost před měsíční).',
+          'Při přepínači „měsíčně / ročně“: cena pro roční variantu. Pokud na kartě zobrazujete jen jednu cenu, bere se tato hodnota jako hlavní.',
         maxLength: 80,
       },
       'pricing.plan1.desc': {
@@ -611,14 +616,15 @@ export const sitePagesConfig: SitePagesConfigMap = {
       'pricing.plan1.ctaHref': {
         label: 'Tarif 1 – odkaz tlačítka',
         section: 'Ceník · Tarif 1',
-        helpText: 'URL nebo kotva (např. #kontakt nebo mailto:…). Prázdné = #kontakt.',
+        helpText:
+          'Kam má tlačítko po kliknutí vést: stránka na webu (např. /kontakt), nebo krátký odkaz na část úvodní stránky s kontaktem. Když pole zůstane prázdné, otevře se kontakt na úvodní stránce.',
         maxLength: 500,
         advanced: true,
       },
       'pricing.plan1.popularBadge': {
-        label: 'Tarif 1 – odznak (prázdné = bez zvýraznění)',
+        label: 'Tarif 1 – štítek zvýrazněné karty',
         section: 'Ceník · Tarif 1',
-        helpText: 'Vyplňte např. Nejoblíbenější pro zvýrazněnou kartu.',
+        helpText: 'Volitelné. Prázdné pole znamená stejný vzhled jako u ostatních karet; např. Nejoblíbenější zvýrazní tuto kartu.',
         maxLength: 60,
         advanced: true,
       },
@@ -638,13 +644,13 @@ export const sitePagesConfig: SitePagesConfigMap = {
         label: 'Tarif 2 – cena (měsíčně)',
         section: 'Ceník · Tarif 2',
         helpText:
-          'Režim dvě varianty: při přepínači „měsíčně“. Režim jen karty: záloha, pokud chybí roční.',
+          'Při přepínači „měsíčně / ročně“: měsíční varianta. Jedna cena na kartě: doplněte i roční, jinak se použije tato.',
         maxLength: 80,
       },
       'pricing.plan2.priceYearly': {
         label: 'Tarif 2 – cena (ročně)',
         section: 'Ceník · Tarif 2',
-        helpText: 'Režim dvě varianty: při „ročně“. Režim jen karty: hlavní zobrazená cena.',
+        helpText: 'Při přepínači „měsíčně / ročně“: roční varianta. Jedna cena na kartě: hlavní zobrazená cena.',
         maxLength: 80,
       },
       'pricing.plan2.desc': {
@@ -661,12 +667,15 @@ export const sitePagesConfig: SitePagesConfigMap = {
       'pricing.plan2.ctaHref': {
         label: 'Tarif 2 – odkaz tlačítka',
         section: 'Ceník · Tarif 2',
+        helpText:
+          'Kam má tlačítko po kliknutí vést: stránka na webu (např. /kontakt), nebo krátký odkaz na část úvodní stránky s kontaktem. Když pole zůstane prázdné, otevře se kontakt na úvodní stránce.',
         maxLength: 500,
         advanced: true,
       },
       'pricing.plan2.popularBadge': {
-        label: 'Tarif 2 – odznak',
+        label: 'Tarif 2 – štítek zvýrazněné karty',
         section: 'Ceník · Tarif 2',
+        helpText: 'Volitelné. Prázdné pole znamená stejný vzhled jako u ostatních karet; např. Nejoblíbenější zvýrazní tuto kartu.',
         maxLength: 60,
         advanced: true,
       },
@@ -685,13 +694,13 @@ export const sitePagesConfig: SitePagesConfigMap = {
         label: 'Tarif 3 – cena (měsíčně)',
         section: 'Ceník · Tarif 3',
         helpText:
-          'Režim dvě varianty: při přepínači „měsíčně“. Režim jen karty: záloha, pokud chybí roční.',
+          'Při přepínači „měsíčně / ročně“: měsíční varianta. Jedna cena na kartě: doplněte i roční, jinak se použije tato.',
         maxLength: 80,
       },
       'pricing.plan3.priceYearly': {
         label: 'Tarif 3 – cena (ročně)',
         section: 'Ceník · Tarif 3',
-        helpText: 'Režim dvě varianty: při „ročně“. Režim jen karty: hlavní zobrazená cena.',
+        helpText: 'Při přepínači „měsíčně / ročně“: roční varianta. Jedna cena na kartě: hlavní zobrazená cena.',
         maxLength: 80,
       },
       'pricing.plan3.desc': {
@@ -708,12 +717,15 @@ export const sitePagesConfig: SitePagesConfigMap = {
       'pricing.plan3.ctaHref': {
         label: 'Tarif 3 – odkaz tlačítka',
         section: 'Ceník · Tarif 3',
+        helpText:
+          'Kam má tlačítko po kliknutí vést: stránka na webu (např. /kontakt), nebo krátký odkaz na část úvodní stránky s kontaktem. Když pole zůstane prázdné, otevře se kontakt na úvodní stránce.',
         maxLength: 500,
         advanced: true,
       },
       'pricing.plan3.popularBadge': {
-        label: 'Tarif 3 – odznak',
+        label: 'Tarif 3 – štítek zvýrazněné karty',
         section: 'Ceník · Tarif 3',
+        helpText: 'Volitelné. Prázdné pole znamená stejný vzhled jako u ostatních karet; např. Nejoblíbenější zvýrazní tuto kartu.',
         maxLength: 60,
         advanced: true,
       },
@@ -724,23 +736,23 @@ export const sitePagesConfig: SitePagesConfigMap = {
         maxLength: 2000,
       },
       'tax.title': {
-        label: 'Nadpis extra sekce',
-        section: 'Extra sekce',
+        label: 'Nadpis doplňkové sekce',
+        section: 'Doplňková sekce',
         recommendedMaxLength: 40,
         maxLength: 120,
       },
       'tax.teaser': {
-        label: 'Text extra sekce',
+        label: 'Text doplňkové sekce',
         type: 'textarea',
-        section: 'Extra sekce',
+        section: 'Doplňková sekce',
         recommendedMaxLength: 220,
         maxLength: 800,
       },
       'tax.enabled': {
-        label: 'Zobrazit extra sekci',
+        label: 'Zobrazit doplňkovou sekci',
         type: 'choice',
-        section: 'Extra sekce',
-        helpText: 'Skryje celou sekci na webu.',
+        section: 'Doplňková sekce',
+        helpText: 'Skryje celou tuto sekci na webu (např. daňové poradenství).',
         choices: [
           { value: 'show', label: 'Zobrazit' },
           { value: 'hide', label: 'Skrýt' },
@@ -748,10 +760,10 @@ export const sitePagesConfig: SitePagesConfigMap = {
         advanced: true,
       },
       'cta.enabled': {
-        label: 'Zobrazit sekci CTA',
+        label: 'Zobrazit spodní blok s kontaktem',
         type: 'choice',
-        section: 'CTA',
-        helpText: 'Skryje celou CTA sekci na webu.',
+        section: 'Spodní blok',
+        helpText: 'Skryje dolní část úvodní stránky s výzvou ke kontaktu nebo formulářem.',
         choices: [
           { value: 'show', label: 'Zobrazit' },
           { value: 'hide', label: 'Skrýt' },
@@ -759,91 +771,91 @@ export const sitePagesConfig: SitePagesConfigMap = {
         advanced: true,
       },
       'cta.title': {
-        label: 'CTA – nadpis',
-        section: 'CTA',
+        label: 'Spodní blok – nadpis',
+        section: 'Spodní blok',
         recommendedMaxLength: 70,
         maxLength: 140,
       },
       'cta.desc': {
-        label: 'CTA – popis',
+        label: 'Spodní blok – popis',
         type: 'textarea',
-        section: 'CTA',
+        section: 'Spodní blok',
         recommendedMaxLength: 180,
         maxLength: 600,
       },
       'cta.btnPhone': {
-        label: 'CTA – text levého tlačítka (telefon)',
-        section: 'CTA',
+        label: 'Spodní blok – text tlačítka s telefonem',
+        section: 'Spodní blok',
         helpText:
           'Volitelné. Pokud necháte prázdné, zobrazí se číslo z kontaktu. Můžete zadat např. Zavolejte nám.',
         recommendedMaxLength: 28,
         maxLength: 80,
       },
       'cta.btnEmail': {
-        label: 'CTA – text pravého tlačítka (e-mail)',
-        section: 'CTA',
+        label: 'Spodní blok – text tlačítka s e-mailem',
+        section: 'Spodní blok',
         helpText: 'Text u ikony obálky (např. Napište nám e-mail).',
         recommendedMaxLength: 32,
         maxLength: 80,
       },
       'cta.form.badge': {
-        label: 'CTA form – štítek (badge)',
-        section: 'CTA · Formulář',
-        helpText: 'Krátký text nad nadpisem (jen pro layout „split“).',
+        label: 'Formulář – malý štítek nad nadpisem',
+        section: 'Spodní blok · Formulář',
+        helpText: 'Krátký text nad nadpisem (jen u rozložení se dvěma sloupci).',
         recommendedMaxLength: 40,
         maxLength: 120,
       },
       'cta.form.title': {
-        label: 'CTA form – nadpis vlevo',
-        section: 'CTA · Formulář',
-        helpText: 'Nadpis intro části (jen pro layout „split“).',
+        label: 'Formulář – nadpis vlevo',
+        section: 'Spodní blok · Formulář',
+        helpText: 'Nadpis vlevo od formuláře (jen u rozložení se dvěma sloupci).',
         recommendedMaxLength: 70,
         maxLength: 180,
       },
       'cta.form.lead': {
-        label: 'CTA form – text vlevo',
+        label: 'Formulář – krátký text vlevo',
         type: 'textarea',
-        section: 'CTA · Formulář',
-        helpText: 'Krátký popis (jen pro layout „split“).',
+        section: 'Spodní blok · Formulář',
+        helpText: 'Krátký popis vlevo od formuláře (jen u rozložení se dvěma sloupci).',
         recommendedMaxLength: 220,
         maxLength: 800,
       },
       'cta.form.bullet1': {
-        label: 'CTA form – bod 1',
-        section: 'CTA · Formulář',
+        label: 'Formulář – první odrážka vlevo',
+        section: 'Spodní blok · Formulář',
         maxLength: 140,
       },
       'cta.form.bullet2': {
-        label: 'CTA form – bod 2',
-        section: 'CTA · Formulář',
+        label: 'Formulář – druhá odrážka vlevo',
+        section: 'Spodní blok · Formulář',
         maxLength: 140,
       },
       'cta.form.bullet3': {
-        label: 'CTA form – bod 3',
-        section: 'CTA · Formulář',
+        label: 'Formulář – třetí odrážka vlevo',
+        section: 'Spodní blok · Formulář',
         maxLength: 140,
       },
       'cta.form.nameLabel': {
-        label: 'CTA form – popisek pole Jméno',
-        section: 'CTA · Formulář',
+        label: 'Formulář – popisek pole Jméno',
+        section: 'Spodní blok · Formulář',
         recommendedMaxLength: 24,
         maxLength: 80,
       },
       'cta.form.phoneLabel': {
-        label: 'CTA form – popisek pole Telefon',
-        section: 'CTA · Formulář',
+        label: 'Formulář – popisek pole Telefon',
+        section: 'Spodní blok · Formulář',
         recommendedMaxLength: 24,
         maxLength: 80,
       },
       'cta.form.emailLabel': {
-        label: 'CTA form – popisek pole E-mail',
-        section: 'CTA · Formulář',
+        label: 'Formulář – popisek pole E-mail',
+        section: 'Spodní blok · Formulář',
         recommendedMaxLength: 24,
         maxLength: 80,
       },
       'cta.form.messageLabel': {
-        label: 'CTA form – popisek pole Zpráva',
-        section: 'CTA · Formulář',
+        label: 'Formulář – popisek pole Zpráva',
+        section: 'Spodní blok · Formulář',
         recommendedMaxLength: 24,
         maxLength: 80,
       },
@@ -863,7 +875,7 @@ export const sitePagesConfig: SitePagesConfigMap = {
   },
 };
 
-/** Flat mapa pro validaci / uložení: `main:hero.title`, `about:about.text`, … */
+/** Spojený seznam všech polí stránek (pro kontrolu a ukládání v CMS). */
 export const siteContentConfig: ContentConfig = flattenSitePagesFields(sitePagesConfig);
 
 /** Kompletní konfigurace polí (metadata + obsah). */
@@ -873,7 +885,7 @@ export const defaultConfig: ContentConfig = {
   ...siteContentConfig,
 };
 
-/** Identifikátor šablony ARCH&CO (sloupec `site_settings.template_id`). */
+/** Šablona ARCH (druhý typ webu v tomto CMS). */
 export const CMS_TEMPLATE_ARCH = 'arch' as const;
 
 export function getSitePagesForTemplate(templateId: string | null | undefined): SitePagesConfigMap {

@@ -50,7 +50,7 @@ function BrandMark({
       />
     );
   }
-  const title = siteName.trim() || '—';
+  const title = siteName.trim() || '-';
   return (
     <div>
       <p className="text-lg font-semibold text-gray-900 tracking-tight">{title}</p>
@@ -143,13 +143,16 @@ export default function Layout() {
             </NavLink>
           </div>
 
-          <div className={navSectionTitleClass}>Nastavení webu</div>
+          <div className={navSectionTitleClass}>Základní nastavení</div>
           <div className="px-3 space-y-1">
             <NavLink to={tenantHref('/metadata')} className={({ isActive }) => navItemClass(isActive)}>
               Základní nastavení
             </NavLink>
+            <NavLink to={tenantHref('/settings/menu')} className={({ isActive }) => navItemClass(isActive)}>
+              Nastavení menu
+            </NavLink>
             <NavLink to={tenantHref('/settings/template')} className={({ isActive }) => navItemClass(isActive)}>
-              Šablona / Vzhled
+              Vzhled
             </NavLink>
             <NavLink to={tenantHref('/settings/contact')} className={({ isActive }) => navItemClass(isActive)}>
               Kontakt a firma

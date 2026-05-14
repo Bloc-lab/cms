@@ -216,7 +216,12 @@ export async function adminContentDraftsRoutes(app: FastifyInstance) {
       }
 
       if (pageId === 'main' && request.body?.siteSettings !== undefined) {
-        const parsed = validateAndNormalizeAdminSiteSettings(request.body.siteSettings);
+        const raw =
+          request.body.siteSettings && typeof request.body.siteSettings === 'object' && !Array.isArray(request.body.siteSettings)
+            ? ({ ...(request.body.siteSettings as Record<string, unknown>) } as Record<string, unknown>)
+            : {};
+        delete raw.templateId;
+        const parsed = validateAndNormalizeAdminSiteSettings(raw);
         if (!parsed.ok) {
           return reply.status(400).send({ error: parsed.error });
         }
@@ -344,7 +349,7 @@ export async function adminContentDraftsRoutes(app: FastifyInstance) {
 
       const drafts = draftRows ?? [];
       if (drafts.length === 0 && !siteDraft) {
-        return reply.status(400).send({ error: 'Nic k publikování — nejdřív uložte koncept.' });
+        return reply.status(400).send({ error: 'Nic k publikování - nejdřív uložte koncept.' });
       }
 
       const { data: allPublished, error: pubErr } = await supabaseAdmin
@@ -404,7 +409,16 @@ export async function adminContentDraftsRoutes(app: FastifyInstance) {
       }
 
       if (pageId === 'main' && siteDraft) {
+        const { data: curTpl } = await supabaseAdmin
+          .from('site_settings')
+          .select('template_id')
+          .eq('tenant_id', tenantId)
+          .maybeSingle();
         const dbRow = toDbAdminSiteSettings(siteDraft);
+        const tid = typeof (curTpl as { template_id?: string | null } | null)?.template_id === 'string'
+          ? (curTpl as { template_id: string }).template_id.trim()
+          : '';
+        dbRow.template_id = tid.length > 0 ? tid : dbRow.template_id ?? 'template1';
         const { error: sErr } = await supabaseAdmin.from('site_settings').upsert(
           {
             tenant_id: tenantId,

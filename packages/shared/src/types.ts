@@ -6,21 +6,20 @@ export interface ContentField {
   label: string;
   type?: 'text' | 'textarea' | 'image' | 'choice';
   /**
-   * Pro `type: 'choice'` — hodnoty ukládané do obsahu (např. `dual`, `single`).
+   * Pro přepínače - vnitřní hodnota a text, který vidí návštěvník u volby.
    */
   choices?: Array<{ value: string; label: string }>;
   /** If true, at least one language must have a non-empty value (admin validates on save). */
   required?: boolean;
   /**
-   * Krátká nápověda pro netechnické editory. Zobrazuje se pod labelem v administraci.
-   * Nemá vliv na backend ani veřejné API.
+   * Krátký návod pro editory; zobrazí se v administraci pod názvem pole.
    */
   helpText?: string;
   /** Placeholder pro input/textarea v administraci. */
   placeholder?: string;
-  /** Doporučený limit délky (UI hint, nemusí být striktní). */
+  /** Doporučená délka textu (pouze upozornění v administraci). */
   recommendedMaxLength?: number;
-  /** Striktní limit délky (UI omezení). */
+  /** Maximální délka textu v administraci (včetně mezer). */
   maxLength?: number;
   /**
    * Název sekce v editaci stránky (např. Hero, Služby, SEO, Pokročilé).

@@ -6,19 +6,19 @@ Zkopíruj **celý blok níže** (od „Jsi vývojář…“ až po konec) do nov
 
 ## Prompt (vlož do Cursoru)
 
-Jsi vývojář frontendu. Stavím **statický / demo web**, který má ukázat, jak funguje napojení na **Nase CMS** — multi-tenant headless CMS (Fastify + Supabase). Administrace je jiná aplikace; tento projekt je **pouze veřejný web** čtoucí obsah.
+Jsi vývojář frontendu. Stavím **statický / demo web**, který má ukázat, jak funguje napojení na **Nase CMS** - multi-tenant headless CMS (Fastify + Supabase). Administrace je jiná aplikace; tento projekt je **pouze veřejný web** čtoucí obsah.
 
 ### Autentizace a tenant
 
 - **Veřejný obsah** se bere endpointem **`GET /api/v1/content`**
 - **Povinná hlavička:** `X-API-KEY: <API klíč tenanta>`  
   Tenanta CMS pozná podle API klíče (hash v DB). Bez platného klíče API vrátí chybu.
-- **Volitelný query parametr:** `lang` — `cs` nebo `en` (výchozí v API je `cs`).  
+- **Volitelný query parametr:** `lang` - `cs` nebo `en` (výchozí v API je `cs`).  
   Příklad: `GET https://<tvůj-backend>/api/v1/content?lang=cs`
 
 ### Odpověď API
 
-- **JSON objekt:** `Record<string, string>` — plochá mapa **klíč → textová hodnota** (včetně URL obrázků jako řetězců).
+- **JSON objekt:** `Record<string, string>` - plochá mapa **klíč → textová hodnota** (včetně URL obrázků jako řetězců).
 - Hodnoty v administraci jsou ukládány s prefixem stránky (`pageId:fieldKey`), ale **veřejné API** klíče **normalizuje**:
   - **Domovská stránka (pageId `main`):** klíče jako `hero.title`, `hero.subtitle`, `hero.image`, `services.title`, `services.desc`, `contact.phone`, `contact.email`, `contact.address`
   - **Stránka „O nás“ (slug `o-nas`, pageId `about`):** např. `about.text`
@@ -26,7 +26,7 @@ Jsi vývojář frontendu. Stavím **statický / demo web**, který má ukázat, 
 
 ### Volitelné: branding bez API klíče (přihlášení / náhled)
 
-- **`GET /api/v1/public/site-info`** — tenant se bere z **Host** (subdoména), **bez** `X-API-KEY`
+- **`GET /api/v1/public/site-info`** - tenant se bere z **Host** (subdoména), **bez** `X-API-KEY`
 - Odpověď: `{ siteName: string, logoUrl: string | null }`  
   Použití: např. přihlašovací stránka adminu, nebo demo záhlaví, pokud nechceš tahat celý content.
 
@@ -51,8 +51,8 @@ Routing ve frontendu: např. `/` = home, `/o-nas` = about stránka. Obsah pro ka
 
 ### Co nerealizovat v tomto projektu
 
-- Přihlášení do CMS, upload médií, editace — to je **admin aplikace** CMS.
-- Volání `/api/v1/admin/*` — vyžaduje JWT a subdoménu adminu.
+- Přihlášení do CMS, upload médií, editace - to je **admin aplikace** CMS.
+- Volání `/api/v1/admin/*` - vyžaduje JWT a subdoménu adminu.
 
 ### Cíl
 
@@ -100,4 +100,4 @@ Pokud voláš `http://localhost:3000` z jiného portu bez proxy, na Fastify mus�
 
 ---
 
-Soubor v tomto repu: `docs/CURSOR_PROMPT_DEMO_FRONTEND.md` — slouží jako dokumentace pro přenos promptu do jiného okna Cursoru.
+Soubor v tomto repu: `docs/CURSOR_PROMPT_DEMO_FRONTEND.md` - slouží jako dokumentace pro přenos promptu do jiného okna Cursoru.
