@@ -142,3 +142,7 @@ Spusť v Supabase SQL Editoru v pořadí:
 ## Testování
 
 Kompletní návod včetně seed dat: **[docs/TESTING.md](docs/TESTING.md)**
+
+## Šablona: více URL na Vercelu (více tenantů)
+
+Nasazení stejné šablony na další doménu, DNS, CORS, API klíče a mapování na tenanta: **[docs/TEMPLATE_MULTI_URL.md](docs/TEMPLATE_MULTI_URL.md)**
