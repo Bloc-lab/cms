@@ -1,6 +1,6 @@
 import type { ContentConfig } from '@nase-cms/shared';
 
-/** Pořadí sekcí ve formuláři (stejná logika jako v PageContentFields). */
+/** Section titles in form order (same grouping rules as PageContentFields). */
 export function getFieldSectionTitles(fields: ContentConfig): string[] {
   const seen = new Set<string>();
   const order: string[] = [];
@@ -28,36 +28,36 @@ function isDomPortfolioBlockSection(title: string): boolean {
   return t === DOMU_PORTFOLIO_ROOT || t.startsWith(`${DOMU_PORTFOLIO_ROOT} ·`);
 }
 
-/** Spodní část webu v CMS (český název i starší anglický). */
-export function getPatičkaFooterBlockRoot(title: string): 'Patička' | 'Footer' | null {
+/** CMS section root label for site footer block (Czech "Patička" or legacy English "Footer"). */
+export type SiteFooterBlockRoot = 'Patička' | 'Footer';
+
+export function getSiteFooterBlockRoot(title: string): SiteFooterBlockRoot | null {
   const t = title.trim();
   if (t === 'Patička' || t.startsWith('Patička ·')) return 'Patička';
   if (t === 'Footer' || t.startsWith('Footer ·')) return 'Footer';
   return null;
 }
 
-function isInPatičkaFooterBlock(title: string, root: 'Patička' | 'Footer'): boolean {
+function isInSiteFooterBlock(title: string, root: SiteFooterBlockRoot): boolean {
   const t = title.trim();
   return t === root || t.startsWith(`${root} ·`);
 }
 
-/** Podsekce typu „Patička · Odbornost“ (bez samotného kořene Patička). */
-export function isPatičkaFooterChildSectionTitle(title: string): boolean {
+/** True for subsection titles like "Patička · Odbornost" (not the root "Patička" row). */
+export function isSiteFooterChildSectionTitle(title: string): boolean {
   const t = title.trim();
   return /^Patička\s*·\s*.+/i.test(t) || /^Footer\s*·\s*.+/i.test(t);
 }
 
-/**
- * Levé menu: podsekce patičky mají vlastní položku, ale ve stránce jsou pod záložkami uvnitř kořene.
- */
-export function isPatičkaFooterNavChildSection(sectionTitle: string): boolean {
-  return isPatičkaFooterChildSectionTitle(sectionTitle);
+/** Left nav: footer subsections are separate items but rendered as tabs inside the root block. */
+export function isSiteFooterNavChildSection(sectionTitle: string): boolean {
+  return isSiteFooterChildSectionTitle(sectionTitle);
 }
 
 export type SectionNavChild = { sectionTitle: string; navLabel: string };
 
-/** CMS klíč nadpisu sloupce pro podsekci patičky (ARCH). */
-export function getPatičkaFooterColumnHeadingFieldKey(sectionTitle: string): string | null {
+/** Content field key for the column heading tied to a footer subsection (ARCH). */
+export function getSiteFooterColumnHeadingFieldKey(sectionTitle: string): string | null {
   const t = sectionTitle.trim();
   if (/^(Patička|Footer)\s*·\s*Odbornost\s*$/i.test(t)) return 'footer.columnExpertise';
   if (/^(Patička|Footer)\s*·\s*Navigace\s*$/i.test(t)) return 'footer.columnNavigation';
@@ -65,12 +65,12 @@ export function getPatičkaFooterColumnHeadingFieldKey(sectionTitle: string): st
   return null;
 }
 
-/** Text záložky / podpoložky v menu: živý nadpis sloupce, jinak suffix za „·“. */
-export function getPatičkaFooterSubsectionDisplayLabel(
+/** Tab / nav label: live column heading when set, else suffix after the middle dot. */
+export function getSiteFooterSubsectionDisplayLabel(
   sectionTitle: string,
   getTrimmedFieldValue: (fieldKey: string) => string
 ): string {
-  const fk = getPatičkaFooterColumnHeadingFieldKey(sectionTitle);
+  const fk = getSiteFooterColumnHeadingFieldKey(sectionTitle);
   if (fk) {
     const v = getTrimmedFieldValue(fk);
     if (v) return v;
@@ -81,22 +81,22 @@ export function getPatičkaFooterSubsectionDisplayLabel(
 }
 
 export type SectionNavStructureOptions = {
-  /** Nápisy podsekcí patičky v levém menu (klíč = přesný `field.section`, např. Patička · Odbornost). */
-  patičkaFooterNavLabels?: Record<string, string>;
+  /** Optional nav labels for footer subsections (key = exact `field.section`, e.g. Patička · Odbornost). */
+  siteFooterNavLabels?: Record<string, string>;
 };
 
-/** Synchronizace levého menu s záložkami uvnitř sekce (Portfolio / tarify ceníku). */
+/** Sync left nav with in-page tabs (portfolio / pricing plans). */
 export const CMS_ADMIN_FOCUS_SUBSECTION = 'cms-admin-focus-subsection';
 
 export type CmsAdminFocusSubsectionDetail = {
   pageId: string;
   portfolioSub?: string;
   pricingPlan?: number;
-  /** Plný název CMS sekce pod záložkou v bloku Patička / Footer (např. Patička · Odbornost). */
+  /** Full CMS section title for the active footer tab (e.g. Patička · Odbornost). */
   footerSubsectionTitle?: string;
 };
 
-/** Podsekce portfolia na ARCH domovské stránce (`card:1`, `beforeAfter`, …). */
+/** ARCH home: portfolio subsection key (`card:1`, `beforeAfter`, …). */
 export function parseDomPortfolioSubKey(sectionTitle: string): string | null {
   const t = sectionTitle.trim();
   const m = t.match(/^Domů\s*·\s*Portfolio\s*·\s*Karta\s*(\d+)\s*$/i);
@@ -107,7 +107,7 @@ export function parseDomPortfolioSubKey(sectionTitle: string): string | null {
   return null;
 }
 
-/** MONO domovská stránka: „Ceník · Tarif N“ → číslo tarifu. */
+/** MONO home: "Ceník · Tarif N" -> plan index. */
 export function parsePricingPlanIndex(sectionTitle: string): number | null {
   const m = sectionTitle.trim().match(/^Ceník\s*·\s*Tarif\s*(\d+)\s*$/i);
   if (!m) return null;
@@ -115,18 +115,18 @@ export function parsePricingPlanIndex(sectionTitle: string): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
-/** Jedna položka nebo skupina „Ceník“ s tarify pod sebou (pro levé menu). */
+/** Single nav entry or a "Ceník" group with plan children. */
 export type SectionNavNode =
   | { type: 'single'; sectionTitle: string }
   | {
       type: 'group';
       groupLabel: string;
-      /** Kotva pro klik na hlavní „Ceník“ (úvodní sekce, nebo první v bloku). */
+      /** Scroll target for the group header (pricing intro or first block section). */
       primarySection: string;
       children: SectionNavChild[];
     };
 
-/** Sloučí „Ceník“ + „Ceník · Tarif …“ do jedné skupiny v navigaci. */
+/** Merge "Ceník" + "Ceník · Tarif …" (and portfolio / footer) for the left nav. */
 export function getSectionNavStructure(
   fields: ContentConfig,
   options?: SectionNavStructureOptions
@@ -180,10 +180,10 @@ export function getSectionNavStructure(
       });
       continue;
     }
-    const patRoot = getPatičkaFooterBlockRoot(t);
+    const patRoot = getSiteFooterBlockRoot(t);
     if (patRoot) {
       const block: string[] = [];
-      while (i < titles.length && isInPatičkaFooterBlock(titles[i]!, patRoot)) {
+      while (i < titles.length && isInSiteFooterBlock(titles[i]!, patRoot)) {
         block.push(titles[i]!);
         i++;
       }
@@ -193,7 +193,7 @@ export function getSectionNavStructure(
         .map((sectionTitle) => {
           const stripped =
             sectionTitle.replace(new RegExp(`^\\s*${patRoot}\\s*·\\s*`, 'i'), '').trim() || sectionTitle;
-          const custom = options?.patičkaFooterNavLabels?.[sectionTitle]?.trim();
+          const custom = options?.siteFooterNavLabels?.[sectionTitle]?.trim();
           const navLabel = custom || stripped;
           return { sectionTitle, navLabel };
         });
@@ -211,7 +211,7 @@ export function getSectionNavStructure(
   return out;
 }
 
-/** Stabilní id pro scroll – bez diakritiky a speciálních znaků. */
+/** Stable DOM id for section scroll (ASCII slug). */
 export function sectionAnchorId(pageId: string, sectionTitle: string): string {
   const slug = sectionTitle
     .normalize('NFD')
@@ -219,6 +219,6 @@ export function sectionAnchorId(pageId: string, sectionTitle: string): string {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '');
-  const base = slug.length > 0 ? slug : 'sekce';
+  const base = slug.length > 0 ? slug : 'section';
   return `cms-section-${pageId}-${base}`;
 }

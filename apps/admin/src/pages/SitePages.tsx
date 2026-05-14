@@ -6,7 +6,7 @@ import { getTenantTemplateId } from '../lib/tenantTemplateId';
 
 const PAGE_SIZE = 5;
 
-/** Řádky tabulky = stránky z konfigurace (sitePagesConfig), ne z databáze. */
+/** Table rows are pages from config (`sitePagesConfig`), not from the database. */
 export interface ConfigPageRow {
   pageId: string;
   label: string;

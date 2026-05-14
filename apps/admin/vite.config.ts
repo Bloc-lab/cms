@@ -9,7 +9,7 @@ const sharedSrcEntry = path.resolve(adminDir, '../../packages/shared/src/index.t
 export default defineConfig({
   plugins: [react()],
   resolve: {
-    // Dev i build berou konfiguraci přímo ze zdroje shared (bez ručního `npm run build -w @nase-cms/shared`).
+    // Dev and build resolve shared package from source (no manual `npm run build -w @nase-cms/shared`).
     alias: { '@nase-cms/shared': sharedSrcEntry },
   },
   server: {
@@ -20,8 +20,8 @@ export default defineConfig({
     proxy: {
       '/api': {
         target: 'http://127.0.0.1:3000',
-        // Musí být false: jinak proxy přepíše Host na localhost:3000 a tenant z subdomény
-        // (kadernictvi.localhost) zmizí → admin API vrací 404 „Tenant subdomain required“.
+        // Must be false: otherwise the proxy rewrites Host to localhost:3000 and the tenant subdomain
+        // (e.g. kadernictvi.localhost) is lost — the admin API returns 404 "Tenant subdomain required".
         changeOrigin: false,
         secure: false,
       },

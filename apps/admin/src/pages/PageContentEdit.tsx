@@ -8,7 +8,7 @@ import { dispatchBrandingRefresh } from '../lib/branding';
 import {
   CMS_ADMIN_FOCUS_SUBSECTION,
   getSectionNavStructure,
-  isPatičkaFooterNavChildSection,
+  isSiteFooterNavChildSection,
   parseDomPortfolioSubKey,
   parsePricingPlanIndex,
   sectionAnchorId,
@@ -118,7 +118,7 @@ export default function PageContentEdit() {
   const enabledLangs = parseEnabledLangs(entries);
   const showTranslationBadges = parseShowTranslationBadges(entries);
 
-  const patičkaFooterNavLabelOverrides = useMemo(() => {
+  const siteFooterNavLabelOverrides = useMemo(() => {
     if (pageId !== 'main') return {} as Record<string, string>;
     const out: Record<string, string> = {};
     const read = (fieldKey: string) => (entries[entryKey(storageKey('main', fieldKey), lang)] ?? '').trim();
@@ -420,7 +420,7 @@ export default function PageContentEdit() {
 
   const pathLabel = pageDef.slug === '' ? '/' : `/${pageDef.slug}`;
   const sectionNavRaw = getSectionNavStructure(pageDef.fields, {
-    patičkaFooterNavLabels: patičkaFooterNavLabelOverrides,
+    siteFooterNavLabels: siteFooterNavLabelOverrides,
   });
   const sectionNav =
     pageId === 'main'
@@ -475,7 +475,7 @@ export default function PageContentEdit() {
                       const planIdx = parsePricingPlanIndex(c.sectionTitle);
                       if (planIdx !== null) detail.pricingPlan = planIdx;
                     }
-                    if (isPatičkaFooterNavChildSection(c.sectionTitle)) {
+                    if (isSiteFooterNavChildSection(c.sectionTitle)) {
                       detail.footerSubsectionTitle = c.sectionTitle;
                     }
                     window.dispatchEvent(new CustomEvent(CMS_ADMIN_FOCUS_SUBSECTION, { detail }));

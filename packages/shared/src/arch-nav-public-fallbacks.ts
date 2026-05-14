@@ -1,7 +1,7 @@
 /**
- * Veřejné API: položky menu ARCH (O nás / Ceník / Kontakt) - prázdný text se doplní z názvu stránky.
- * Skryté položky (nav.menu* = 0) odstraní odpovídající text v nav.*.
- * Zastaralé klíče (scroll menu, CTA v menu) se z odpovědi odstraní úplně.
+ * Public API: ARCH nav items (About / Pricing / Contact) — empty labels fall back to page titles.
+ * Hidden items (`nav.menu* = 0`) drop the matching `nav.*` text.
+ * Deprecated keys (scroll-in-menu, CTA in menu) are removed from the response entirely.
  */
 import { ARCH_FLAT_CS } from './arch-flat-cs.js';
 import { ARCH_FLAT_EN } from './arch-flat-en.js';
@@ -23,14 +23,14 @@ const PAGE_NAV_TO_MENU: Record<PageLinkedNavKey, string> = {
   'nav.contact': 'nav.menuContact',
 };
 
-/** Pár [text v menu, příznak zobrazení] - jen stránky. */
+/** Pairs [`nav.*` label, `nav.menu*` visibility flag] — page links only. */
 export const ARCH_NAV_LABEL_AND_MENU: ReadonlyArray<[string, string]> = [
   ['nav.about', 'nav.menuAbout'],
   ['nav.pricing', 'nav.menuPricing'],
   ['nav.contact', 'nav.menuContact'],
 ];
 
-/** Dřívější menu (scroll + CTA) - z veřejné mapy ARCH odstraníme. */
+/** Older menu keys (scroll + CTA) — stripped from the public ARCH map. */
 export const ARCH_NAV_DEPRECATED_PUBLIC_KEYS: readonly string[] = [
   'nav.portfolio',
   'nav.process',
@@ -69,7 +69,7 @@ export function applyArchNavPublicFallbacks(
   }
 }
 
-/** Odstraní text skrytých položek menu (`nav.*`), příznaky `nav.menu*` zůstanou. */
+/** Removes text for hidden menu rows (`nav.*`); `nav.menu*` flags stay. */
 export function applyArchNavMenuHiding(content: Record<string, string>): void {
   for (const [labelPub, menuPub] of ARCH_NAV_LABEL_AND_MENU) {
     if (archNavMenuOn(content, menuPub)) continue;
@@ -77,7 +77,7 @@ export function applyArchNavMenuHiding(content: Record<string, string>): void {
   }
 }
 
-/** Odstraní zastaralé klíče menu (scroll z Domů, CTA v menu). */
+/** Removes deprecated menu keys (Home scroll anchors, CTA in menu). */
 export function stripArchNavDeprecatedKeys(content: Record<string, string>): void {
   for (const k of ARCH_NAV_DEPRECATED_PUBLIC_KEYS) {
     delete content[k];

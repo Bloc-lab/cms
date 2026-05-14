@@ -9,7 +9,7 @@ function f(label: string, section: string, rest: Partial<ContentField> = {}): Co
 }
 
 export const archCmsConfig: ContentConfig = {
-  // -- Administrace
+  // -- Admin-only fields
   'admin.siteName': f('Název webu (značka)', 'Administrace', {
     required: true,
     helpText: 'Zobrazí se v administraci a nahoře na webu; obvykle název studia nebo značka.',
@@ -21,7 +21,7 @@ export const archCmsConfig: ContentConfig = {
     helpText: 'Logo v administraci a podle šablony i na webu. Může zůstat prázdné, pokud stačí textový název.',
   }),
 
-  // -- Navigace (šablona ARCH: jen stránky O nás, Ceník, Kontakt; bez odkazů na části úvodní stránky)
+  // -- Navigation (ARCH template: About, Pricing, Contact pages only; no anchors into home sections)
   'nav.about': f('Menu - O nás', 'Navigace', {
     recommendedMaxLength: 24,
     maxLength: 48,
@@ -66,7 +66,7 @@ export const archCmsConfig: ContentConfig = {
     helpText: 'Při „Skrýt“ se položka v horním menu na webu nezobrazí.',
   }),
 
-  // -- Domů · Úvod
+  // -- Home · Intro
   'hero.image': f('Úvod - hlavní obrázek', 'Domů · Úvod', {
     type: 'image',
     helpText: 'Velký obrázek nahoře na stránce (doporučeno alespoň kolem 1600 px šířky).',
@@ -99,7 +99,7 @@ export const archCmsConfig: ContentConfig = {
     maxLength: 80,
   }),
 
-  // -- Domů · Portfolio
+  // -- Home · Portfolio
   'portfolio.title': f('Portfolio - nadpis sekce', 'Domů · Portfolio', {
     recommendedMaxLength: 48,
     maxLength: 100,
@@ -164,7 +164,7 @@ export const archCmsConfig: ContentConfig = {
   'portfolio.detail3.image': f('Detail 3 - obrázek', 'Domů · Portfolio · Detaily', { type: 'image' }),
   'portfolio.detail3.imageAlt': f('Detail 3 - popis obrázku', 'Domů · Portfolio · Detaily', { maxLength: 280 }),
 
-  // -- Domů · Blok (obrázek, text, odrážky - obecný název v CMS)
+  // -- Home · Block (image, text, bullets — generic block name in CMS)
   'craft.image': f('Blok - obrázek', 'Domů · Blok', { type: 'image' }),
   'craft.imageAlt': f('Blok - popis obrázku', 'Domů · Blok', { maxLength: 280 }),
   'craft.label': f('Blok - malý štítek', 'Domů · Blok', { maxLength: 40 }),
@@ -185,7 +185,7 @@ export const archCmsConfig: ContentConfig = {
     maxLength: 400,
   }),
 
-  // -- Domů · Kontaktní blok
+  // -- Home · Contact block
   'cta.bgImage': f('Kontaktní blok - obrázek na pozadí', 'Domů · Kontaktní blok', { type: 'image' }),
   'cta.bgImageAlt': f('Kontaktní blok - popis pozadí', 'Domů · Kontaktní blok', { maxLength: 280 }),
   'cta.title': f('Kontaktní blok - nadpis', 'Domů · Kontaktní blok', { recommendedMaxLength: 72, maxLength: 140 }),
@@ -197,7 +197,7 @@ export const archCmsConfig: ContentConfig = {
   'cta.btnPrimary': f('Kontaktní blok - první tlačítko', 'Domů · Kontaktní blok', { maxLength: 80 }),
   'cta.btnSecondary': f('Kontaktní blok - druhé tlačítko', 'Domů · Kontaktní blok', { maxLength: 80 }),
 
-  // -- Patička (hlavní stránka)
+  // -- Site footer (main page)
   'footer.blurb': f('Patička - krátký popis', 'Patička', {
     type: 'textarea',
     recommendedMaxLength: 200,
@@ -279,7 +279,7 @@ export const archCmsConfig: ContentConfig = {
     maxLength: 500,
   }),
 
-  // -- Globální kontakt (mimo patičku)
+  // -- Global contact (outside footer)
   'contact.phone': f('Kontakt - telefon', 'Kontakt (všechny stránky)', { maxLength: 40 }),
   'contact.email': f('Kontakt - e-mail', 'Kontakt (všechny stránky)', { maxLength: 120 }),
   'contact.address': f('Kontakt - adresa', 'Kontakt (všechny stránky)', {
@@ -293,7 +293,7 @@ export const archCmsConfig: ContentConfig = {
     maxLength: 4000,
   }),
 
-  // -- Stránka Ceník (samostatná stránka s tarify a kartami)
+  // -- Pricing page (standalone page with tiers and cards)
   'pricingPage.hero.badge': f('Ceník - malý štítek v úvodu', 'Ceník', { maxLength: 64 }),
   'pricingPage.hero.title': f('Ceník - hlavní nadpis v úvodu', 'Ceník', { maxLength: 120 }),
   'pricingPage.hero.lead': f('Ceník - úvodní text', 'Ceník', {
@@ -403,7 +403,7 @@ export const archCmsConfig: ContentConfig = {
   'pricingPage.final.btnPrimary': f('Ceník - závěr, hlavní tlačítko', 'Závěr', { maxLength: 80 }),
   'pricingPage.final.btnSecondary': f('Ceník - závěr, druhé tlačítko', 'Závěr', { maxLength: 80 }),
 
-  // -- Stránka Kontakt
+  // -- Contact page
   'contactPage.hero.badge': f('Kontakt - malý štítek v úvodu', 'Kontakt · Úvod', { maxLength: 64 }),
   'contactPage.hero.title': f('Kontakt - hlavní nadpis v úvodu', 'Kontakt · Úvod', { maxLength: 120 }),
   'contactPage.hero.lead': f('Kontakt - úvodní text', 'Kontakt · Úvod', {
@@ -497,5 +497,5 @@ export const archCmsConfig: ContentConfig = {
   }),
 };
 
-/** Pořadí polí ve formuláři (pro stabilní zobrazení v administraci). */
+/** Field order in the form (stable ordering in the admin UI). */
 export const archCmsConfigKeyOrder = Object.keys(archCmsConfig);

@@ -6,7 +6,7 @@ const inputClass =
 const selectClass =
   'w-full px-3 py-2 border border-gray-200 rounded-md text-sm bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/25 focus:border-blue-500';
 
-/** Stejný tvar jako v Nastavení kontaktu / editaci stránky - editor mění hlavně položky menu. */
+/** Same shape as contact settings / page edit — this editor mainly adjusts menu items. */
 export type AdminSiteSettings = {
   templateId?: string;
   theme: { primary: string; secondary1: string; secondary2?: string };
@@ -28,7 +28,7 @@ export type AdminSiteSettings = {
 type Props = {
   siteSettings: AdminSiteSettings;
   setSiteSettings: Dispatch<SetStateAction<AdminSiteSettings | null>>;
-  /** Zapnutí domovské sekce podle přepínače na stránce Domů (výchozí jazyk). */
+  /** Whether a home section is enabled per the Home page toggle (primary language). */
   isSectionEnabled: (mainFieldKey: string) => boolean;
 };
 

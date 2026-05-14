@@ -41,7 +41,7 @@ function formatSavedAt(d: Date): string {
   });
 }
 
-/** Jen zobrazení - změna šablony je v platformovém adminu (tenant). */
+/** Display only — template changes happen in platform admin (per tenant). */
 function templateDisplayName(id: string | undefined): string {
   const k = (id ?? '').trim();
   const map: Record<string, string> = {

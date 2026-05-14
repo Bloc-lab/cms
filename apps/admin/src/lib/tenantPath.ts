@@ -1,4 +1,4 @@
-/** První segment path-based tenanta: /t/<slug>/… */
+/** First path segment for path-based tenants: /t/<slug>/… */
 const TENANT_PATH_RE = /^\/t\/([^/]+)(?=\/|$)/;
 
 export function slugFromTenantPath(pathname: string): string | undefined {
@@ -7,7 +7,7 @@ export function slugFromTenantPath(pathname: string): string | undefined {
   return s?.length ? s : undefined;
 }
 
-/** Subdoména při hostname ve tvaru <slug>.BASE (např. kadernictvi.tvujcms.cz). */
+/** Subdomain when the hostname looks like <slug>.BASE (e.g. kadernictvi.tvujcms.cz). */
 export function slugFromAdminHostname(hostname: string, adminBaseDomain: string | undefined): string | undefined {
   const base = adminBaseDomain?.trim().toLowerCase();
   const host = hostname.trim().toLowerCase().split(':')[0];
@@ -19,7 +19,7 @@ export function slugFromAdminHostname(hostname: string, adminBaseDomain: string 
 }
 
 /**
- * true = sdílená URL bez tenantové subdomény (typicky *.vercel.app) - použij /t/&lt;slug&gt;/….
+ * true = shared URL without a tenant subdomain (typically *.vercel.app) — use /t/&lt;slug&gt;/… paths.
  */
 export function needsPathTenantSlug(): boolean {
   if (typeof window === 'undefined') return false;
@@ -32,7 +32,7 @@ export function needsPathTenantSlug(): boolean {
   return true;
 }
 
-/** Absolutní URL přihlášení CMS pro daného tenanta (z platformy `/platform/…`). */
+/** Absolute CMS login URL for a tenant (from platform `/platform/…`). */
 export function platformTenantCmsUrl(adminSubdomain: string): string {
   const slug = adminSubdomain.trim().toLowerCase();
   if (!slug || typeof window === 'undefined') {
@@ -50,13 +50,13 @@ export function platformTenantCmsUrl(adminSubdomain: string): string {
   return `${window.location.protocol}//${tenantHost}/`;
 }
 
-/** Prefix pro NavLink (/t/slug nebo ''). */
+/** Prefix for NavLink (`/t/slug` or empty). */
 export function tenantPathPrefix(): string {
   const s = slugFromTenantPath(window.location.pathname);
   return s ? `/t/${s}` : '';
 }
 
-/** Absolutní cesta v aktuálním tenant scope (legacy root vs /t/&lt;slug&gt;). */
+/** Absolute path in the current tenant scope (legacy root vs /t/&lt;slug&gt;). */
 export function tenantHref(path: string): string {
   const p = tenantPathPrefix();
   const normalized = path.startsWith('/') ? path : `/${path}`;

@@ -189,7 +189,7 @@ export default function Metadata() {
       next.add(code);
     }
     const nextValue = setEnabledLangsValue([...next]);
-    // ukládáme jen do cs varianty – je to interní admin preference
+    // Persist only on the `cs` variant — internal admin preference.
     setValue(ADMIN_ENABLED_LANGS_KEY, 'cs', nextValue);
   };
 
@@ -197,7 +197,7 @@ export default function Metadata() {
     setValue(ADMIN_SHOW_TRANSLATION_BADGES_KEY, 'cs', setShowTranslationBadgesValue(show));
   };
 
-  /** Pole z `metadataConfig` ve shared - přidáním klíče v balíčku se objeví ve formuláři. */
+  /** Fields from shared `metadataConfig`; adding a key in the package surfaces it in this form. */
   const metadataFields = Object.entries(metadataConfig).filter(
     ([k]) => k !== ADMIN_ENABLED_LANGS_KEY && k !== ADMIN_SHOW_TRANSLATION_BADGES_KEY
   );

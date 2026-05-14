@@ -1,21 +1,21 @@
 import type { ContentConfig } from './types.js';
 
-/** Jedna logická stránka webu: segment URL + pole obsahu (jako v „Obsah webu“). */
+/** One logical site page: URL segment plus content fields (as in “Site content”). */
 export interface SitePageDefinition {
   /**
-   * Segment cesty bez úvodního lomítka. Prázdný řetězec = domovská stránka (/).
-   * Např. `o-nas` odpovídá `/o-nas`.
+   * Path segment without a leading slash. Empty string = home page (/).
+   * For example `o-nas` maps to `/o-nas`.
    */
   slug: string;
-  /** Název v administraci */
+  /** Label shown in the admin UI */
   label: string;
-  /** Pole stejná jako dříve uvnitř jedné flat mapy - klíče typu `hero.title` */
+  /** Same field shape as the old single flat map — keys like `hero.title` */
   fields: ContentConfig;
 }
 
 export type SitePagesConfigMap = Record<string, SitePageDefinition>;
 
-/** Oddělovač v DB: `pageId` + ':' + `fieldKey` → např. `main:hero.title` */
+/** DB key separator: `pageId` + ':' + `fieldKey` → e.g. `main:hero.title` */
 export function storageKey(pageId: string, fieldKey: string): string {
   return `${pageId}:${fieldKey}`;
 }
@@ -26,7 +26,7 @@ export function parseStorageKey(fullKey: string): { pageId: string; fieldKey: st
   return { pageId: fullKey.slice(0, idx), fieldKey: fullKey.slice(idx + 1) };
 }
 
-/** Staré flat klíče (bez pageId) → nový tvar. Admin.* beze změny. */
+/** Legacy flat keys (no pageId) → new shape. `admin.*` keys stay unchanged. */
 export function legacyContentKeyToStorageKey(key: string): string {
   if (key.startsWith('admin.')) return key;
   if (parseStorageKey(key)) return key;

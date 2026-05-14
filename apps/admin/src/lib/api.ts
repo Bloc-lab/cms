@@ -5,7 +5,7 @@ import {
 
 export const API_BASE = import.meta.env.VITE_API_URL ?? '';
 
-/** Slug z URL (/t/:slug nebo subdomain vůči VITE_ADMIN_BASE_DOMAIN). */
+/** Tenant slug from the URL (`/t/:slug` or subdomain vs VITE_ADMIN_BASE_DOMAIN). */
 function detectTenantSlug(): string | undefined {
   if (typeof window === 'undefined') return undefined;
   const pathname = window.location.pathname;

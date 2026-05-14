@@ -1,6 +1,6 @@
 /**
- * Sdílená konfigurace obsahu pro CMS a web.
- * Z těchto popisů se v administraci skládají formuláře; uložené hodnoty se zobrazují na webu.
+ * Shared content configuration for the CMS and the public site.
+ * The admin builds forms from these definitions; saved values render on the site.
  */
 
 export type { ContentField, ContentConfig } from './types.js';
@@ -45,14 +45,14 @@ import { resolveRedusSeedValueByLang } from './redus-public-defaults.js';
 import { resolveArchSeedValueByLang } from './arch-public-defaults.js';
 import { archSitePagesConfig, archSiteContentConfig } from './arch-site-pages.js';
 
-/** Interní identifikátory polí pro branding (název webu, logo) v administraci. */
+/** Internal field keys for branding (site name, logo) in the admin UI. */
 export const ADMIN_SITE_NAME_KEY = 'admin.siteName';
 export const ADMIN_LOGO_KEY = 'admin.logo';
 export const ADMIN_TAGLINE_KEY = 'admin.tagline';
 export const ADMIN_ENABLED_LANGS_KEY = 'admin.enabledLangs';
 export const ADMIN_SHOW_TRANSLATION_BADGES_KEY = 'admin.showTranslationBadges';
 
-/** Branding / CMS metadata (název, logo) - samostatná stránka v administraci. */
+/** Branding / CMS metadata (name, logo) — dedicated admin page. */
 export const metadataConfig: ContentConfig = {
   [ADMIN_SITE_NAME_KEY]: {
     label: 'Název webu',
@@ -875,17 +875,17 @@ export const sitePagesConfig: SitePagesConfigMap = {
   },
 };
 
-/** Spojený seznam všech polí stránek (pro kontrolu a ukládání v CMS). */
+/** Flattened list of all page fields (validation and CMS persistence). */
 export const siteContentConfig: ContentConfig = flattenSitePagesFields(sitePagesConfig);
 
-/** Kompletní konfigurace polí (metadata + obsah). */
+/** Full field configuration (metadata + content). */
 export const defaultConfig: ContentConfig = {
   ...metadataConfig,
   ...siteSettingsConfig,
   ...siteContentConfig,
 };
 
-/** Šablona ARCH (druhý typ webu v tomto CMS). */
+/** ARCH template id (second site type in this CMS). */
 export const CMS_TEMPLATE_ARCH = 'arch' as const;
 
 export function getSitePagesForTemplate(templateId: string | null | undefined): SitePagesConfigMap {

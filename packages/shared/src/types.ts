@@ -6,27 +6,27 @@ export interface ContentField {
   label: string;
   type?: 'text' | 'textarea' | 'image' | 'choice';
   /**
-   * Pro přepínače - vnitřní hodnota a text, který vidí návštěvník u volby.
+   * For toggles: internal value and label shown to visitors for each option.
    */
   choices?: Array<{ value: string; label: string }>;
   /** If true, at least one language must have a non-empty value (admin validates on save). */
   required?: boolean;
   /**
-   * Krátký návod pro editory; zobrazí se v administraci pod názvem pole.
+   * Short hint for editors; shown in the admin UI under the field name.
    */
   helpText?: string;
-  /** Placeholder pro input/textarea v administraci. */
+  /** Placeholder for input/textarea in the admin UI. */
   placeholder?: string;
-  /** Doporučená délka textu (pouze upozornění v administraci). */
+  /** Recommended text length (admin warning only). */
   recommendedMaxLength?: number;
-  /** Maximální délka textu v administraci (včetně mezer). */
+  /** Maximum text length in the admin UI (including spaces). */
   maxLength?: number;
   /**
-   * Název sekce v editaci stránky (např. Hero, Služby, SEO, Pokročilé).
-   * Pokud chybí, admin zařadí pole do výchozí sekce.
+   * Section title in the page editor (e.g. Hero, Services, SEO, Advanced).
+   * If omitted, the admin places the field in the default section.
    */
   section?: string;
-  /** Skryje pole do “Pokročilé” části (nebo zobrazí badge). */
+  /** Moves the field into the "Advanced" area (or shows a badge). */
   advanced?: boolean;
 }
 

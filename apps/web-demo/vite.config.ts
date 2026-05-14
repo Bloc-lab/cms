@@ -6,7 +6,7 @@ export default defineConfig({
     proxy: {
       '/api': {
         target: 'http://127.0.0.1:3000',
-        // false = zachovat Host z prohlížeče (konzistentní s adminem; content API používá X-API-KEY)
+        // false = keep the browser Host (same as admin; content API uses X-API-KEY)
         changeOrigin: false,
         secure: false,
       },

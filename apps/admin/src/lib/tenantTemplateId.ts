@@ -5,7 +5,7 @@ type SiteSettingsResp = { templateId?: string };
 let cache: { id: string; at: number } | null = null;
 const TTL_MS = 4000;
 
-/** `site_settings.template_id` pro aktuálního tenanta (šablona obsahu v CMS). */
+/** `site_settings.template_id` for the current tenant (CMS content template). */
 export async function getTenantTemplateId(): Promise<string> {
   const now = Date.now();
   if (cache && now - cache.at < TTL_MS) {

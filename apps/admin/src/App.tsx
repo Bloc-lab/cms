@@ -57,7 +57,7 @@ function PathDeploymentHint() {
   );
 }
 
-/** /content → kořen aktuálního tenant scope (legacy `/` nebo `/t/:slug`). */
+/** `/content` → tenant scope root (legacy `/` or `/t/:slug`). */
 function ContentScopeRedirect() {
   return <Navigate to={tenantHref('/')} replace />;
 }

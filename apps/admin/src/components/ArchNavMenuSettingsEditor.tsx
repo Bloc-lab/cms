@@ -13,7 +13,7 @@ const inputClass =
 
 const MAIN = 'main';
 
-/** Pořadí položek + příznak v menu + krátká orientace „kam to míří“ (jen vlastní stránky, bez scroll kotev z Domů). */
+/** Row order, in-menu flag, and short “where it goes” hint (site pages only; no Home scroll anchors). */
 export const ARCH_NAV_MENU_ROWS = [
   {
     labelKey: 'nav.about',

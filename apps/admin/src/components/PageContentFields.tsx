@@ -3,9 +3,9 @@ import { storageKey as makeStorageKey, type ContentConfig, type ContentField } f
 import { PRIMARY_LANG } from '../lib/languages';
 import {
   CMS_ADMIN_FOCUS_SUBSECTION,
-  getPatičkaFooterBlockRoot,
-  getPatičkaFooterSubsectionDisplayLabel,
-  isPatičkaFooterChildSectionTitle,
+  getSiteFooterBlockRoot,
+  getSiteFooterSubsectionDisplayLabel,
+  isSiteFooterChildSectionTitle,
   parseDomPortfolioSubKey,
   parsePricingPlanIndex,
   sectionAnchorId,
@@ -15,7 +15,7 @@ import {
 const inputClass =
   'w-full px-3 py-2 border border-gray-200 rounded-md text-sm bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/25 focus:border-blue-500';
 
-/** ARCH stránka ceníku: `standard.card1.title` → 1 */
+/** ARCH pricing page: `standard.card1.title` -> card index 1 */
 function parseArchStandardCardIndex(fieldKey: string): number | null {
   const m = fieldKey.match(/^standard\.card(\d+)\./);
   if (!m) return null;
@@ -86,7 +86,7 @@ interface Props {
     lead?: { formspreeUrl?: string };
   } | null;
   setSiteSettings?: (next: any) => void;
-  /** Volitelné - šablona (např. arch); předává se kvůli budoucím větvím v editoru. */
+  /** Optional template id for future editor branches. */
   siteTemplateId?: string | null;
 }
 
@@ -156,18 +156,18 @@ export default function PageContentFields({
 
   const ctaFormSection = sectionsRaw.find(([title]) => title.trim() === 'CTA · Formulář') ?? null;
 
-  const patičkaFooterSubsections = sectionsRaw.filter(([title]) => isPatičkaFooterChildSectionTitle(title));
+  const siteFooterSubsections = sectionsRaw.filter(([title]) => isSiteFooterChildSectionTitle(title));
 
-  let patičkaFooterRootTitle: 'Patička' | 'Footer' | null = null;
+  let siteFooterRootTitle: 'Patička' | 'Footer' | null = null;
   for (const [title] of sectionsRaw) {
-    const r = getPatičkaFooterBlockRoot(title);
+    const r = getSiteFooterBlockRoot(title);
     if (r && title.trim() === r) {
-      patičkaFooterRootTitle = r;
+      siteFooterRootTitle = r;
       break;
     }
   }
-  if (!patičkaFooterRootTitle && patičkaFooterSubsections.length > 0) {
-    patičkaFooterRootTitle = getPatičkaFooterBlockRoot(patičkaFooterSubsections[0]![0]) ?? null;
+  if (!siteFooterRootTitle && siteFooterSubsections.length > 0) {
+    siteFooterRootTitle = getSiteFooterBlockRoot(siteFooterSubsections[0]![0]) ?? null;
   }
 
   const sections = sectionsRaw.filter(
@@ -176,7 +176,7 @@ export default function PageContentFields({
       parseDomPortfolioSubKey(title) === null &&
       !isContactFormVolbyOrRozpocetSection(title) &&
       title.trim() !== 'CTA · Formulář' &&
-      !isPatičkaFooterChildSectionTitle(title)
+      !isSiteFooterChildSectionTitle(title)
   );
 
   const [activePricingPlan, setActivePricingPlan] = useState<number>(1);
@@ -212,12 +212,12 @@ export default function PageContentFields({
     setActiveDomPortfolioSub(keys[0] ?? 'card:1');
   }, [domPortfolioSubsections, activeDomPortfolioSub]);
 
-  const [activePatičkaFooterSubTitle, setActivePatičkaFooterSubTitle] = useState('');
+  const [activeSiteFooterSubTitle, setActiveSiteFooterSubTitle] = useState('');
   useEffect(() => {
-    if (patičkaFooterSubsections.length === 0) return;
-    if (patičkaFooterSubsections.some(([t]) => t === activePatičkaFooterSubTitle)) return;
-    setActivePatičkaFooterSubTitle(patičkaFooterSubsections[0]![0]);
-  }, [patičkaFooterSubsections, activePatičkaFooterSubTitle]);
+    if (siteFooterSubsections.length === 0) return;
+    if (siteFooterSubsections.some(([t]) => t === activeSiteFooterSubTitle)) return;
+    setActiveSiteFooterSubTitle(siteFooterSubsections[0]![0]);
+  }, [siteFooterSubsections, activeSiteFooterSubTitle]);
 
   useEffect(() => {
     const handler = (ev: Event) => {
@@ -231,8 +231,8 @@ export default function PageContentFields({
         setActivePricingPlan(d.pricingPlan);
       }
       if (typeof d.footerSubsectionTitle === 'string' && d.footerSubsectionTitle.trim().length > 0) {
-        if (isPatičkaFooterChildSectionTitle(d.footerSubsectionTitle)) {
-          setActivePatičkaFooterSubTitle(d.footerSubsectionTitle);
+        if (isSiteFooterChildSectionTitle(d.footerSubsectionTitle)) {
+          setActiveSiteFooterSubTitle(d.footerSubsectionTitle);
         }
       }
     };
@@ -712,7 +712,7 @@ export default function PageContentFields({
                   );
                 }
 
-                // ARCH domů - Portfolio: karty / před–po / detaily pod záložkami.
+                // ARCH home — Portfolio: cards, before/after, details in sub-tabs.
                 if (
                   !isHidden &&
                   pageId === 'main' &&
@@ -778,7 +778,7 @@ export default function PageContentFields({
                   );
                 }
 
-                // ARCH kontakt - formulář: Volby a rozpočet pod záložkami.
+                // ARCH contact — form: options and budget in sub-tabs.
                 if (
                   !isHidden &&
                   pageId === 'contactPage' &&
@@ -847,16 +847,16 @@ export default function PageContentFields({
                   );
                 }
 
-                // Patička / Footer: sloupce a odkazy pod záložkami (jeden blok jako portfolio).
+                // Site footer (Czech "Patička" or English "Footer"): columns and links in sub-tabs (same block pattern as portfolio).
                 if (
                   !isHidden &&
-                  patičkaFooterRootTitle &&
-                  sectionTitle.trim() === patičkaFooterRootTitle &&
-                  patičkaFooterSubsections.length > 0
+                  siteFooterRootTitle &&
+                  sectionTitle.trim() === siteFooterRootTitle &&
+                  siteFooterSubsections.length > 0
                 ) {
-                  const selectedPatSub =
-                    patičkaFooterSubsections.find(([t]) => t === activePatičkaFooterSubTitle) ??
-                    patičkaFooterSubsections[0]!;
+                  const selectedFooterSub =
+                    siteFooterSubsections.find(([t]) => t === activeSiteFooterSubTitle) ??
+                    siteFooterSubsections[0]!;
                   return (
                     <>
                       {finalFields.length > 0 ? (
@@ -868,27 +868,27 @@ export default function PageContentFields({
                         <div className="flex flex-wrap items-center justify-between gap-3">
                           <div>
                             <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                              {patičkaFooterRootTitle === 'Footer' ? 'Footer' : 'Patička'}
+                              {siteFooterRootTitle === 'Footer' ? 'Footer' : 'Patička'}
                             </p>
                             <p className="text-sm text-gray-700 mt-0.5">
-                              Sloupce a odkazy – přepínej záložkami (stejný princip jako portfolio nebo tarify).
+                              Columns and links — switch with tabs (same pattern as portfolio or pricing tiers).
                             </p>
                           </div>
                           <div className="flex flex-wrap gap-2">
-                            {patičkaFooterSubsections.map(([subTitle]) => {
-                              const isActive = subTitle === activePatičkaFooterSubTitle;
+                            {siteFooterSubsections.map(([subTitle]) => {
+                              const isActive = subTitle === activeSiteFooterSubTitle;
                               return (
                                 <button
                                   key={subTitle}
                                   type="button"
-                                  onClick={() => setActivePatičkaFooterSubTitle(subTitle)}
+                                  onClick={() => setActiveSiteFooterSubTitle(subTitle)}
                                   className={`rounded-lg border px-4 py-2.5 text-sm font-medium transition ${
                                     isActive
                                       ? 'border-blue-600 bg-blue-50 text-blue-900 shadow-sm'
                                       : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
                                   }`}
                                 >
-                                  {getPatičkaFooterSubsectionDisplayLabel(subTitle, (fk) =>
+                                  {getSiteFooterSubsectionDisplayLabel(subTitle, (fk) =>
                                     (getValue(fk, lang) ?? '').trim()
                                   )}
                                 </button>
@@ -897,7 +897,7 @@ export default function PageContentFields({
                           </div>
                         </div>
                         <div className="mt-5 grid grid-cols-1 md:grid-cols-2 gap-5">
-                          {(selectedPatSub[1] ?? []).map(([fieldKey, field]) => {
+                          {(selectedFooterSub[1] ?? []).map(([fieldKey, field]) => {
                             const fieldType = field?.type ?? 'text';
                             const fullSpan =
                               fieldType === 'textarea' ||
@@ -916,7 +916,7 @@ export default function PageContentFields({
                   );
                 }
 
-                // ARCH /pricing - sekce Standard: karty pod záložkami (stejný UX vzor jako tarify u MONO).
+                // ARCH /pricing — Standard section: cards in sub-tabs (same UX pattern as MONO pricing tiers).
                 if (
                   !isHidden &&
                   pageId === 'pricingPage' &&

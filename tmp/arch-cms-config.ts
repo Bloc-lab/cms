@@ -10,7 +10,7 @@ function f(label: string, section: string, rest: Partial<ContentField> = {}): Co
 }
 
 export const archCmsConfig: ContentConfig = {
-  // -- Administrace
+  // -- Admin-only fields
   'admin.siteName': f('Název webu (značka)', 'Administrace', {
     required: true,
     helpText: 'Zobrazuje se v hlavičce a branding; obvykle ARCH&CO nebo název studia.',
@@ -22,7 +22,7 @@ export const archCmsConfig: ContentConfig = {
     helpText: 'Logo pro CMS / web; lze použít i prázdné, pokud stačí textový název.',
   }),
 
-  // -- Navigace
+  // -- Navigation
   'nav.portfolio': f('Menu - Portfolio', 'Navigace', { recommendedMaxLength: 24, maxLength: 48 }),
   'nav.process': f('Menu - Postup práce', 'Navigace', { recommendedMaxLength: 28, maxLength: 56 }),
   'nav.services': f('Menu - Služby', 'Navigace', { recommendedMaxLength: 24, maxLength: 48 }),
@@ -35,7 +35,7 @@ export const archCmsConfig: ContentConfig = {
     maxLength: 64,
   }),
 
-  // -- Domů · Hero
+  // -- Home · Hero
   'hero.image': f('Hero - hlavní obrázek', 'Domů · Hero', {
     type: 'image',
     helpText: 'Široký vizuál (doporučeno min. ~1600 px šířky).',
@@ -68,7 +68,7 @@ export const archCmsConfig: ContentConfig = {
     maxLength: 80,
   }),
 
-  // -- Domů · Portfolio
+  // -- Home · Portfolio
   'portfolio.title': f('Portfolio - nadpis sekce', 'Domů · Portfolio', {
     recommendedMaxLength: 48,
     maxLength: 100,
@@ -133,7 +133,7 @@ export const archCmsConfig: ContentConfig = {
   'portfolio.detail3.image': f('Detail 3 - obrázek', 'Domů · Portfolio · Detaily', { type: 'image' }),
   'portfolio.detail3.imageAlt': f('Detail 3 - alt', 'Domů · Portfolio · Detaily', { maxLength: 280 }),
 
-  // -- Domů · Řemeslo
+  // -- Home · Craft / trade block
   'craft.image': f('Řemeslo - obrázek', 'Domů · Řemeslo', { type: 'image' }),
   'craft.imageAlt': f('Řemeslo - alt obrázku', 'Domů · Řemeslo', { maxLength: 280 }),
   'craft.label': f('Řemeslo - malý štítek', 'Domů · Řemeslo', { maxLength: 40 }),
@@ -154,7 +154,7 @@ export const archCmsConfig: ContentConfig = {
     maxLength: 400,
   }),
 
-  // -- Domů · CTA blok
+  // -- Home · CTA block
   'cta.bgImage': f('CTA - pozadí', 'Domů · CTA', { type: 'image' }),
   'cta.bgImageAlt': f('CTA - alt pozadí', 'Domů · CTA', { maxLength: 280 }),
   'cta.title': f('CTA - nadpis', 'Domů · CTA', { recommendedMaxLength: 72, maxLength: 140 }),
@@ -166,7 +166,7 @@ export const archCmsConfig: ContentConfig = {
   'cta.btnPrimary': f('CTA - primární tlačítko', 'Domů · CTA', { maxLength: 80 }),
   'cta.btnSecondary': f('CTA - sekundární tlačítko', 'Domů · CTA', { maxLength: 80 }),
 
-  // -- Footer (hlavní stránka)
+  // -- Site footer (main page)
   'footer.blurb': f('Footer - krátký popis', 'Footer', {
     type: 'textarea',
     recommendedMaxLength: 200,
@@ -199,7 +199,7 @@ export const archCmsConfig: ContentConfig = {
     advanced: true,
   }),
 
-  // -- Globální kontakt (mimo footer)
+  // -- Global contact (outside footer)
   'contact.phone': f('Kontakt - telefon', 'Kontakt (globální)', { maxLength: 40 }),
   'contact.email': f('Kontakt - e-mail', 'Kontakt (globální)', { maxLength: 120 }),
   'contact.address': f('Kontakt - adresa', 'Kontakt (globální)', {
@@ -213,7 +213,7 @@ export const archCmsConfig: ContentConfig = {
     maxLength: 4000,
   }),
 
-  // -- Stránka Ceník
+  // -- Pricing page
   'pricingPage.hero.badge': f('Ceník - hero štítek', 'Ceník · Hero', { maxLength: 64 }),
   'pricingPage.hero.title': f('Ceník - hero nadpis', 'Ceník · Hero', { maxLength: 120 }),
   'pricingPage.hero.lead': f('Ceník - hero perex', 'Ceník · Hero', {
@@ -345,7 +345,7 @@ export const archCmsConfig: ContentConfig = {
   }),
   'pricingPage.footer.copyright': f('Ceník footer - copyright', 'Ceník · Footer', { maxLength: 200 }),
 
-  // -- Stránka Kontakt
+  // -- Contact page
   'contactPage.hero.badge': f('Kontakt - hero štítek', 'Kontakt · Hero', { maxLength: 64 }),
   'contactPage.hero.title': f('Kontakt - hero nadpis', 'Kontakt · Hero', { maxLength: 120 }),
   'contactPage.hero.lead': f('Kontakt - hero perex', 'Kontakt · Hero', {
