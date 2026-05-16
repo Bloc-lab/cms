@@ -11,6 +11,7 @@ import { loadPreviewPayload } from '../../lib/preview-public-data.js';
 import { insertContentPreviewToken } from '../../lib/preview-token.js';
 import { toDbAdminSiteSettings, validateAndNormalizeAdminSiteSettings, type SiteSettingsAdmin } from '../../lib/site-settings.js';
 import { loadSitePagesConfigForTenant } from '../../lib/tenant-site-pages.js';
+import { profileIsDemo } from '../../lib/demo-user.js';
 
 const PRIMARY_LANG = 'cs';
 
@@ -70,30 +71,46 @@ export async function adminContentDraftsRoutes(app: FastifyInstance) {
   app.post<{ Body: { pageId?: string } }>(
     '/api/v1/admin/content-preview-token',
     async (request: FastifyRequest<{ Body: { pageId?: string } }>, reply: FastifyReply) => {
-      const tenantId = request.tenantId;
-      const userId = request.userId;
-      const pageId = request.body?.pageId?.trim() ?? '';
-      if (!tenantId) {
-        return reply.status(500).send({ error: 'Server error' });
-      }
-      const pages = await loadSitePagesConfigForTenant(tenantId);
-      if (!isValidPageId(pages, pageId)) {
-        return reply.status(400).send({ error: 'Unknown page' });
-      }
       try {
-        const { plainToken, expiresAt } = await insertContentPreviewToken({
-          tenantId,
-          pageId,
-          userId,
-        });
-        return reply.send({ token: plainToken, expiresAt, pageId });
-      } catch (e) {
-        const msg = e instanceof Error ? e.message : 'Failed to create token';
-        if (msg.includes('missing') || msg.includes('Apply migration')) {
-          return reply.status(503).send({ error: msg });
+        const tenantId = request.tenantId;
+        const userId = request.userId;
+        const pageId = request.body?.pageId?.trim() ?? '';
+        if (!tenantId) {
+          return reply.status(500).send({
+            error: 'Tenant context missing',
+            detail: 'Open the admin under your tenant URL (e.g. /t/<subdomain>/…) so the API receives the tenant.',
+          });
         }
+        const pages = await loadSitePagesConfigForTenant(tenantId);
+        if (!isValidPageId(pages, pageId)) {
+          return reply.status(400).send({ error: 'Unknown page' });
+        }
+        try {
+          const { plainToken, expiresAt } = await insertContentPreviewToken({
+            tenantId,
+            pageId,
+            userId,
+          });
+          return reply.send({ token: plainToken, expiresAt, pageId });
+        } catch (e) {
+          const msg = e instanceof Error ? e.message : 'Failed to create token';
+          if (msg.includes('missing') || msg.includes('Apply migration')) {
+            return reply.status(503).send({ error: msg });
+          }
+          if (msg === 'Server misconfiguration') {
+            return reply.status(503).send({
+              error: msg,
+              detail: 'Set SUPABASE_SERVICE_ROLE_KEY in the backend environment.',
+            });
+          }
+          request.log.error(e);
+          return reply.status(500).send({ error: msg });
+        }
+      } catch (e) {
         request.log.error(e);
-        return reply.status(500).send({ error: msg });
+        return reply.status(500).send({
+          error: e instanceof Error ? e.message : 'Failed to create preview token',
+        });
       }
     }
   );
@@ -307,8 +324,13 @@ export async function adminContentDraftsRoutes(app: FastifyInstance) {
     ) => {
       const tenantId = request.tenantId;
       const pageId = request.params.pageId;
+      const userId = request.userId;
       if (!tenantId || !supabaseAdmin) {
         return reply.status(500).send({ error: 'Server error' });
+      }
+
+      if (userId && (await profileIsDemo(userId))) {
+        return reply.status(403).send({ error: 'Publishing is disabled for demo accounts' });
       }
       const pages = await loadSitePagesConfigForTenant(tenantId);
       if (!isValidPageId(pages, pageId)) {

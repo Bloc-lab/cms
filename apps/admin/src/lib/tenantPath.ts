@@ -32,6 +32,19 @@ export function needsPathTenantSlug(): boolean {
   return true;
 }
 
+/** Absolute URL nebo path k domovské stránce CMS pro daný tenant (demo přesměrování). */
+export function tenantAdminHomeUrl(adminSubdomain: string): string {
+  const slug = adminSubdomain.trim().toLowerCase();
+  if (!slug || typeof window === 'undefined') return '/';
+  if (needsPathTenantSlug()) {
+    return `/t/${encodeURIComponent(slug)}/`;
+  }
+  const platformHost = window.location.host;
+  const hostNoPort = platformHost.split(':')[0] ?? platformHost;
+  const portPart = platformHost.includes(':') ? `:${platformHost.split(':')[1]}` : '';
+  return `${window.location.protocol}//${slug}.${hostNoPort}${portPart}/`;
+}
+
 /** Absolute CMS login URL for a tenant (from platform `/platform/…`). */
 export function platformTenantCmsUrl(adminSubdomain: string): string {
   const slug = adminSubdomain.trim().toLowerCase();

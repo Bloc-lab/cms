@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, Navigate, useMatch } from 'react-router-dom';
+import { useNavigate, Navigate, useMatch, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { fetchPublicSiteInfo } from '../lib/siteInfo';
-import { needsPathTenantSlug } from '../lib/tenantPath';
+import { needsPathTenantSlug, tenantAdminHomeUrl } from '../lib/tenantPath';
+import { supabase } from '../lib/supabase';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -41,7 +42,22 @@ export default function Login() {
       </div>
     );
   }
-  if (user) return <Navigate to={defaultAfterLogin} replace />;
+  if (user) {
+    const demoSlug = (user.user_metadata as { demo_admin_subdomain?: string } | undefined)?.demo_admin_subdomain?.trim();
+    if (demoSlug && typeof pathTenantSlug !== 'string') {
+      const home = tenantAdminHomeUrl(demoSlug);
+      if (home.startsWith('http')) {
+        window.location.replace(home);
+        return (
+          <div className="flex items-center justify-center min-h-screen bg-[#f5f5f5] text-sm text-gray-500">
+            Přesměrování…
+          </div>
+        );
+      }
+      return <Navigate to={home} replace />;
+    }
+    return <Navigate to={defaultAfterLogin} replace />;
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,6 +65,19 @@ export default function Login() {
     setLoading(true);
     try {
       await signIn(email, password);
+      const { data: sessionData } = await supabase.auth.getSession();
+      const demoSlug = (
+        sessionData.session?.user.user_metadata as { demo_admin_subdomain?: string } | undefined
+      )?.demo_admin_subdomain?.trim();
+      if (demoSlug && typeof pathTenantSlug !== 'string') {
+        const home = tenantAdminHomeUrl(demoSlug);
+        if (home.startsWith('http')) {
+          window.location.assign(home);
+        } else {
+          navigate(home, { replace: true });
+        }
+        return;
+      }
       navigate(defaultAfterLogin);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Přihlášení selhalo');
@@ -106,6 +135,11 @@ export default function Login() {
             {loading ? 'Přihlašování…' : 'Přihlásit'}
           </button>
         </form>
+        <p className="mt-6 text-center text-sm text-gray-600">
+          <Link to="/demo" className="text-blue-600 hover:underline font-medium">
+            Vyzkoušet demo účet
+          </Link>
+        </p>
       </div>
     </div>
   );

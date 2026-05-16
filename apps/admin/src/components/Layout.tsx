@@ -67,6 +67,7 @@ export default function Layout() {
   const location = useLocation();
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [siteName, setSiteName] = useState('');
+  const [isDemo, setIsDemo] = useState(false);
 
   const loadBranding = useCallback(async () => {
     try {
@@ -84,6 +85,12 @@ export default function Layout() {
       setSiteName('');
     }
   }, []);
+
+  useEffect(() => {
+    void apiGet<{ isDemo?: boolean }>('/api/v1/admin/me')
+      .then((r) => setIsDemo(r.isDemo === true))
+      .catch(() => setIsDemo(false));
+  }, [location.pathname]);
 
   useEffect(() => {
     void loadBranding();
@@ -164,6 +171,11 @@ export default function Layout() {
 
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-20 flex h-14 shrink-0 items-center justify-end gap-4 border-b border-gray-200 bg-white px-4 md:px-6">
+          {isDemo ? (
+            <span className="mr-auto hidden sm:inline text-xs font-medium uppercase tracking-wide text-amber-800">
+              Demo režim — publikování je vypnuté
+            </span>
+          ) : null}
           <div className="flex items-center gap-3 shrink-0">
             <span
               className="hidden md:inline max-w-[180px] truncate text-sm text-gray-500"

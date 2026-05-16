@@ -2,7 +2,10 @@ import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { supabaseAdmin } from '../../lib/supabase.js';
 import { DEFAULT_PUBLIC_SITE_SETTINGS, toPublicSiteSettings } from '../../lib/site-settings.js';
 import { loadPreviewPayload } from '../../lib/preview-public-data.js';
-import { resolvePreviewTokenPageId } from '../../lib/preview-token.js';
+import {
+  parsePreviewTokenFromRequestQuery,
+  resolvePreviewFromPlainTokenDetails,
+} from '../../lib/preview-token.js';
 
 const DEFAULT_LANG = 'cs';
 
@@ -20,18 +23,30 @@ export async function publicSiteSettingsRoutes(app: FastifyInstance) {
         return reply.status(500).send({ error: 'Server error' });
       }
 
-      const previewToken =
-        typeof request.query.previewToken === 'string' ? request.query.previewToken : undefined;
+      const previewToken = parsePreviewTokenFromRequestQuery(request.query as Record<string, unknown>);
 
-      if (previewToken?.trim()) {
-        const pageId = await resolvePreviewTokenPageId(tenantId, previewToken);
-        if (!pageId) {
+      /** Tenant for DB reads: preview token embeds the correct tenant (hash is global). */
+      let settingsTenantId = tenantId;
+
+      if (previewToken) {
+        const resolved = await resolvePreviewFromPlainTokenDetails(previewToken);
+        if (!resolved.ok) {
+          if (resolved.reason === 'no_service') {
+            return reply.status(500).send({ error: 'Server error' });
+          }
+          if (resolved.reason === 'expired') {
+            return reply.status(403).send({
+              error: 'Preview token expired',
+              detail: 'Vygenerujte nový odkaz náhledu v administraci (platnost cca 1 hodina).',
+            });
+          }
           return reply.status(403).send({ error: 'Invalid or expired preview token' });
         }
-        if (pageId === 'main') {
-          const lang = request.query.lang ?? DEFAULT_LANG;
+        settingsTenantId = resolved.tenantId;
+        if (resolved.pageId === 'main') {
+          const lang = typeof request.query.lang === 'string' ? request.query.lang : DEFAULT_LANG;
           try {
-            const payload = await loadPreviewPayload(tenantId, 'main', lang);
+            const payload = await loadPreviewPayload(settingsTenantId, 'main', lang);
             if (payload.siteSettings) {
               return reply.send(payload.siteSettings);
             }
@@ -49,7 +64,7 @@ export async function publicSiteSettingsRoutes(app: FastifyInstance) {
         .select(
           'template_id, theme_primary, theme_secondary1, theme_secondary2, nav_json, cta_variant, cta_submit_label, cta_success_message, cta_form_layout'
         )
-        .eq('tenant_id', tenantId)
+        .eq('tenant_id', settingsTenantId)
         .maybeSingle();
 
       if (error) {

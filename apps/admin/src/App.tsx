@@ -3,6 +3,7 @@ import { useAuth } from './context/AuthContext';
 import Layout from './components/Layout';
 import PlatformLayout from './components/PlatformLayout';
 import Login from './pages/Login';
+import DemoSignup from './pages/DemoSignup';
 import SitePages from './pages/SitePages';
 import Metadata from './pages/Metadata';
 import MediaLibrary from './pages/MediaLibrary';
@@ -98,6 +99,7 @@ export default function App() {
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
+      <Route path="/demo" element={<DemoSignup />} />
       <Route path="/t/:tenantSlug/login" element={<Login />} />
 
       <Route

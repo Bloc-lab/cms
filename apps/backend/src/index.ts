@@ -15,6 +15,7 @@ import { adminSiteSettingsRoutes } from './routes/admin/site-settings.js';
 import { adminMeRoutes } from './routes/admin/me.js';
 import { devTenantsRoutes } from './routes/dev/tenants.js';
 import { platformTenantsRoutes } from './routes/platform/tenants.js';
+import { demoSignupRoutes } from './routes/demo/signup.js';
 
 const app = Fastify({ logger: true });
 
@@ -83,6 +84,7 @@ await app.register(adminSiteSettingsRoutes);
 await app.register(adminMeRoutes);
 await app.register(devTenantsRoutes);
 await app.register(platformTenantsRoutes);
+await app.register(demoSignupRoutes);
 
 // Health check (no tenant required)
 app.get('/health', async () => {

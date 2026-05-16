@@ -20,6 +20,7 @@ import StickyActionBar from '../components/StickyActionBar';
 import Toast from '../components/Toast';
 import { tenantHref } from '../lib/tenantPath';
 import { getTenantTemplateId } from '../lib/tenantTemplateId';
+import { resolvePublicPreviewSiteBase } from '../lib/publicPreviewSiteUrl';
 
 interface ContentEntry {
   key: string;
@@ -63,6 +64,19 @@ function entryKey(key: string, l: string): string {
   return `${key}:${l}`;
 }
 
+function buildPublicWebPreviewUrl(opts: {
+  previewToken: string;
+  lang: string;
+  pageSlug: string;
+  publicSiteBase: string | undefined;
+}): { url: string; absolute: boolean } {
+  const base = (opts.publicSiteBase ?? '').trim().replace(/\/$/, '');
+  const qs = new URLSearchParams({ previewToken: opts.previewToken, lang: opts.lang }).toString();
+  const rel = opts.pageSlug === '' ? `/?${qs}` : `/${opts.pageSlug}?${qs}`;
+  if (base) return { url: `${base}${rel}`, absolute: true };
+  return { url: rel, absolute: false };
+}
+
 export default function PageContentEdit() {
   const { pageId } = useParams<{ pageId: string }>();
   const [contentTemplateId, setContentTemplateId] = useState<string | null>(null);
@@ -75,6 +89,13 @@ export default function PageContentEdit() {
     return () => {
       cancelled = true;
     };
+  }, []);
+
+  const [isDemo, setIsDemo] = useState(false);
+  useEffect(() => {
+    void apiGet<{ isDemo?: boolean }>('/api/v1/admin/me')
+      .then((r) => setIsDemo(r.isDemo === true))
+      .catch(() => setIsDemo(false));
   }, []);
 
   const templateReady = contentTemplateId !== null;
@@ -104,6 +125,9 @@ export default function PageContentEdit() {
   const [lastAutosavedAt, setLastAutosavedAt] = useState<Date | null>(null);
   const [hasServerDraft, setHasServerDraft] = useState(false);
   const [publicPreviewBusy, setPublicPreviewBusy] = useState(false);
+  const [webPreviewUrl, setWebPreviewUrl] = useState<string | null>(null);
+  const [webPreviewIframeKey, setWebPreviewIframeKey] = useState(0);
+  const webPreviewOpenRef = useRef(false);
 
   const entriesRef = useRef(entries);
   const siteSettingsRef = useRef(siteSettings);
@@ -117,6 +141,14 @@ export default function PageContentEdit() {
 
   const enabledLangs = parseEnabledLangs(entries);
   const showTranslationBadges = parseShowTranslationBadges(entries);
+
+  const previewSiteBase = useMemo(
+    () => resolvePublicPreviewSiteBase(contentTemplateId),
+    [contentTemplateId]
+  );
+
+  const previewSiteConfiguredHint =
+    'Je potřeba adresa náhledu pro tuto šablonu (.env): VITE_PUBLIC_SITE_URL_MAP, nebo VITE_PUBLIC_SITE_URL (+ volitelně VITE_PUBLIC_SITE_URL_TEMPLATE1 nebo …_ARCH).';
 
   const siteFooterNavLabelOverrides = useMemo(() => {
     if (pageId !== 'main') return {} as Record<string, string>;
@@ -178,6 +210,62 @@ export default function PageContentEdit() {
     }
     await apiPut(`/api/v1/admin/content-drafts/${encodeURIComponent(pageId)}`, body);
   }, [pageId, pageDef, buildPageDraftEntries]);
+
+  const requestWebPreviewLink = useCallback(
+    async (language: string): Promise<{ url: string; absolute: boolean }> => {
+      if (!pageId || !pageDef) {
+        throw new Error('Chybí stránka');
+      }
+      const { token } = await apiPost<{ token: string; expiresAt: string; pageId: string }>(
+        '/api/v1/admin/content-preview-token',
+        { pageId }
+      );
+      const publicBase = previewSiteBase;
+      return buildPublicWebPreviewUrl({
+        previewToken: token,
+        lang: language,
+        pageSlug: pageDef.slug,
+        publicSiteBase: publicBase,
+      });
+    },
+    [pageId, pageDef, previewSiteBase]
+  );
+
+  useEffect(() => {
+    webPreviewOpenRef.current = false;
+    setWebPreviewUrl(null);
+  }, [pageId]);
+
+  useEffect(() => {
+    if (!webPreviewOpenRef.current || !pageId || !pageDef) return;
+    let cancelled = false;
+    void (async () => {
+      setPublicPreviewBusy(true);
+      try {
+        const { url, absolute } = await requestWebPreviewLink(lang);
+        if (cancelled) return;
+        if (!absolute) {
+          webPreviewOpenRef.current = false;
+          setWebPreviewUrl(null);
+          setToast(previewSiteConfiguredHint);
+          setTimeout(() => setToast(''), 6000);
+          return;
+        }
+        setWebPreviewUrl(url);
+        setWebPreviewIframeKey((k) => k + 1);
+      } catch (e) {
+        if (!cancelled) {
+          setToast(e instanceof Error ? e.message : 'Nepodařilo se obnovit náhled');
+          setTimeout(() => setToast(''), 6000);
+        }
+      } finally {
+        if (!cancelled) setPublicPreviewBusy(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [lang, pageId, pageDef, requestWebPreviewLink]);
 
   useEffect(() => {
     if (!templateReady || !pageDef || !pageId) return;
@@ -332,6 +420,23 @@ export default function PageContentEdit() {
       }
 
       await saveDraftToServer();
+
+      if (isDemo) {
+        setBaseline({ ...entries });
+        if (pageId === 'main' && siteSettings) {
+          setBaselineSiteSettings(JSON.parse(JSON.stringify(siteSettings)) as AdminSiteSettings);
+        }
+        setHasServerDraft(false);
+        const now = new Date();
+        setLastSavedAt(now);
+        setSaveNotice('Koncept uložen');
+        setToast('V demo účtu je publikování vypnuté — použijte odkaz náhledu nebo JSON náhled.');
+        setRecentlySaved(true);
+        setTimeout(() => setRecentlySaved(false), 10_000);
+        dispatchBrandingRefresh();
+        return;
+      }
+
       await apiPost<{ ok: boolean }>(`/api/v1/admin/content-drafts/${encodeURIComponent(pageId)}/publish`, {
         enabledLangs: langs,
       });
@@ -389,18 +494,67 @@ export default function PageContentEdit() {
     setMediaPickerKey(null);
   };
 
+  const handleCloseWebPreview = () => {
+    webPreviewOpenRef.current = false;
+    setWebPreviewUrl(null);
+  };
+
+  const handleShowWebPreview = async () => {
+    if (!pageId || !pageDef) return;
+    setPublicPreviewBusy(true);
+    try {
+      const { url, absolute } = await requestWebPreviewLink(lang);
+      if (!absolute) {
+        setToast(previewSiteConfiguredHint);
+        setTimeout(() => setToast(''), 6000);
+        return;
+      }
+      webPreviewOpenRef.current = true;
+      setWebPreviewUrl(url);
+      setWebPreviewIframeKey((k) => k + 1);
+      setToast('Náhled načten');
+      setTimeout(() => setToast(''), 4000);
+    } catch (e) {
+      setToast(e instanceof Error ? e.message : 'Nepodařilo se načíst náhled');
+      setTimeout(() => setToast(''), 6000);
+    } finally {
+      setPublicPreviewBusy(false);
+    }
+  };
+
+  const handleRefreshWebPreview = async () => {
+    if (!pageId || !pageDef) return;
+    if (!webPreviewOpenRef.current) {
+      await handleShowWebPreview();
+      return;
+    }
+    setPublicPreviewBusy(true);
+    try {
+      const { url, absolute } = await requestWebPreviewLink(lang);
+      if (!absolute) {
+        webPreviewOpenRef.current = false;
+        setWebPreviewUrl(null);
+        setToast(previewSiteConfiguredHint);
+        setTimeout(() => setToast(''), 6000);
+        return;
+      }
+      setWebPreviewUrl(url);
+      setWebPreviewIframeKey((k) => k + 1);
+      setToast('Náhled obnoven');
+      setTimeout(() => setToast(''), 3000);
+    } catch (e) {
+      setToast(e instanceof Error ? e.message : 'Nepodařilo se obnovit náhled');
+      setTimeout(() => setToast(''), 6000);
+    } finally {
+      setPublicPreviewBusy(false);
+    }
+  };
+
   const handleCopyWebPreviewLink = async () => {
     if (!pageId || !pageDef) return;
     setPublicPreviewBusy(true);
     try {
-      const { token } = await apiPost<{ token: string; expiresAt: string; pageId: string }>(
-        '/api/v1/admin/content-preview-token',
-        { pageId }
-      );
-      const base = import.meta.env.VITE_PUBLIC_SITE_URL?.trim().replace(/\/$/, '') ?? '';
-      const qs = new URLSearchParams({ previewToken: token, lang }).toString();
-      const rel = pageDef.slug === '' ? `/?${qs}` : `/${pageDef.slug}?${qs}`;
-      const url = base ? `${base}${rel}` : rel;
+      const { url } = await requestWebPreviewLink(lang);
       await navigator.clipboard.writeText(url);
       setToast('Odkaz na náhled na webu zkopírován');
       setTimeout(() => setToast(''), 4000);
@@ -410,6 +564,11 @@ export default function PageContentEdit() {
     } finally {
       setPublicPreviewBusy(false);
     }
+  };
+
+  const handleOpenWebPreviewInNewTab = () => {
+    if (!webPreviewUrl) return;
+    window.open(webPreviewUrl, '_blank', 'noopener,noreferrer');
   };
 
   if (loading) {
@@ -513,103 +672,168 @@ export default function PageContentEdit() {
           </>
         ) : null}
 
-        <div className="flex min-w-0 flex-1 justify-center">
-          <div className="w-full max-w-6xl">
-            <nav className="mb-3 text-sm text-gray-500" aria-label="Drobečková navigace">
-              <Link to={tenantHref('/')} className="hover:text-gray-700">
-                Stránky
-              </Link>
-              <span className="mx-2 text-gray-300">/</span>
-              <span className="font-medium text-gray-900">{pageDef.label}</span>
-            </nav>
-
-            <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-              <div>
-                <h1 className="text-2xl font-semibold tracking-tight text-gray-900">{pageDef.label}</h1>
-                <p className="mt-1 font-mono text-sm text-gray-500">{pathLabel}</p>
-              </div>
-              <div className="flex flex-wrap items-center gap-2 sm:shrink-0">
-                <button
-                  type="button"
-                  onClick={() => setSimpleView((v) => !v)}
-                  className="rounded-md border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-                  aria-pressed={simpleView}
-                  title="Zjednoduší zobrazení formuláře (méně upozornění)"
-                >
-                  {simpleView ? 'Zobrazit upozornění' : 'Skrýt upozornění'}
-                </button>
-                <div className="inline-flex rounded-md border border-gray-200 bg-white p-0.5 shadow-sm">
-                  {enabledLangs.map((l) => (
-                    <button
-                      key={l}
-                      type="button"
-                      onClick={() => setLang(l)}
-                      className={`rounded px-3 py-1.5 text-sm font-medium ${
-                        lang === l ? 'bg-blue-600 text-white shadow-sm' : 'text-gray-600 hover:bg-gray-50'
-                      }`}
-                    >
-                      {l.toUpperCase()}
-                    </button>
-                  ))}
-                </div>
-                <button
-                  type="button"
-                  onClick={() => void handleCopyWebPreviewLink()}
-                  disabled={publicPreviewBusy}
-                  title={
-                    import.meta.env.VITE_PUBLIC_SITE_URL?.trim()
-                      ? 'Zkopíruje odkaz na náhled webu (platí omezenou dobu).'
-                      : 'Zkopíruje odkaz na náhled; celá adresa v prohlížeči závisí na nastavení nasazení webu.'
-                  }
-                  className="rounded-md border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  {publicPreviewBusy ? 'Odkaz…' : 'Odkaz náhledu na web'}
-                </button>
-                <Link
-                  to={tenantHref('/')}
-                  className="rounded-md border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-                >
-                  Zpět na seznam
+        <div className={`flex min-w-0 flex-1 ${webPreviewUrl ? '' : 'justify-center'}`}>
+          <div
+            className={
+              webPreviewUrl
+                ? 'grid w-full grid-cols-1 gap-6 xl:grid-cols-[2fr_3fr] xl:items-start xl:gap-5'
+                : 'w-full max-w-6xl'
+            }
+          >
+            <div className="min-w-0 w-full">
+              <nav className="mb-3 text-sm text-gray-500" aria-label="Drobečková navigace">
+                <Link to={tenantHref('/')} className="hover:text-gray-700">
+                  Stránky
                 </Link>
-                <button
-                  type="button"
-                  onClick={handleSave}
-                  disabled={saving || !isDirty}
-                  className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                <span className="mx-2 text-gray-300">/</span>
+                <span className="font-medium text-gray-900">{pageDef.label}</span>
+              </nav>
+
+              <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <h1 className="text-2xl font-semibold tracking-tight text-gray-900">{pageDef.label}</h1>
+                  <p className="mt-1 font-mono text-sm text-gray-500">{pathLabel}</p>
+                </div>
+                <div className="flex flex-wrap items-center gap-2 sm:shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setSimpleView((v) => !v)}
+                    className="rounded-md border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                    aria-pressed={simpleView}
+                    title="Zjednoduší zobrazení formuláře (méně upozornění)"
+                  >
+                    {simpleView ? 'Zobrazit upozornění' : 'Skrýt upozornění'}
+                  </button>
+                  <div className="inline-flex rounded-md border border-gray-200 bg-white p-0.5 shadow-sm">
+                    {enabledLangs.map((l) => (
+                      <button
+                        key={l}
+                        type="button"
+                        onClick={() => setLang(l)}
+                        className={`rounded px-3 py-1.5 text-sm font-medium ${
+                          lang === l ? 'bg-blue-600 text-white shadow-sm' : 'text-gray-600 hover:bg-gray-50'
+                        }`}
+                      >
+                        {l.toUpperCase()}
+                      </button>
+                    ))}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => void handleShowWebPreview()}
+                    disabled={publicPreviewBusy}
+                    title={
+                      previewSiteBase
+                        ? `Zobrazí náhled webu (${contentTemplateId ?? '?'}) přímo v administraci (platí omezenou dobu).`
+                        : previewSiteConfiguredHint
+                    }
+                    className="rounded-md border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {publicPreviewBusy ? 'Náhled…' : webPreviewUrl ? 'Načíst náhled znovu' : 'Zobrazit náhled'}
+                  </button>
+                  <Link
+                    to={tenantHref('/')}
+                    className="rounded-md border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                  >
+                    Zpět na seznam
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={handleSave}
+                    disabled={saving || !isDirty}
+                    className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {saving ? 'Ukládání…' : isDemo ? 'Uložit koncept' : 'Uložit'}
+                  </button>
+                </div>
+              </div>
+
+              {error ? (
+                <div className="mb-6 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+                  {error}
+                </div>
+              ) : null}
+              {autosaveError ? (
+                <div className="mb-6 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+                  {autosaveError}
+                </div>
+              ) : null}
+
+              <div className="space-y-5">
+                <PageContentFields
+                  pageId={pageId}
+                  fields={pageDef.fields}
+                  lang={lang}
+                  enabledLangs={enabledLangs}
+                  showFieldTranslationBadges={!simpleView && showTranslationBadges}
+                  entries={entries}
+                  fieldErrors={fieldErrors}
+                  entryKey={entryKey}
+                  setValue={setValue}
+                  setMediaPickerKey={setMediaPickerKey}
+                  siteSettings={siteSettings}
+                  setSiteSettings={setSiteSettingsFromUser}
+                  siteTemplateId={contentTemplateId ?? undefined}
+                />
+              </div>
+            </div>
+
+            {webPreviewUrl ? (
+              <aside
+                className="min-w-0 w-full shrink-0 xl:sticky xl:top-14 xl:h-[calc(100vh-3.5rem)] xl:self-start"
+                aria-label="Náhled webu"
+              >
+                <div
+                  className="flex h-full max-h-[85vh] min-h-0 flex-col overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm xl:max-h-none"
+                  role="region"
                 >
-                  {saving ? 'Ukládání…' : 'Uložit'}
-                </button>
-              </div>
-            </div>
-
-            {error ? (
-              <div className="mb-6 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
-                {error}
-              </div>
+                  <div className="flex flex-wrap items-center gap-2 border-b border-gray-100 bg-gray-50/80 px-3 py-2">
+                    <span className="text-xs font-semibold uppercase tracking-wide text-gray-600">Náhled webu</span>
+                    <div className="flex flex-wrap items-center gap-2 xl:ml-auto">
+                      <button
+                        type="button"
+                        onClick={() => void handleRefreshWebPreview()}
+                        disabled={publicPreviewBusy}
+                        className="rounded-md border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        Obnovit
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => void handleCopyWebPreviewLink()}
+                        disabled={publicPreviewBusy}
+                        className="rounded-md border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        Zkopírovat odkaz
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleOpenWebPreviewInNewTab}
+                        className="rounded-md border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                      >
+                        Otevřít v novém okně
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleCloseWebPreview}
+                        className="rounded-md border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                      >
+                        Zavřít
+                      </button>
+                    </div>
+                  </div>
+                  <iframe
+                    key={webPreviewIframeKey}
+                    title="Náhled webu"
+                    src={webPreviewUrl}
+                    className="h-[70vh] w-full shrink-0 border-0 bg-white xl:h-auto xl:min-h-0 xl:flex-1"
+                  />
+                  <p className="shrink-0 border-t border-gray-100 px-3 py-2 text-xs text-gray-500">
+                    Pokud zůstane prázdné okénko, šablona může blokovat zobrazení v iframe — použijte „Otevřít v novém okně“.
+                  </p>
+                </div>
+              </aside>
             ) : null}
-            {autosaveError ? (
-              <div className="mb-6 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-                {autosaveError}
-              </div>
-            ) : null}
-
-            <div className="space-y-5">
-              <PageContentFields
-                pageId={pageId}
-                fields={pageDef.fields}
-                lang={lang}
-                enabledLangs={enabledLangs}
-                showFieldTranslationBadges={!simpleView && showTranslationBadges}
-                entries={entries}
-                fieldErrors={fieldErrors}
-                entryKey={entryKey}
-                setValue={setValue}
-                setMediaPickerKey={setMediaPickerKey}
-                siteSettings={siteSettings}
-                setSiteSettings={setSiteSettingsFromUser}
-                siteTemplateId={contentTemplateId ?? undefined}
-              />
-            </div>
           </div>
         </div>
       </div>
@@ -621,11 +845,11 @@ export default function PageContentEdit() {
           <>
             {lastSavedAt ? (
               <span>
-                Naposledy publikováno{' '}
+                {isDemo ? 'Koncept naposledy uložen ' : 'Naposledy publikováno '}
                 <time dateTime={lastSavedAt.toISOString()}>{formatSavedAt(lastSavedAt)}</time>
               </span>
             ) : (
-              <span>Ještě jste nepublikovali</span>
+              <span>{isDemo ? 'Uložte koncept pro náhled (publikování je vypnuté)' : 'Ještě jste nepublikovali'}</span>
             )}
             {autosaving ? (
               <span className="ml-2 text-gray-600">• Ukládám koncept…</span>
@@ -664,10 +888,22 @@ export default function PageContentEdit() {
               onClick={handleSave}
               disabled={!isDirty || saving}
               className={`rounded-md px-4 py-2 text-sm font-medium text-white shadow-sm disabled:cursor-not-allowed disabled:opacity-50 ${
-                recentlySaved && !isDirty ? 'bg-emerald-600' : 'bg-blue-600 hover:bg-blue-700'
+                recentlySaved && !isDirty
+                  ? isDemo
+                    ? 'bg-blue-600'
+                    : 'bg-emerald-600'
+                  : 'bg-blue-600 hover:bg-blue-700'
               }`}
             >
-              {saving ? 'Ukládání…' : recentlySaved && !isDirty ? 'Publikováno' : 'Publikovat změny'}
+              {saving
+                ? 'Ukládání…'
+                : recentlySaved && !isDirty
+                  ? isDemo
+                    ? 'Koncept uložen'
+                    : 'Publikováno'
+                  : isDemo
+                    ? 'Uložit koncept'
+                    : 'Publikovat změny'}
             </button>
           </>
         }

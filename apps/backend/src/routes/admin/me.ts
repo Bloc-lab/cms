@@ -8,12 +8,22 @@ export async function adminMeRoutes(app: FastifyInstance) {
       return reply.status(500).send({ error: 'Server error' });
     }
 
-    const { data: profile, error } = await supabaseAdmin.from('profiles').select('email,role').eq('id', userId).single();
+    const { data: profile, error } = await supabaseAdmin
+      .from('profiles')
+      .select('email,role,is_demo')
+      .eq('id', userId)
+      .single();
     if (error || !profile) {
       return reply.status(500).send({ error: 'Failed to load profile' });
     }
 
-    return reply.send({ id: userId, email: profile.email, role: profile.role });
+    const p = profile as { email: string; role: string; is_demo?: boolean };
+    return reply.send({
+      id: userId,
+      email: p.email,
+      role: p.role,
+      isDemo: p.is_demo === true,
+    });
   });
 }
 

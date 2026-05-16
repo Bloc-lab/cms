@@ -62,8 +62,17 @@ PORT=3000
 VITE_SUPABASE_URL=https://xxx.supabase.co
 VITE_SUPABASE_ANON_KEY=eyJ...
 VITE_API_URL=
-# Volitelné: základní URL veřejného webu pro tlačítko „Odkaz náhledu na web“ (celá URL se zkopíruje do schránky)
+# Náhled webu podle tenant šablony (`site_settings.template_id`):
+
+# Fallback pro všechny šablony (nebo kde není vlastní řádek v mapě ani _TEMPLATE1 / _ARCH)
 # VITE_PUBLIC_SITE_URL=https://tvuj-web.cz
+
+# Volitelně zvlášť pro MONO (template1) / ARCH arch
+# VITE_PUBLIC_SITE_URL_TEMPLATE1=https://mono.example.vercel.app
+# VITE_PUBLIC_SITE_URL_ARCH=https://arch.example.vercel.app
+
+# Nejpružnější: JSON map template_id → URL (nezávislé na počtu šablon)
+# VITE_PUBLIC_SITE_URL_MAP={"template1":"https://mono.vercel.app","arch":"https://arch.vercel.app"}
 ```
 
 ---

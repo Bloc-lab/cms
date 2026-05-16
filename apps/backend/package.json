@@ -8,7 +8,8 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "typecheck": "tsc --noEmit",
-    "seed:content": "tsx scripts/seed-tenant-default-content.ts"
+    "seed:content": "tsx scripts/seed-tenant-default-content.ts",
+    "seed:arch": "tsx scripts/seed-arch-default-content.ts"
   },
   "dependencies": {
     "@fastify/cors": "^11.2.0",

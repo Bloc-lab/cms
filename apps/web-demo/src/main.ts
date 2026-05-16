@@ -11,7 +11,17 @@ if (!apiKey) {
   `;
 } else {
   app.innerHTML = '<p style="font-family: system-ui; padding: 1rem;">Načítám obsah z CMS…</p>';
-  fetch('/api/v1/content?lang=cs', {
+
+  const pageParams = new URLSearchParams(window.location.search);
+  const lang = pageParams.get('lang')?.trim() || 'cs';
+  const previewToken = pageParams.get('previewToken')?.trim();
+
+  const qs = new URLSearchParams({ lang });
+  if (previewToken) {
+    qs.set('previewToken', previewToken);
+  }
+
+  fetch(`/api/v1/content?${qs.toString()}`, {
     headers: { 'X-API-KEY': apiKey },
   })
     .then(async (res) => {

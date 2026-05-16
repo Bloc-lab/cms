@@ -9,7 +9,10 @@ import {
 } from '@nase-cms/shared';
 import { rowsToPublicContentMap } from '../../lib/public-content-map.js';
 import { loadPreviewPayload } from '../../lib/preview-public-data.js';
-import { resolvePreviewTokenPageId } from '../../lib/preview-token.js';
+import {
+  parsePreviewTokenFromRequestQuery,
+  resolvePreviewFromPlainTokenDetails,
+} from '../../lib/preview-token.js';
 
 const DEFAULT_LANG = 'cs';
 
@@ -27,20 +30,28 @@ export async function contentPagesRoutes(app: FastifyInstance) {
         return reply.status(500).send({ error: 'Tenant not resolved' });
       }
 
-      const lang = request.query.lang ?? DEFAULT_LANG;
-      const previewToken =
-        typeof request.query.previewToken === 'string' ? request.query.previewToken : undefined;
+      const lang = typeof request.query.lang === 'string' ? request.query.lang : DEFAULT_LANG;
+      const previewToken = parsePreviewTokenFromRequestQuery(request.query as Record<string, unknown>);
 
-      if (previewToken?.trim()) {
+      if (previewToken) {
         if (!supabaseAdmin) {
           return reply.status(500).send({ error: 'Server misconfiguration' });
         }
-        const pageId = await resolvePreviewTokenPageId(tenantId, previewToken);
-        if (!pageId) {
+        const resolved = await resolvePreviewFromPlainTokenDetails(previewToken);
+        if (!resolved.ok) {
+          if (resolved.reason === 'no_service') {
+            return reply.status(500).send({ error: 'Server misconfiguration' });
+          }
+          if (resolved.reason === 'expired') {
+            return reply.status(403).send({
+              error: 'Preview token expired',
+              detail: 'Vygenerujte nový odkaz náhledu v administraci (platnost cca 1 hodina).',
+            });
+          }
           return reply.status(403).send({ error: 'Invalid or expired preview token' });
         }
         try {
-          const payload = await loadPreviewPayload(tenantId, pageId, lang);
+          const payload = await loadPreviewPayload(resolved.tenantId, resolved.pageId, lang);
           return reply.send(payload.content);
         } catch (e) {
           request.log.error({ err: e }, 'public content preview');
