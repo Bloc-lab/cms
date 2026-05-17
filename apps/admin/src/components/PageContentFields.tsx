@@ -712,7 +712,7 @@ export default function PageContentFields({
                   );
                 }
 
-                // ARCH home — Portfolio: cards, before/after, details in sub-tabs.
+                // ARCH home - Portfolio: cards, before/after, details in sub-tabs.
                 if (
                   !isHidden &&
                   pageId === 'main' &&
@@ -778,7 +778,7 @@ export default function PageContentFields({
                   );
                 }
 
-                // ARCH contact — form: options and budget in sub-tabs.
+                // ARCH contact - form: options and budget in sub-tabs.
                 if (
                   !isHidden &&
                   pageId === 'contactPage' &&
@@ -871,7 +871,7 @@ export default function PageContentFields({
                               {siteFooterRootTitle === 'Footer' ? 'Footer' : 'Patička'}
                             </p>
                             <p className="text-sm text-gray-700 mt-0.5">
-                              Columns and links — switch with tabs (same pattern as portfolio or pricing tiers).
+                              Columns and links - switch with tabs (same pattern as portfolio or pricing tiers).
                             </p>
                           </div>
                           <div className="flex flex-wrap gap-2">
@@ -916,7 +916,7 @@ export default function PageContentFields({
                   );
                 }
 
-                // ARCH /pricing — Standard section: cards in sub-tabs (same UX pattern as MONO pricing tiers).
+                // ARCH /pricing - Standard section: cards in sub-tabs (same UX pattern as MONO pricing tiers).
                 if (
                   !isHidden &&
                   pageId === 'pricingPage' &&

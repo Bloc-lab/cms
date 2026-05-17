@@ -25,15 +25,15 @@ Předpoklady:
 
 ### 1.1 Druhý záznam tenanta
 
-V tabulce **`tenants`** musí existovat samostatný řádek pro druhý web (jiné `id`, vlastní `admin_subdomain` atd.). Veškerý obsah (`content_entries`, `site_settings`, …) je vázaný na **`tenant_id`** — bez druhého tenanta nemáte co oddělit.
+V tabulce **`tenants`** musí existovat samostatný řádek pro druhý web (jiné `id`, vlastní `admin_subdomain` atd.). Veškerý obsah (`content_entries`, `site_settings`, …) je vázaný na **`tenant_id`** - bez druhého tenanta nemáte co oddělit.
 
 ### 1.2 Navázání veřejné URL na tenanta
 
 Do **`tenant_domains`** uložte řádek:
 
-- **`tenant_id`** — ID tenanta pro tento web.
-- **`domain`** — přesně tak, jak host vidí prohlížeč (malá písmena, bez `https://`, bez cesty).  
-  - Příklad: `www.example.cz` **nebo** `example.cz` — podle toho, co reálně používáte.  
+- **`tenant_id`** - ID tenanta pro tento web.
+- **`domain`** - přesně tak, jak host vidí prohlížeč (malá písmena, bez `https://`, bez cesty).  
+  - Příklad: `www.example.cz` **nebo** `example.cz` - podle toho, co reálně používáte.  
   - Pokud chcete obě varianty, často přidáte **dva** záznamy nebo jednu canonical a druhou přesměrujete ve Vercelu.
 - **`type`**: `web` (pro veřejný web; backend při `Host` / `X-Tenant-Host` s druhem `web` hledá v této tabulce).
 
@@ -72,13 +72,13 @@ Endpoint **`GET /api/v1/content`** ignoruje doménu stránky; tenanta určuje **
 
    U řádku s klíčem musí být **`hash_len = 64`**.
 
-Plaintext klíč **neukládejte** do databáze — jen do konfigurace šablony (Vercel env), viz níže.
+Plaintext klíč **neukládejte** do databáze - jen do konfigurace šablony (Vercel env), viz níže.
 
 ---
 
 ## 3. Vercel: nová doména a DNS
 
-1. **Vercel** → váš projekt šablony → **Settings** → **Domains** → **Add** — zadejte doménu (např. `www.example.cz`).
+1. **Vercel** → váš projekt šablony → **Settings** → **Domains** → **Add** - zadejte doménu (např. `www.example.cz`).
 2. U **DNS** (registrátor, např. Wedos) nastavte záznamy **přesně podle instrukcí Vercelu** (typicky **CNAME** `www` → `cname.vercel-dns.com`).  
    - U `www` nesmí současně zůstat konfliktní **A** záznam na starý hosting.
 3. Po ověření DNS Vercel vystaví **SSL**. Pokud selže HTTP-01 challenge, zkontrolujte DNS, případně **AAAA** záznamy a konflikty se starým hostingem.
@@ -107,8 +107,8 @@ Logika je v `apps/backend/src/index.ts` (proměnná `CORS_ORIGINS`, volitelně `
 
 Pro každou „linku“ / doménu použijte **vlastní** `VITE_*` proměnnou s plaintext klíčem, např.:
 
-- `VITE_CMS_API_KEY_VERCEL` — klíč tenanta pro výchozí URL `*.vercel.app`
-- `VITE_CMS_API_KEY_BLOCLAB` — klíč tenanta pro `www.bloclab.cz` (příklad)
+- `VITE_CMS_API_KEY_VERCEL` - klíč tenanta pro výchozí URL `*.vercel.app`
+- `VITE_CMS_API_KEY_BLOCLAB` - klíč tenanta pro `www.bloclab.cz` (příklad)
 
 Názvy si můžete pojmenovat jinak; důležité je **mapovat hostname → správná proměnná**.
 
@@ -145,7 +145,7 @@ X-API-KEY: <hodnota podle hostname>
 
 ## 7. Bezpečnost (stručně)
 
-Plaintext klíč v prohlížeči není před uživateli skrytý — kdokoli ho může zkopírovat z DevTools. Pro čistě **veřejný** obsah je to běžné; pro citlivější scénáře zvažte **serverový proxy** na Vercelu (klíč jen v server env) nebo veřejné endpointy řízené doménou (`/api/v1/public/…`) s omezením v CORS a rate limitem na backendu.
+Plaintext klíč v prohlížeči není před uživateli skrytý - kdokoli ho může zkopírovat z DevTools. Pro čistě **veřejný** obsah je to běžné; pro citlivější scénáře zvažte **serverový proxy** na Vercelu (klíč jen v server env) nebo veřejné endpointy řízené doménou (`/api/v1/public/…`) s omezením v CORS a rate limitem na backendu.
 
 ---
 

@@ -97,7 +97,7 @@ async function tenantPlugin(app: FastifyInstance) {
       return;
     }
 
-    // Public demo signup / template list — no tenant context
+    // Public demo signup / template list - no tenant context
     if (url.startsWith('/api/v1/demo/')) {
       request.tenantSource = 'demo';
       return;

@@ -189,7 +189,7 @@ export default function Metadata() {
       next.add(code);
     }
     const nextValue = setEnabledLangsValue([...next]);
-    // Persist only on the `cs` variant — internal admin preference.
+    // Persist only on the `cs` variant - internal admin preference.
     setValue(ADMIN_ENABLED_LANGS_KEY, 'cs', nextValue);
   };
 

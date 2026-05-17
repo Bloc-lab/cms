@@ -41,7 +41,7 @@ function formatSavedAt(d: Date): string {
   });
 }
 
-/** Display only — template changes happen in platform admin (per tenant). */
+/** Display only - template changes happen in platform admin (per tenant). */
 function templateDisplayName(id: string | undefined): string {
   const k = (id ?? '').trim();
   const map: Record<string, string> = {

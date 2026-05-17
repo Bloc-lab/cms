@@ -21,7 +21,7 @@ export default defineConfig({
       '/api': {
         target: 'http://127.0.0.1:3000',
         // Must be false: otherwise the proxy rewrites Host to localhost:3000 and the tenant subdomain
-        // (e.g. kadernictvi.localhost) is lost — the admin API returns 404 "Tenant subdomain required".
+        // (e.g. kadernictvi.localhost) is lost - the admin API returns 404 "Tenant subdomain required".
         changeOrigin: false,
         secure: false,
       },

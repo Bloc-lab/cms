@@ -52,7 +52,7 @@ export const ADMIN_TAGLINE_KEY = 'admin.tagline';
 export const ADMIN_ENABLED_LANGS_KEY = 'admin.enabledLangs';
 export const ADMIN_SHOW_TRANSLATION_BADGES_KEY = 'admin.showTranslationBadges';
 
-/** Branding / CMS metadata (name, logo) — dedicated admin page. */
+/** Branding / CMS metadata (name, logo) - dedicated admin page. */
 export const metadataConfig: ContentConfig = {
   [ADMIN_SITE_NAME_KEY]: {
     label: 'Název webu',

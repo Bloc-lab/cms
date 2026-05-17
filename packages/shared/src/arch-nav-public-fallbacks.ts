@@ -1,5 +1,5 @@
 /**
- * Public API: ARCH nav items (About / Pricing / Contact) — empty labels fall back to page titles.
+ * Public API: ARCH nav items (About / Pricing / Contact) - empty labels fall back to page titles.
  * Hidden items (`nav.menu* = 0`) drop the matching `nav.*` text.
  * Deprecated keys (scroll-in-menu, CTA in menu) are removed from the response entirely.
  */
@@ -23,14 +23,14 @@ const PAGE_NAV_TO_MENU: Record<PageLinkedNavKey, string> = {
   'nav.contact': 'nav.menuContact',
 };
 
-/** Pairs [`nav.*` label, `nav.menu*` visibility flag] — page links only. */
+/** Pairs [`nav.*` label, `nav.menu*` visibility flag] - page links only. */
 export const ARCH_NAV_LABEL_AND_MENU: ReadonlyArray<[string, string]> = [
   ['nav.about', 'nav.menuAbout'],
   ['nav.pricing', 'nav.menuPricing'],
   ['nav.contact', 'nav.menuContact'],
 ];
 
-/** Older menu keys (scroll + CTA) — stripped from the public ARCH map. */
+/** Older menu keys (scroll + CTA) - stripped from the public ARCH map. */
 export const ARCH_NAV_DEPRECATED_PUBLIC_KEYS: readonly string[] = [
   'nav.portfolio',
   'nav.process',

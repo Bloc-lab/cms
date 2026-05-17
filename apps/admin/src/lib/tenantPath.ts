@@ -19,7 +19,7 @@ export function slugFromAdminHostname(hostname: string, adminBaseDomain: string 
 }
 
 /**
- * true = shared URL without a tenant subdomain (typically *.vercel.app) — use /t/&lt;slug&gt;/… paths.
+ * true = shared URL without a tenant subdomain (typically *.vercel.app) - use /t/&lt;slug&gt;/… paths.
  */
 export function needsPathTenantSlug(): boolean {
   if (typeof window === 'undefined') return false;

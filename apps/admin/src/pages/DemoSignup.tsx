@@ -86,7 +86,7 @@ export default function DemoSignup() {
         <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-gray-400 text-center">Ukázka</p>
         <h1 className="text-xl font-semibold text-center text-gray-900 mt-4 mb-2">Demo účet</h1>
         <p className="text-sm text-gray-600 text-center mb-6 leading-relaxed">
-          Vytvoří se samostatné sandbox prostředí. Změny se ukládají jako koncept a můžete si je prohlédnout v náhledu —
+          Vytvoří se samostatné sandbox prostředí. Změny se ukládají jako koncept a můžete si je prohlédnout v náhledu -
           veřejné publikování je u demo účtů vypnuté.
         </p>
         <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4">
@@ -124,7 +124,7 @@ export default function DemoSignup() {
               className="w-full px-3 py-2 border border-gray-200 rounded-md text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/25 focus:border-blue-500 bg-white"
             >
               {templates.length === 0 ? (
-                <option value="">—</option>
+                <option value="">-</option>
               ) : (
                 templates.map((t) => (
                   <option key={t.id} value={t.id}>

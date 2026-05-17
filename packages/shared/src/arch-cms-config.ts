@@ -164,7 +164,7 @@ export const archCmsConfig: ContentConfig = {
   'portfolio.detail3.image': f('Detail 3 - obrázek', 'Domů · Portfolio · Detaily', { type: 'image' }),
   'portfolio.detail3.imageAlt': f('Detail 3 - popis obrázku', 'Domů · Portfolio · Detaily', { maxLength: 280 }),
 
-  // -- Home · Block (image, text, bullets — generic block name in CMS)
+  // -- Home · Block (image, text, bullets - generic block name in CMS)
   'craft.image': f('Blok - obrázek', 'Domů · Blok', { type: 'image' }),
   'craft.imageAlt': f('Blok - popis obrázku', 'Domů · Blok', { maxLength: 280 }),
   'craft.label': f('Blok - malý štítek', 'Domů · Blok', { maxLength: 40 }),

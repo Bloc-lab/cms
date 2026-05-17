@@ -430,7 +430,7 @@ export default function PageContentEdit() {
         const now = new Date();
         setLastSavedAt(now);
         setSaveNotice('Koncept uložen');
-        setToast('V demo účtu je publikování vypnuté — použijte odkaz náhledu nebo JSON náhled.');
+        setToast('V demo účtu je publikování vypnuté - použijte odkaz náhledu nebo JSON náhled.');
         setRecentlySaved(true);
         setTimeout(() => setRecentlySaved(false), 10_000);
         dispatchBrandingRefresh();
@@ -829,7 +829,7 @@ export default function PageContentEdit() {
                     className="h-[70vh] w-full shrink-0 border-0 bg-white xl:h-auto xl:min-h-0 xl:flex-1"
                   />
                   <p className="shrink-0 border-t border-gray-100 px-3 py-2 text-xs text-gray-500">
-                    Pokud zůstane prázdné okénko, šablona může blokovat zobrazení v iframe — použijte „Otevřít v novém okně“.
+                    Pokud zůstane prázdné okénko, šablona může blokovat zobrazení v iframe - použijte „Otevřít v novém okně“.
                   </p>
                 </div>
               </aside>

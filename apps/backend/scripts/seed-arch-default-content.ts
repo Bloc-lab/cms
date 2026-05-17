@@ -101,7 +101,7 @@ async function main(): Promise<void> {
       overwrite,
     });
     if (upsertedCount === 0) {
-      console.log('Nic k doplnění — všechny hodnoty už jsou vyplněné (nebo použij SEED_OVERWRITE=1).');
+      console.log('Nic k doplnění - všechny hodnoty už jsou vyplněné (nebo použij SEED_OVERWRITE=1).');
       return;
     }
     console.log(

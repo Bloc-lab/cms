@@ -9,7 +9,7 @@ export interface SitePageDefinition {
   slug: string;
   /** Label shown in the admin UI */
   label: string;
-  /** Same field shape as the old single flat map — keys like `hero.title` */
+  /** Same field shape as the old single flat map - keys like `hero.title` */
   fields: ContentConfig;
 }
 

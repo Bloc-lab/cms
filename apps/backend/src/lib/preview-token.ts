@@ -91,7 +91,7 @@ function isFkToAuthUsersError(error: { message?: string; code?: string; details?
 
 /**
  * Returns page_id from token if valid for this tenant and not expired; otherwise null.
- * @deprecated Prefer resolvePreviewFromPlainToken for public preview — token_hash is globally unique
+ * @deprecated Prefer resolvePreviewFromPlainToken for public preview - token_hash is globally unique
  * and must not depend on the client sending the matching X-API-KEY.
  */
 export async function resolvePreviewTokenPageId(
@@ -109,7 +109,7 @@ export type PreviewTokenResolution = { tenantId: string; pageId: string };
 export type PreviewResolveFailure = 'missing' | 'not_found' | 'expired' | 'no_service';
 
 /**
- * Looks up preview by plain token. `token_hash` is UNIQUE — tenant comes from the row.
+ * Looks up preview by plain token. `token_hash` is UNIQUE - tenant comes from the row.
  */
 export async function resolvePreviewFromPlainToken(
   plainToken: string | undefined
