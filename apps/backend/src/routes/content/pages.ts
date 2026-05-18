@@ -13,6 +13,7 @@ import {
   parsePreviewTokenFromRequestQuery,
   resolvePreviewFromPlainTokenDetails,
 } from '../../lib/preview-token.js';
+import { setNoStoreCacheHeaders, setPublicCacheHeaders } from '../../lib/http-cache.js';
 
 const DEFAULT_LANG = 'cs';
 
@@ -52,6 +53,7 @@ export async function contentPagesRoutes(app: FastifyInstance) {
         }
         try {
           const payload = await loadPreviewPayload(resolved.tenantId, resolved.pageId, lang);
+          setNoStoreCacheHeaders(reply);
           return reply.send(payload.content);
         } catch (e) {
           request.log.error({ err: e }, 'public content preview');
@@ -67,17 +69,7 @@ export async function contentPagesRoutes(app: FastifyInstance) {
       const cacheKeyStr = cacheKey(tenantId, 'content', lang);
       const cached = getCached<Record<string, string>>(cacheKeyStr);
       if (cached) {
-        const { data: tplCached } = await supabaseAdmin
-          .from('site_settings')
-          .select('template_id')
-          .eq('tenant_id', tenantId)
-          .maybeSingle();
-        const templateCached = ((tplCached as { template_id?: string | null } | null)?.template_id ?? '').trim();
-        if (templateCached === CMS_TEMPLATE_ARCH) {
-          const out = { ...cached };
-          stripArchNavDeprecatedKeys(out);
-          return reply.send(out);
-        }
+        setPublicCacheHeaders(reply, 'X-API-KEY');
         return reply.send(cached);
       }
 
@@ -104,6 +96,7 @@ export async function contentPagesRoutes(app: FastifyInstance) {
       }
 
       setCached(cacheKeyStr, response);
+      setPublicCacheHeaders(reply, 'X-API-KEY');
       return reply.send(response);
     }
   );

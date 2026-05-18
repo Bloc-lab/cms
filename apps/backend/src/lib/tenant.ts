@@ -1,5 +1,6 @@
 import { supabaseAdmin } from './supabase.js';
-import { verifyApiKey } from './api-key.js';
+import { hashApiKey } from './api-key.js';
+import { apiKeyTenantCacheKey, getCached, setCached } from './cache.js';
 
 const ADMIN_BASE_DOMAIN = process.env.ADMIN_BASE_DOMAIN ?? 'localhost';
 
@@ -150,7 +151,7 @@ export async function resolveTenantByHost(host: string, kind: TenantHostKind): P
 }
 
 /**
- * Resolve tenant from X-API-KEY header.
+ * Resolve tenant from X-API-KEY header (indexed lookup by api_key_hash).
  */
 export async function resolveTenantByApiKey(apiKey: string | undefined): Promise<TenantResolution> {
   const trimmed = typeof apiKey === 'string' ? apiKey.trim() : '';
@@ -162,22 +163,26 @@ export async function resolveTenantByApiKey(apiKey: string | undefined): Promise
     return { ok: false, status: 500, message: 'Server misconfiguration' };
   }
 
-  const { data: tenants, error } = await supabaseAdmin
+  const keyHash = hashApiKey(trimmed);
+  const memKey = apiKeyTenantCacheKey(keyHash);
+  const cached = getCached<{ tenantId: string }>(memKey);
+  if (cached?.tenantId) {
+    return { ok: true, tenantId: cached.tenantId };
+  }
+
+  const { data: tenant, error } = await supabaseAdmin
     .from('tenants')
-    .select('id, api_key_hash')
-    .not('api_key_hash', 'is', null);
+    .select('id')
+    .eq('api_key_hash', keyHash)
+    .maybeSingle();
 
   if (error) {
     return { ok: false, status: 500, message: 'Database error' };
   }
-
-  const tenant = tenants?.find((t) => {
-    const stored = typeof t.api_key_hash === 'string' ? t.api_key_hash.trim() : '';
-    return stored.length > 0 && verifyApiKey(trimmed, stored);
-  });
-  if (!tenant) {
+  if (!tenant?.id) {
     return { ok: false, status: 401, message: 'Invalid X-API-KEY' };
   }
 
+  setCached(memKey, { tenantId: tenant.id });
   return { ok: true, tenantId: tenant.id };
 }

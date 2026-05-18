@@ -37,6 +37,9 @@ SUPABASE_ANON_KEY=your-anon-key
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 ADMIN_BASE_DOMAIN=mojecms.cz
 CACHE_TTL_MS=300000
+# Edge cache for published GET /api/v1/content, site-info, site-settings (seconds)
+PUBLIC_CACHE_S_MAXAGE=60
+PUBLIC_CACHE_STALE_WHILE_REVALIDATE=300
 PORT=3000
 ```
 

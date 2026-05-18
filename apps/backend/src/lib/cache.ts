@@ -37,3 +37,8 @@ export function invalidateTenantCache(tenantId: string): void {
 export function cacheKey(tenantId: string, slug: string, lang: string): string {
   return `${tenantId}:${slug}:${lang}`;
 }
+
+/** SHA-256 hex of API key → tenant id (avoids scanning all tenants on every request). */
+export function apiKeyTenantCacheKey(keyHash: string): string {
+  return `apikey:${keyHash}`;
+}

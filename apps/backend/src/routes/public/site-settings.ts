@@ -6,6 +6,7 @@ import {
   parsePreviewTokenFromRequestQuery,
   resolvePreviewFromPlainTokenDetails,
 } from '../../lib/preview-token.js';
+import { setNoStoreCacheHeaders, setPublicCacheHeaders } from '../../lib/http-cache.js';
 
 const DEFAULT_LANG = 'cs';
 
@@ -48,6 +49,7 @@ export async function publicSiteSettingsRoutes(app: FastifyInstance) {
           try {
             const payload = await loadPreviewPayload(settingsTenantId, 'main', lang);
             if (payload.siteSettings) {
+              setNoStoreCacheHeaders(reply);
               return reply.send(payload.siteSettings);
             }
           } catch (e) {
@@ -77,6 +79,7 @@ export async function publicSiteSettingsRoutes(app: FastifyInstance) {
           /could not find the table .*site_settings/i.test(message)
         ) {
           // Migration not applied yet – behave like "no settings" so frontend can use defaults.
+          setPublicCacheHeaders(reply, ['Host', 'X-API-KEY']);
           return reply.send(DEFAULT_PUBLIC_SITE_SETTINGS);
         }
         request.log.error({ err: error }, 'public site-settings');
@@ -84,9 +87,11 @@ export async function publicSiteSettingsRoutes(app: FastifyInstance) {
       }
 
       if (!row) {
+        setPublicCacheHeaders(reply, ['Host', 'X-API-KEY']);
         return reply.send(DEFAULT_PUBLIC_SITE_SETTINGS);
       }
 
+      setPublicCacheHeaders(reply, ['Host', 'X-API-KEY']);
       return reply.send(
         toPublicSiteSettings(row as unknown as {
           template_id: string | null;

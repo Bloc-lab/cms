@@ -1,5 +1,6 @@
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { supabaseAdmin } from '../../lib/supabase.js';
+import { setPublicCacheHeaders } from '../../lib/http-cache.js';
 
 const BRANDING_KEYS = ['admin.siteName', 'admin.logo'] as const;
 
@@ -44,6 +45,7 @@ export async function publicSiteInfoRoutes(app: FastifyInstance) {
     const logoRaw = (map['admin.logo:cs'] ?? map['admin.logo:en'] ?? '').trim();
     const logoUrl = logoRaw || null;
 
+    setPublicCacheHeaders(reply, 'Host');
     return reply.send({ siteName, logoUrl });
   });
 }
