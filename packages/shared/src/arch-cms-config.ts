@@ -197,38 +197,14 @@ export const archCmsConfig: ContentConfig = {
   'cta.btnPrimary': f('Kontaktní blok - první tlačítko', 'Domů · Kontaktní blok', { maxLength: 80 }),
   'cta.btnSecondary': f('Kontaktní blok - druhé tlačítko', 'Domů · Kontaktní blok', { maxLength: 80 }),
 
-  // -- Site footer (main page)
-  'footer.blurb': f('Patička - krátký popis', 'Patička', {
+  // -- Site footer (shown on every page; edited under Domů in admin)
+  'footer.blurb': f('Patička - krátký popis', 'Patička (celý web)', {
     type: 'textarea',
     recommendedMaxLength: 200,
     maxLength: 500,
+    helpText: 'Zobrazuje se v patičce na všech stránkách webu (Domů, Ceník, Kontakt, O nás).',
   }),
-  'footer.columnExpertise': f('Patička - nadpis sloupce Odbornost', 'Patička', { maxLength: 48 }),
-  'footer.linkExp1': f('Odbornost - viditelný text 1', 'Patička · Odbornost', { maxLength: 80 }),
-  'footer.linkExp1Href': f('Odbornost - adresa pro odkaz 1', 'Patička · Odbornost', {
-    helpText:
-      'Kam má vést po kliknutí: stránka na webu (např. /cenik), kotva na úvodní stránce (např. #portfolio) nebo celý odkaz zkopírovaný z prohlížeče. Prázdné: zobrazí se jen text bez prokliku (podle šablony webu).',
-    maxLength: 500,
-  }),
-  'footer.linkExp2': f('Odbornost - viditelný text 2', 'Patička · Odbornost', { maxLength: 80 }),
-  'footer.linkExp2Href': f('Odbornost - adresa pro odkaz 2', 'Patička · Odbornost', {
-    helpText:
-      'Kam má vést po kliknutí: stránka na webu, kotva nebo celý odkaz. Prázdné: jen text bez prokliku.',
-    maxLength: 500,
-  }),
-  'footer.linkExp3': f('Odbornost - viditelný text 3', 'Patička · Odbornost', { maxLength: 80 }),
-  'footer.linkExp3Href': f('Odbornost - adresa pro odkaz 3', 'Patička · Odbornost', {
-    helpText:
-      'Kam má vést po kliknutí: stránka na webu, kotva nebo celý odkaz. Prázdné: jen text bez prokliku.',
-    maxLength: 500,
-  }),
-  'footer.linkExp4': f('Odbornost - viditelný text 4', 'Patička · Odbornost', { maxLength: 80 }),
-  'footer.linkExp4Href': f('Odbornost - adresa pro odkaz 4', 'Patička · Odbornost', {
-    helpText:
-      'Kam má vést po kliknutí: stránka na webu, kotva nebo celý odkaz. Prázdné: jen text bez prokliku.',
-    maxLength: 500,
-  }),
-  'footer.columnNavigation': f('Patička - nadpis sloupce Navigace', 'Patička', { maxLength: 48 }),
+  'footer.columnNavigation': f('Patička - nadpis sloupce Navigace', 'Patička (celý web)', { maxLength: 48 }),
   'footer.linkNav1': f('Navigace - viditelný text 1', 'Patička · Navigace', { maxLength: 80 }),
   'footer.linkNav1Href': f('Navigace - adresa pro odkaz 1', 'Patička · Navigace', {
     helpText:
@@ -333,22 +309,33 @@ export const archCmsConfig: ContentConfig = {
     maxLength: 16,
   }),
   'pricingPage.plan1.price': f('Tarif 1 - cena', 'Ceník · Tarif 1', { maxLength: 48 }),
-  'pricingPage.plan1.desc': f('Tarif 1 - popis', 'Ceník · Tarif 1', { type: 'textarea', maxLength: 600 }),
+  'pricingPage.plan1.desc': f('Tarif 1 - odrážky', 'Ceník · Tarif 1', {
+    type: 'textarea',
+    maxLength: 900,
+    helpText: 'Každý řádek = jedna odrážka v kartě. Prázdné řádky se přeskočí.',
+  }),
   'pricingPage.plan1.cta': f('Tarif 1 - tlačítko', 'Ceník · Tarif 1', { maxLength: 80 }),
 
   'pricingPage.plan2.category': f('Tarif 2 - kategorie', 'Ceník · Tarif 2', { maxLength: 48 }),
   'pricingPage.plan2.title': f('Tarif 2 - název', 'Ceník · Tarif 2', { maxLength: 100 }),
   'pricingPage.plan2.pricePrefix': f('Tarif 2 - slovo před cenou', 'Ceník · Tarif 2', { maxLength: 16 }),
   'pricingPage.plan2.price': f('Tarif 2 - cena', 'Ceník · Tarif 2', { maxLength: 48 }),
-  'pricingPage.plan2.desc': f('Tarif 2 - popis', 'Ceník · Tarif 2', { type: 'textarea', maxLength: 600 }),
+  'pricingPage.plan2.desc': f('Tarif 2 - odrážky', 'Ceník · Tarif 2', {
+    type: 'textarea',
+    maxLength: 900,
+    helpText: 'Každý řádek = jedna odrážka v kartě. Prázdné řádky se přeskočí.',
+  }),
   'pricingPage.plan2.cta': f('Tarif 2 - tlačítko', 'Ceník · Tarif 2', { maxLength: 80 }),
-  'pricingPage.plan2.badgePopular': f('Tarif 2 - štítek zvýrazněné karty', 'Ceník · Tarif 2', { maxLength: 32 }),
 
   'pricingPage.plan3.category': f('Tarif 3 - kategorie', 'Ceník · Tarif 3', { maxLength: 48 }),
   'pricingPage.plan3.title': f('Tarif 3 - název', 'Ceník · Tarif 3', { maxLength: 100 }),
   'pricingPage.plan3.pricePrefix': f('Tarif 3 - slovo před cenou', 'Ceník · Tarif 3', { maxLength: 16 }),
   'pricingPage.plan3.price': f('Tarif 3 - cena', 'Ceník · Tarif 3', { maxLength: 48 }),
-  'pricingPage.plan3.desc': f('Tarif 3 - popis', 'Ceník · Tarif 3', { type: 'textarea', maxLength: 600 }),
+  'pricingPage.plan3.desc': f('Tarif 3 - odrážky', 'Ceník · Tarif 3', {
+    type: 'textarea',
+    maxLength: 900,
+    helpText: 'Každý řádek = jedna odrážka v kartě. Prázdné řádky se přeskočí.',
+  }),
   'pricingPage.plan3.cta': f('Tarif 3 - tlačítko', 'Ceník · Tarif 3', { maxLength: 80 }),
 
   'pricingPage.standard.title': f('Ceník - standard nadpis', 'Standard', { maxLength: 100 }),
@@ -481,20 +468,6 @@ export const archCmsConfig: ContentConfig = {
   'contactPage.banner.imageAlt': f('Kontakt - popis obrázku v banneru', 'Kontakt · Banner', { maxLength: 280 }),
   'contactPage.banner.title': f('Kontakt - banner nadpis', 'Kontakt · Banner', { maxLength: 100 }),
   'contactPage.banner.cta': f('Kontakt - text tlačítka v banneru', 'Kontakt · Banner', { maxLength: 64 }),
-
-  'contactPage.footer.copyright': f('Kontakt - patička, text copyrightu', 'Kontakt · Patička', { maxLength: 200 }),
-  'contactPage.footer.linkPrivacy': f('Kontakt - patička, text odkazu ochrana soukromí', 'Kontakt · Patička', {
-    maxLength: 80,
-  }),
-  'contactPage.footer.linkTerms': f('Kontakt - patička, text odkazu obchodní podmínky', 'Kontakt · Patička', {
-    maxLength: 80,
-  }),
-  'contactPage.footer.linkSustainability': f('Kontakt - patička, text odkazu udržitelnost', 'Kontakt · Patička', {
-    maxLength: 80,
-  }),
-  'contactPage.footer.linkAccessibility': f('Kontakt - patička, text odkazu přístupnost', 'Kontakt · Patička', {
-    maxLength: 80,
-  }),
 };
 
 /** Field order in the form (stable ordering in the admin UI). */

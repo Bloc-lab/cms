@@ -59,7 +59,6 @@ export type SectionNavChild = { sectionTitle: string; navLabel: string };
 /** Content field key for the column heading tied to a footer subsection (ARCH). */
 export function getSiteFooterColumnHeadingFieldKey(sectionTitle: string): string | null {
   const t = sectionTitle.trim();
-  if (/^(Patička|Footer)\s*·\s*Odbornost\s*$/i.test(t)) return 'footer.columnExpertise';
   if (/^(Patička|Footer)\s*·\s*Navigace\s*$/i.test(t)) return 'footer.columnNavigation';
   if (/^(Patička|Footer)\s*·\s*Kontakt\s*$/i.test(t)) return 'footer.columnConnect';
   return null;

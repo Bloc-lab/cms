@@ -158,10 +158,8 @@ export default function PageContentEdit() {
       const v = read(fieldKey);
       if (v) out[sectionTitle] = v;
     };
-    add('Patička · Odbornost', 'footer.columnExpertise');
     add('Patička · Navigace', 'footer.columnNavigation');
     add('Patička · Kontakt', 'footer.columnConnect');
-    add('Footer · Odbornost', 'footer.columnExpertise');
     add('Footer · Navigace', 'footer.columnNavigation');
     add('Footer · Kontakt', 'footer.columnConnect');
     return out;
