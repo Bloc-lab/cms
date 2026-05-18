@@ -45,7 +45,7 @@ export async function publicSiteInfoRoutes(app: FastifyInstance) {
     const logoRaw = (map['admin.logo:cs'] ?? map['admin.logo:en'] ?? '').trim();
     const logoUrl = logoRaw || null;
 
-    setPublicCacheHeaders(reply, 'Host');
+    setPublicCacheHeaders(reply, ['Host', 'X-API-KEY']);
     return reply.send({ siteName, logoUrl });
   });
 }
